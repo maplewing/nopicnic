@@ -3,7 +3,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { products, aggregateRating, siteConfig } from "../data/products";
 
-const categories = ["All", "Books", "Naming", "Digital", "Apparel"];
+const categories = ["All", "Books", "Naming", "Digital"];
 
 export default function Shop() {
   const [activeCategory, setActiveCategory] = useState("All");

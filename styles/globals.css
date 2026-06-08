@@ -111,24 +111,22 @@ button {
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0;
-  border-top: 1px solid var(--gray-border);
+  gap: 32px;
+  padding-top: 32px;
 }
 
 .product-card {
-  border-right: 1px solid var(--gray-border);
-  border-bottom: 1px solid var(--gray-border);
-  padding: 24px;
+  padding: 0;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: opacity 0.15s;
 }
 
 .product-card:hover {
-  background: var(--gray-light);
+  opacity: 0.75;
 }
 
 .product-card-image {
-  aspect-ratio: 3/4;
+  aspect-ratio: 4/3;
   background: var(--gray-light);
   margin-bottom: 16px;
   overflow: hidden;
@@ -198,7 +196,7 @@ button {
 }
 
 .product-image-main {
-  aspect-ratio: 3/4;
+  aspect-ratio: 4/3;
   background: var(--gray-light);
   overflow: hidden;
   margin-bottom: 8px;
