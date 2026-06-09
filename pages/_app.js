@@ -1,27 +1,36 @@
 import "../styles/globals.css";
-import { Raleway } from "next/font/google";
+import { Work_Sans, Courier_Prime } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { CartProvider } from "../components/CartContext";
 import Nav from "../components/Nav";
 import CartDrawer from "../components/CartDrawer";
 import Footer from "../components/Footer";
 
-const raleway = Raleway({
+const workSans = Work_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
-  variable: "--font-sans",
+  variable: "--font-display",
+});
+
+const courierPrime = Courier_Prime({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+  variable: "--font-body",
 });
 
 export default function App({ Component, pageProps }) {
   return (
     <CartProvider>
-      <div className={raleway.variable} style={{ fontFamily: "var(--font-sans)" }}>
+      <div className={`${workSans.variable} ${courierPrime.variable}`}>
         <Nav />
         <CartDrawer />
         <main>
           <Component {...pageProps} />
         </main>
         <Footer />
+        <SpeedInsights />
       </div>
     </CartProvider>
   );
