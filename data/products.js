@@ -337,13 +337,15 @@ export const products = [
     category: "Books",
     inStock: true,
     productWeightOz: 15.7,
-    images: ["/images/rsr-cover-2.png", "/images/rsr-cover.jpg", "/images/rsr-spread.jpg", "/images/rsr-interior.png", "/images/rsr-poster.jpg"],
+    images: ["/images/rsr-cover-2.png", "/images/rsr-spread.jpg", "/images/rsr-interior.png"],
     pressImage: "/images/rsr-press.png",
-    description: `Run Studio Run is a step-by-step guide that helps you look at your studio critically — as a business as opposed to an artistic endeavor. Ships with a massive A0 print highlighting a lesson from each chapter.`,
+    description: `Run Studio Run is a step-by-step guide that helps you look at your studio critically — as a business as opposed to an artistic endeavor.`,
     details: [
       "Hardcover, 2nd edition",
-      "Design and illustration by Moniker",
       "Ships with A0 poster (841 × 1189mm)",
+    ],
+    credits: [
+      { label: "Design and illustration by", name: "Moniker", url: "https://monikersf.com" },
     ],
     topics: [
       "Your Offering",
@@ -374,6 +376,9 @@ export const products = [
     kickstarter: {
       image: "/images/kickstarter_project_run_studio.jpeg",
       text: "Run Studio Run started out on Kickstarter where it became a featured project and raised 150% of its goal. The book was designed and illustrated by Moniker in San Francisco.",
+      postText: "We also did a four part podcast miniseries speaking to different studio leaders about how they approach the business side of their work.",
+      postLinkText: "Check it out here",
+      postLinkHref: "/studio-sessions#podcast",
     },
   },
   {

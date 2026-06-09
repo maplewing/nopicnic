@@ -124,7 +124,7 @@ export default function StudioSessions() {
           below.
         </p>
 
-        <h2>Run Studio Run Podcast Mini-Series</h2>
+        <h2 id="podcast">Run Studio Run Podcast Mini-Series</h2>
         <p>
           A four part podcast mini-series following up on Run Studio Run. I spoke with four different
           studio leaders about their experience running creative businesses.

@@ -169,9 +169,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
         )}
 
         {product.pressImage && (
-          <div className="product-press">
-            <p className="product-press-label">As seen in</p>
-            <img src={product.pressImage} alt="Press mentions" />
+          <div className="product-full-section">
+            <p className="product-full-section-label">As seen in</p>
+            <img src={product.pressImage} alt="Press mentions" style={{ maxWidth: "100%", display: "block" }} />
           </div>
         )}
 
@@ -186,10 +186,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
 
         {product.contributors?.length > 0 && (
           <div className="product-full-section">
-            {product.contributorsLabel
-              ? <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555", marginBottom: 12 }}>{product.contributorsLabel}</p>
-              : <p className="product-full-section-label">Contributors</p>
-            }
+            <p className="product-full-section-label">{product.contributorsLabel || "Contributors"}</p>
             <p style={{ fontSize: 14, lineHeight: 2, color: "#555" }}>
               {product.contributors.map((c, i) => (
                 <span key={i}>
@@ -203,10 +200,18 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
 
         {product.kickstarter && (
           <div className="product-full-section">
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555", marginBottom: 16 }}>{product.kickstarter.text}</p>
             {product.kickstarter.image && (
               <img src={product.kickstarter.image} alt="Run Studio Run on Kickstarter" style={{ maxWidth: "100%", display: "block", marginBottom: 16 }} />
             )}
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555" }}>{product.kickstarter.text}</p>
+            {product.kickstarter.postText && (
+              <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555" }}>
+                {product.kickstarter.postText}{" "}
+                <Link href={product.kickstarter.postLinkHref} style={{ color: "inherit", textDecoration: "underline" }}>
+                  {product.kickstarter.postLinkText}
+                </Link>
+              </p>
+            )}
           </div>
         )}
 
