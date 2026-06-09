@@ -17,6 +17,8 @@
 import Stripe from "stripe";
 import { Resend } from "resend";
 import { orderConfirmationEmail } from "../../lib/orderEmail";
+import { createDownloadToken } from "../../lib/downloadToken";
+import { products } from "../../data/products";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -65,11 +67,30 @@ export default async function handler(req, res) {
         return res.status(200).json({ received: true });
       }
 
+      // Build download links for any digital products in the order
+      const siteUrl = process.env.NEXT_PUBLIC_URL || "https://nopicnicpress.com";
+      const downloadLinks = [];
+
+      for (const item of session.line_items?.data || []) {
+        const stripePriceId = item.price?.id;
+        const product = products.find((p) => p.stripePriceId === stripePriceId);
+        if (product?.isDigital && product?.formats?.length) {
+          const token = createDownloadToken(product.slug, toEmail);
+          downloadLinks.push({
+            name: product.name,
+            formats: product.formats.map((format) => ({
+              format,
+              url: `${siteUrl}/api/download?token=${token}&format=${format}`,
+            })),
+          });
+        }
+      }
+
       const { error } = await resend.emails.send({
         from: "No Picnic Press <orders@nopicnicpress.com>",
         to: toEmail,
         subject: "Your No Picnic Press order is confirmed",
-        html: orderConfirmationEmail(session),
+        html: orderConfirmationEmail(session, downloadLinks),
       });
 
       if (error) {

@@ -10,27 +10,45 @@ export const siteConfig = {
 
 export const reviews = [
   {
-    text: "From cover to cover I was guided in a light hearted and punchy manner on how to name a company. It was freaking glorious.",
+    text: "From cover to cover I was guided in a light hearted and punchy manner on how to name a company. It was freaking glorious. Eli outlines every step of the naming process in a way that is so practical and fluid, a 4th grader could do it.",
     author: "Zach",
     product: "Don't Call It That",
     rating: 5,
   },
   {
-    text: "I am getting ready to launch a small consulting company and finding the right name was a lot harder than I thought it would be. This book is a life saver.",
+    text: "I am getting ready to launch a small consulting company and finding the right name was a lot harder than I thought it would be. After reading a few pages of Don't Call It That I started to relax. Don't Call It That walked me through the whole process. This book is a life saver if you are starting a business and, like me, don't have a creative bone in your body or a big budget for marketing.",
     author: "Susanna",
     product: "Don't Call It That",
+    rating: 5,
+  },
+  {
+    text: "If you think about starting a company or do branding for clients this is a book for you. Every sentence is meaningful. Chapters are organized as a flow for name picking process. You cannot fail at picking a right name with this book.",
+    author: "Lukasz",
+    product: "Don't Call It That",
+    rating: 5,
+  },
+  {
+    text: "For anyone looking to start their own creative services business of any kind, this is the holy grail.",
+    author: "Jennifer",
+    product: "Run Studio Run",
+    rating: 5,
+  },
+  {
+    text: "Run Studio Run should be required reading for all creative individuals and small studios.",
+    author: "Rocky",
+    product: "Run Studio Run",
+    rating: 5,
+  },
+  {
+    text: "I loved this book and found it helpful in so many ways. Eli is a great writer.",
+    author: "Michael",
+    product: "Run Studio Run",
     rating: 5,
   },
   {
     text: "One of the most useful marketing books I've read in a while. A great balance between how to think of the problem and a methodical path to solving it.",
     author: "Ryan",
     product: "Run Studio Run",
-    rating: 5,
-  },
-  {
-    text: "If you think about starting a company or do branding for clients this is a book for you. Every sentence is meaningful.",
-    author: "Lukasz",
-    product: "Don't Call It That",
     rating: 5,
   },
 ];
@@ -60,7 +78,7 @@ export const products = [
     alsoIn: ["Naming"],
     inStock: true,
     productWeightOz: 13,
-    images: ["/images/dcit-cover.jpg", "/images/dcit-spread.jpg", "/images/dcit-mockup-2.jpg"],
+    images: ["/images/dcit-cover.jpg", "/images/dcit-spread.jpg", "/images/dcit-mockup-2.jpg", "/images/dcit-mockup-3.jpg"],
     pressImage: "/images/dcit-press.png",
     description: `Don't Call It That is not a book about naming. It is a step-by-step workbook that walks you through all the ins and outs of the naming process. This book is your best defense against boring names and the people who find them "functional" and "descriptive."`,
     details: [
@@ -87,7 +105,7 @@ export const products = [
     category: "Books",
     inStock: true,
     productWeightOz: 15.7,
-    images: ["/images/rsr-cover.jpg", "/images/rsr-spread.jpg", "/images/rsr-poster.jpg"],
+    images: ["/images/rsr-cover-2.png", "/images/rsr-cover.jpg", "/images/rsr-spread.jpg", "/images/rsr-poster.jpg"],
     pressImage: "/images/rsr-press.png",
     description: `Run Studio Run is a step-by-step guide that helps you look at your studio critically — as a business as opposed to an artistic endeavor. Ships with a massive A0 print highlighting a lesson from each chapter.`,
     details: [
@@ -105,7 +123,7 @@ export const products = [
     category: "Naming",
     inStock: true,
     productWeightOz: 15.7,
-    images: ["/images/gny-cover.jpg", "/images/gny-2.jpg", "/images/gny-3.jpg", "/images/gny-4.jpg"],
+    images: ["/images/gny-cover.jpg", "/images/gny-2.jpg", "/images/gny-3.jpg", "/images/gny-4.jpg", "/images/gny-5.jpg", "/images/gny-6.jpg", "/images/gny-7.jpg", "/images/gny-8.jpg", "/images/gny-9.jpg", "/images/gny-10.jpg"],
     description: `Similar to a deck of playing cards, Go Name Yourself has four suits: Preparation (15 cards), Ideation (45 cards), Lessons (15 cards), and Vetting. Instead of staring at a blank page waiting for brilliance, each card gives you a thought exercise.`,
     details: [
       "75 cards",
@@ -122,7 +140,7 @@ export const products = [
     category: "Books",
     inStock: true,
     productWeightOz: 14,
-    images: ["/images/ac-cover.jpg"],
+    images: ["/images/ac-cover.jpg", "/images/ac-stack.jpg"],
     description: `When you name things for a living, you become acutely aware of the vast verbiage all around you. All the world's a page: storefront signage, trucks on the highway, products in the grocery aisle.`,
     details: [
       "Three-volume zine set",
@@ -155,14 +173,16 @@ export const products = [
     productWeightOz: 0,
     images: ["/images/dcit-digital.jpg"],
     pressImage: "/images/dcit-press.png",
-    description: "The digital edition of Don't Call It That. Delivered as an ePub.",
-    details: ["ePub format", "Delivered via email after purchase"],
+    reviewsFor: "Don't Call It That",
+    formats: ["epub", "pdf", "mobi"],
+    description: "The digital edition of Don't Call It That.",
+    details: ["ePub, PDF, and MOBI — delivered via email after purchase"],
     isDigital: true,
   },
   {
     id: "run-studio-run-digital",
     name: "Run Studio Run — Digital",
-    subtitle: "ePub edition",
+    subtitle: "ePub + PDF edition",
     price: 12.50,
     stripePriceId: "price_1TgAJeEiVbcGdXdNChOwLxeA",
     slug: "run-studio-run-digital",
@@ -171,8 +191,10 @@ export const products = [
     productWeightOz: 0,
     images: ["/images/rsr-digital.jpg"],
     pressImage: "/images/rsr-press.png",
-    description: "The digital edition of Run Studio Run. Delivered as an ePub.",
-    details: ["ePub format", "Delivered via email after purchase"],
+    reviewsFor: "Run Studio Run",
+    formats: ["epub", "pdf"],
+    description: "The digital edition of Run Studio Run.",
+    details: ["ePub and PDF — delivered via email after purchase"],
     isDigital: true,
   },
   {

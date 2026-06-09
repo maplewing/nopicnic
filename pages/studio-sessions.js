@@ -33,6 +33,12 @@ export default function StudioSessions() {
       <div className="about-page">
         <h1>Studio Sessions</h1>
 
+        <img
+          src="/images/studio-session.png"
+          alt="Studio session"
+          style={{ width: "100%", display: "block", marginBottom: 32 }}
+        />
+
         <p>
           I'm starting to do very limited consulting with people who run small creative studios
           and are looking to improve the way they do business. If that sounds like you, fill out

@@ -13,7 +13,8 @@ export async function getStaticPaths() {
 
 export async function getStaticProps({ params }) {
   const product = products.find((p) => p.slug === params.slug);
-  const productReviews = reviews.filter((r) => r.product === product.name);
+  const reviewKey = product.reviewsFor || product.name;
+  const productReviews = reviews.filter((r) => r.product === reviewKey);
   return { props: { product, productReviews } };
 }
 
