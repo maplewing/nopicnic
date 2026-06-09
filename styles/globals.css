@@ -283,7 +283,7 @@ button {
 }
 
 .product-description {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.7;
   margin-bottom: 24px;
   color: #333;
@@ -503,7 +503,7 @@ button {
 }
 
 .homepage-description p {
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.8;
   color: var(--gray-mid);
 }
@@ -1029,7 +1029,7 @@ button {
 }
 
 .about-page p {
-  font-size: 14px;
+  font-size: 18px;
   line-height: 1.8;
   margin-bottom: 20px;
   color: #333;
@@ -1037,7 +1037,7 @@ button {
 
 .about-page ul {
   list-style: none;
-  font-size: 14px;
+  font-size: 18px;
   line-height: 2;
 }
 

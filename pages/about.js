@@ -13,7 +13,7 @@ export default function About() {
           alt="Eli Altman"
           style={{ width: "100%", display: "block", marginBottom: 8 }}
         />
-        <p style={{ fontSize: 11, color: "var(--gray-mid)", marginBottom: 40 }}>
+        <p style={{ fontSize: 13, color: "var(--gray-mid)", marginBottom: 40 }}>
           Photo: Carolyn McDermott
         </p>
 
