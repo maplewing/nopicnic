@@ -29,7 +29,7 @@ export default function handler(req, res) {
 
   const data = verifyDownloadToken(token);
   if (!data) {
-    return res.status(403).send("This download link has expired or is invalid. Please contact hi@elialtman.com for a new link.");
+    return res.status(403).send("This download link has expired or is invalid. Please contact nopicnicpress@gmail.com for a new link.");
   }
 
   const formats = FILE_ENV[data.slug];
@@ -40,7 +40,7 @@ export default function handler(req, res) {
   const fileUrl = process.env[formats[format]];
   if (!fileUrl) {
     // Files not yet uploaded — send a friendly message instead of crashing.
-    return res.status(503).send("Files are being prepared. Please check back shortly or contact hi@elialtman.com.");
+    return res.status(503).send("Files are being prepared. Please check back shortly or contact nopicnicpress@gmail.com.");
   }
 
   // Redirect to the file. The browser will download it directly.

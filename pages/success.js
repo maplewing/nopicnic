@@ -16,7 +16,7 @@ export default function Success() {
         </h1>
         <p style={{ fontSize: 14, lineHeight: 1.8, color: "#555", marginBottom: 32 }}>
           You'll receive a confirmation email shortly. We'll send a tracking number once your
-          order ships. Questions? <a href="mailto:hi@elialtman.com">hi@elialtman.com</a>
+          order ships. Questions? <a href="mailto:nopicnicpress@gmail.com">nopicnicpress@gmail.com</a>
         </p>
         <Link href="/" style={{ fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", borderBottom: "1px solid #000" }}>
           Back to shop

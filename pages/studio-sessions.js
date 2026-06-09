@@ -104,7 +104,7 @@ export default function StudioSessions() {
             {status === "error" && (
               <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>
                 Something went wrong — please email{" "}
-                <a href="mailto:hi@elialtman.com">hi@elialtman.com</a> directly.
+                <a href="mailto:nopicnicpress@gmail.com">nopicnicpress@gmail.com</a> directly.
               </p>
             )}
           </form>
@@ -127,18 +127,18 @@ export default function StudioSessions() {
         <h2>Run Studio Run Podcast Mini-Series</h2>
         <p>
           A four part podcast mini-series following up on Run Studio Run. I spoke with four different
-          studio leaders about their experience running creative businesses. The episodes are available
-          on{" "}
-          <a
-            href="https://podcasts.apple.com/search?term=run+studio+run+eli+altman"
-            target="_blank"
-            rel="noopener"
-          >
-            Apple Podcasts
-          </a>
-          , Amazon Music, and the Podbean App. Searching for "Run Studio Run" should do the trick.
+          studio leaders about their experience running creative businesses.
           Thanks to Audrey McGlinchy for editing.
         </p>
+
+        <iframe
+          allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write"
+          frameBorder="0"
+          height="450"
+          style={{ width: "100%", overflow: "hidden", borderRadius: 8, marginTop: 16 }}
+          sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+          src="https://embed.podcasts.apple.com/us/podcast/the-run-studio-run-podcast/id1536158507"
+        />
       </div>
     </>
   );

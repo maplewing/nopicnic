@@ -37,7 +37,7 @@ export default function About() {
           As seen in the Boston Globe, The Guardian, New York Times, NPR, and the Harvard Law Review.
         </p>
         <p>
-          <a href="mailto:hi@elialtman.com">hi@elialtman.com</a>
+          <a href="mailto:nopicnicpress@gmail.com">nopicnicpress@gmail.com</a>
         </p>
 
         <h2>Speaking</h2>

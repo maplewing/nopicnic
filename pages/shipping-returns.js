@@ -8,19 +8,43 @@ export default function ShippingReturns() {
       </Head>
       <div className="about-page">
         <h1>Shipping + Returns</h1>
+
+        <h2>U.S. Shipping</h2>
         <p>
-          Orders ship from Berkeley, CA via USPS. Standard shipping takes 5–10 business days
-          within the US. International orders may take longer.
+          All domestic packages are shipped via USPS Media Mail unless Priority Mail or FedEx
+          Overnight is selected. Neither Media Mail nor Priority Mail offer guaranteed delivery
+          dates, though FedEx Overnight shipments come with FedEx guarantees. We process orders
+          Monday through Friday, typically shipping in the morning. We occasionally use UPS when
+          delivery windows align similarly.
         </p>
         <p>
-          Free shipping on orders over $50.
+          Domestic shipping costs depend on package weight and are calculated individually per
+          shipment.
+        </p>
+
+        <h2>International Shipping</h2>
+        <p>
+          Export fees and duties are paid by No Picnic Press. Import fees and duties are the
+          responsibility of the buyer. International shipping doesn't include surcharges and we
+          sometimes subsidize costs.
         </p>
         <p>
-          If something arrives damaged or there's an issue with your order, email us at{" "}
-          <a href="mailto:hi@elialtman.com">hi@elialtman.com</a> and we'll make it right.
+          If you're outside the U.S., check our{" "}
+          <a href="/stockists">international stockists</a> before ordering directly — a local
+          retailer may offer better pricing and faster delivery.
+        </p>
+
+        <h2>Returns</h2>
+        <p>
+          Returns are accepted within 14 days of receipt for physical products in new condition.
+          Return shipping is the responsibility of the buyer.
         </p>
         <p>
-          Digital products are delivered via email and are non-refundable.
+          Digital purchases are eligible for a refund within 48 hours of purchase.
+        </p>
+        <p>
+          To initiate a return or with any questions, email{" "}
+          <a href="mailto:nopicnicpress@gmail.com">nopicnicpress@gmail.com</a>.
         </p>
       </div>
     </>

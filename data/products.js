@@ -2,7 +2,7 @@ export const siteConfig = {
   title: "No Picnic Press",
   tagline: "Home of Don't Call It That, Run Studio Run, and Go Name Yourself.",
   description: "No Picnic Press is the Berkeley, California-based publishing imprint of Eli Altman.",
-  email: "hi@elialtman.com",
+  email: "nopicnicpress@gmail.com",
   instagram: "https://instagram.com/ahundredmonkeys",
   blog: "https://www.ahundredmonkeys.com/?s=Eli+Altman&post_type=post",
   studioSessions: "/studio-sessions",

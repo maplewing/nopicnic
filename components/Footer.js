@@ -29,14 +29,6 @@ export default function Footer() {
   return (
     <footer className="footer">
       <div className="footer-inner">
-        <div className="footer-blurb">
-          <p>
-            No Picnic Press is the Berkeley, California-based publishing imprint of{" "}
-            <Link href="/about">Eli Altman</Link>. If you've made it this far I would like
-            to thank you for buying directly from us instead of from all-powerful lord Bezos.
-          </p>
-        </div>
-
         <div className="footer-links">
           <Link href="/shipping-returns">Shipping + Returns</Link>
           <a href={siteConfig.instagram} target="_blank" rel="noopener">Instagram</a>
