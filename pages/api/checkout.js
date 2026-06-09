@@ -2,52 +2,66 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+const ALL_COUNTRIES = [
+  "US", "CA", "GB", "AU", "NZ", "DE", "FR", "NL", "SE", "NO", "DK",
+  "IE", "BE", "CH", "AT", "IT", "ES", "PT", "PL", "JP", "KR",
+  "SG", "HK", "MX", "BR", "AR", "ZA", "IN",
+];
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { items } = req.body;
+  const { items, selectedRate } = req.body;
 
   const line_items = items.map((item) => ({
     price: item.stripePriceId,
     quantity: item.qty,
   }));
 
+  // Build the single shipping option from the live rate the customer selected on /checkout.
+  // Falls back to $0 for digital-only carts.
+  const shipping_options = selectedRate
+    ? [
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: {
+              amount: Math.round(parseFloat(selectedRate.amount) * 100),
+              currency: "usd",
+            },
+            display_name: selectedRate.service,
+            ...(selectedRate.estimatedDays && {
+              delivery_estimate: {
+                minimum: { unit: "business_day", value: selectedRate.estimatedDays },
+                maximum: { unit: "business_day", value: selectedRate.estimatedDays + 2 },
+              },
+            }),
+          },
+        },
+      ]
+    : [
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: { amount: 0, currency: "usd" },
+            display_name: "Digital delivery",
+          },
+        },
+      ];
+
+  const hasPhysical = items.some((i) => !i.isDigital);
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items,
     payment_method_types: ["card", "paypal"],
-    // Apple Pay is enabled automatically for card when on Safari/iOS
-    shipping_address_collection: {
-      allowed_countries: ["US", "CA", "GB", "AU", "NZ", "DE", "FR", "NL", "SE", "NO", "DK"],
-    },
-    shipping_options: [
-      {
-        shipping_rate_data: {
-          type: "fixed_amount",
-          fixed_amount: { amount: 500, currency: "usd" },
-          display_name: "Standard shipping",
-          delivery_estimate: {
-            minimum: { unit: "business_day", value: 5 },
-            maximum: { unit: "business_day", value: 10 },
-          },
-        },
-      },
-      {
-        shipping_rate_data: {
-          type: "fixed_amount",
-          fixed_amount: { amount: 0, currency: "usd" },
-          display_name: "Free shipping (orders $50+)",
-          delivery_estimate: {
-            minimum: { unit: "business_day", value: 5 },
-            maximum: { unit: "business_day", value: 10 },
-          },
-        },
-      },
-    ],
-    allow_promotion_codes: true,  // enables your discount codes
+    ...(hasPhysical && {
+      shipping_address_collection: { allowed_countries: ALL_COUNTRIES },
+    }),
+    shipping_options,
+    allow_promotion_codes: true,
     success_url: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.NEXT_PUBLIC_URL}/`,
-    // customer_email collected here feeds the Zapier → Kit trigger
     customer_creation: "always",
   });
 

@@ -24,6 +24,9 @@ export default function App({ Component, pageProps }) {
   return (
     <CartProvider>
       <div className={`${workSans.variable} ${courierPrime.variable}`}>
+        <div className="shipping-banner">
+          Use code MOREBETTER for free domestic shipping on orders of $50 or more
+        </div>
         <Nav />
         <CartDrawer />
         <main>

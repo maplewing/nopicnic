@@ -1,18 +1,15 @@
+import { useRouter } from "next/router";
 import { useCart } from "./CartContext";
 
 export default function CartDrawer() {
   const { items, removeItem, updateQty, total, isOpen, setIsOpen } = useCart();
+  const router = useRouter();
 
   if (!isOpen) return null;
 
-  async function handleCheckout() {
-    const res = await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items }),
-    });
-    const { url } = await res.json();
-    window.location.href = url;
+  function handleCheckout() {
+    setIsOpen(false);
+    router.push("/checkout");
   }
 
   return (

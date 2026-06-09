@@ -51,6 +51,53 @@ button {
   font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
 }
 
+/* Shipping banner */
+.shipping-banner {
+  background: var(--black);
+  color: var(--white);
+  text-align: center;
+  padding: 9px 24px;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+}
+
+/* Studio Sessions form */
+.studio-form {
+  margin: 32px 0 0;
+}
+
+.studio-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.studio-form-row label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+}
+
+.studio-form-row input,
+.studio-form-row textarea {
+  border: 1px solid var(--gray-border);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body, "Courier New", Courier, monospace);
+  width: 100%;
+  outline: none;
+  resize: vertical;
+}
+
+.studio-form-row input:focus,
+.studio-form-row textarea:focus {
+  border-color: var(--black);
+}
+
 /* Nav */
 .nav {
   position: sticky;
@@ -72,7 +119,7 @@ button {
 }
 
 .nav-logo img {
-  height: 28px;
+  height: 34px;
   width: auto;
 }
 
@@ -583,6 +630,50 @@ button {
   text-align: center;
 }
 
+.cart-destination {
+  margin-bottom: 16px;
+}
+
+.cart-destination-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  margin-bottom: 8px;
+}
+
+.cart-destination-toggle {
+  display: flex;
+  gap: 0;
+}
+
+.dest-btn {
+  flex: 1;
+  border: 1px solid var(--gray-border);
+  background: none;
+  padding: 8px 4px;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.dest-btn:first-child {
+  border-right: none;
+}
+
+.dest-btn.active {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+
+.dest-btn:not(.active):hover {
+  border-color: var(--black);
+}
+
 .cart-footer {
   padding: 24px;
   border-top: 1px solid var(--gray-border);
@@ -600,6 +691,110 @@ button {
   color: var(--gray-mid);
   font-size: 13px;
   padding: 48px 0;
+}
+
+/* Checkout page */
+.checkout-page {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 64px;
+  padding: 48px 0 80px;
+  align-items: start;
+}
+
+@media (max-width: 760px) {
+  .checkout-page {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+.checkout-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+}
+
+.checkout-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gray-border);
+}
+
+.checkout-summary-subtotal {
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.checkout-summary-total {
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  font-weight: 700;
+  font-size: 14px;
+  border-bottom: none;
+  padding-top: 12px;
+}
+
+.checkout-morebetter {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--gray-mid);
+  line-height: 1.5;
+}
+
+.studio-form-row select {
+  border: 1px solid var(--gray-border);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: var(--font-body, "Courier New", Courier, monospace);
+  width: 100%;
+  outline: none;
+  background: var(--white);
+  -webkit-appearance: none;
+}
+
+.studio-form-row select:focus {
+  border-color: var(--black);
+}
+
+.rate-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-border);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.rate-option:first-of-type {
+  border-top: 1px solid var(--gray-border);
+}
+
+.rate-option input[type="radio"] {
+  flex-shrink: 0;
+  accent-color: var(--black);
+}
+
+.rate-service {
+  flex: 1;
+}
+
+.rate-days {
+  font-size: 12px;
+  color: var(--gray-mid);
+}
+
+.rate-price {
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  font-weight: 600;
+  min-width: 48px;
+  text-align: right;
 }
 
 /* About page */

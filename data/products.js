@@ -41,8 +41,8 @@ export const aggregateRating = {
   outOf: 5,
 };
 
-// To update prices or add products, edit this file only.
-// stripePriceId: create these in your Stripe dashboard under Products.
+// shippingWeightOz: total shipment weight including packaging, in ounces.
+// Update these if packaging changes. Omit (or set 0) for digital/service items.
 export const products = [
   {
     id: "dont-call-it-that",
@@ -54,6 +54,7 @@ export const products = [
     category: "Books",
     alsoIn: ["Naming"],
     inStock: true,
+    shippingWeightOz: 14,
     images: ["/images/dcit-cover.jpg"],
     description: `Don't Call It That is not a book about naming. It is a step-by-step workbook that walks you through all the ins and outs of the naming process. This book is your best defense against boring names and the people who find them "functional" and "descriptive."`,
     details: [
@@ -79,6 +80,7 @@ export const products = [
     slug: "run-studio-run",
     category: "Books",
     inStock: true,
+    shippingWeightOz: 18,
     images: ["/images/rsr-cover.jpg"],
     description: `Run Studio Run is a step-by-step guide that helps you look at your studio critically — as a business as opposed to an artistic endeavor. Ships with a massive A0 print highlighting a lesson from each chapter.`,
     details: [
@@ -95,6 +97,7 @@ export const products = [
     slug: "go-name-yourself",
     category: "Naming",
     inStock: true,
+    shippingWeightOz: 14,
     images: ["/images/gny-cover.jpg"],
     description: `Similar to a deck of playing cards, Go Name Yourself has four suits: Preparation (15 cards), Ideation (45 cards), Lessons (15 cards), and Vetting. Instead of staring at a blank page waiting for brilliance, each card gives you a thought exercise.`,
     details: [
@@ -111,6 +114,7 @@ export const products = [
     slug: "assorted-characters",
     category: "Books",
     inStock: true,
+    shippingWeightOz: 10,
     images: ["/images/ac-cover.jpg"],
     description: `When you name things for a living, you become acutely aware of the vast verbiage all around you. All the world's a page: storefront signage, trucks on the highway, products in the grocery aisle.`,
     details: [
@@ -126,6 +130,7 @@ export const products = [
     slug: "name-right-now-bundle",
     category: "Naming",
     inStock: true,
+    shippingWeightOz: 28,
     images: ["/images/bundle.jpg"],
     description: "Everything you need to name something right now. Don't Call It That plus Go Name Yourself, bundled together.",
     details: [],
@@ -140,6 +145,7 @@ export const products = [
     category: "Digital",
     alsoIn: ["Naming"],
     inStock: true,
+    shippingWeightOz: 0,
     images: ["/images/dcit-digital.jpg"],
     description: "The digital edition of Don't Call It That. Delivered as an ePub.",
     details: ["ePub format", "Delivered via email after purchase"],
@@ -154,6 +160,7 @@ export const products = [
     slug: "run-studio-run-digital",
     category: "Digital",
     inStock: true,
+    shippingWeightOz: 0,
     images: ["/images/rsr-digital.jpg"],
     description: "The digital edition of Run Studio Run. Delivered as an ePub.",
     details: ["ePub format", "Delivered via email after purchase"],
@@ -168,6 +175,7 @@ export const products = [
     slug: "extra-strength",
     category: "Naming",
     inStock: true,
+    shippingWeightOz: 28,
     images: ["/images/extra-strength.jpg"],
     description: "Extra Strength is a naming service from No Picnic Press and A Hundred Monkeys. You get both naming guides plus two rounds of professional feedback on the names you develop — so you don't just learn the process, you get help executing it.",
     details: [
@@ -189,6 +197,7 @@ export const products = [
     alsoIn: ["Naming"],
     inStock: true,
     limited: true,
+    shippingWeightOz: 14,
     images: ["/images/dcit-1st-edition.jpg"],
     description: "The original 2013 first edition, from a limited run of 1000 copies. Illustrations by Curtis Jinkins, lettering by Cathryn Galloway. Only a handful of copies left.",
     details: [
@@ -208,6 +217,7 @@ export const products = [
     category: "Books",
     alsoIn: ["Naming"],
     inStock: false,
+    shippingWeightOz: 6,
     images: ["/images/dcit-taxonomy-poster.jpg"],
     description: "A poster illustrating the taxonomy of name species from Don't Call It That.",
     details: [],
@@ -221,6 +231,7 @@ export const products = [
     slug: "run-studio-run-1st-edition",
     category: "Books",
     inStock: false,
+    shippingWeightOz: 18,
     images: ["/images/rsr-1st-edition.jpg"],
     description: "The first edition of Run Studio Run.",
     details: [],
@@ -235,6 +246,7 @@ export const products = [
     category: "Books",
     alsoIn: ["Naming"],
     inStock: false,
+    shippingWeightOz: 14,
     images: ["/images/dcit-2nd-edition.jpg"],
     description: "The second edition of Don't Call It That.",
     details: [],
@@ -248,6 +260,7 @@ export const products = [
     slug: "run-studio-run-art-prints",
     category: "Books",
     inStock: false,
+    shippingWeightOz: 5,
     images: ["/images/rsr-art-prints.jpg"],
     description: "Art prints from Run Studio Run.",
     details: [],
