@@ -171,14 +171,14 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
         {product.pressImage && (
           <div className="product-full-section">
             <p className="product-full-section-label">As seen in</p>
-            <img src={product.pressImage} alt="Press mentions" style={{ maxWidth: "100%", display: "block", mixBlendMode: "multiply" }} />
+            <img src={product.pressImage} alt="Press mentions" style={{ maxWidth: "100%", display: "block" }} />
           </div>
         )}
 
         {product.topics?.length > 0 && (
           <div className="product-full-section">
             <p className="product-full-section-label">Topics covered</p>
-            <p style={{ fontSize: 18, lineHeight: 2, color: "#555" }}>
+            <p style={{ fontSize: 20, lineHeight: 2, color: "#555" }}>
               {product.topics.join(" · ")}
             </p>
           </div>
@@ -187,7 +187,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
         {product.contributors?.length > 0 && (
           <div className="product-full-section">
             <p className="product-full-section-label">{product.contributorsLabel || "Contributors"}</p>
-            <p style={{ fontSize: 18, lineHeight: 2, color: "#555" }}>
+            <p style={{ fontSize: 20, lineHeight: 2, color: "#555" }}>
               {product.contributors.map((c, i) => (
                 <span key={i}>
                   {i > 0 && ", "}
