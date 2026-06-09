@@ -177,7 +177,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
 
         {product.topics?.length > 0 && (
           <div className="product-full-section">
-            <p className="product-full-section-label">Topics covered</p>
+            <p className="product-full-section-label">Let&rsquo;s figure out</p>
             <p style={{ fontSize: 20, lineHeight: 2, color: "#555" }}>
               {product.topics.join(" · ")}
             </p>
