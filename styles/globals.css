@@ -53,7 +53,7 @@ button {
 
 /* Shipping banner */
 .shipping-banner {
-  background: var(--black);
+  background: #333;
   color: var(--white);
   text-align: center;
   padding: 8px 24px;
@@ -283,7 +283,7 @@ button {
 }
 
 .product-description {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.7;
   margin-bottom: 24px;
   color: #333;
@@ -943,6 +943,8 @@ button {
   margin-top: 40px;
   padding-top: 32px;
   border-top: 1px solid var(--gray-border);
+  background: #fff;
+  isolation: isolate;
 }
 
 .product-press-label {

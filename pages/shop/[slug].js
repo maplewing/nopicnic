@@ -76,7 +76,7 @@ export default function ProductPage({ product, productReviews }) {
           <div className="product-info">
             <h1>{product.name}</h1>
             {product.subtitle && (
-              <p style={{ fontSize: 13, color: "#666", marginBottom: 16 }}>{product.subtitle}</p>
+              <p style={{ fontSize: 16, color: "#333", marginBottom: 16, lineHeight: 1.4 }}>{product.subtitle}</p>
             )}
             <p className="product-price">${product.price.toFixed(2)}</p>
 
@@ -176,7 +176,7 @@ export default function ProductPage({ product, productReviews }) {
             {product.whatsNew && (
               <div style={{ marginTop: 32 }}>
                 <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>
-                  What's new in this edition
+                  {product.whatsNewTitle || "What's new in this edition"}
                 </p>
                 <ul style={{ paddingLeft: 16, fontSize: 13, lineHeight: 2, color: "#555" }}>
                   {product.whatsNew.map((item, i) => (

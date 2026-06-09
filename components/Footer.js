@@ -65,7 +65,7 @@ export default function Footer() {
 
       <div className="footer-bottom">
         <span>©2019 to ∞ all rights reserved</span>
-        <span>No Picnic Press</span>
+        <span>No <s>Picnic</s> Press</span>
       </div>
     </footer>
   );
