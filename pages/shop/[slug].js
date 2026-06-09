@@ -203,12 +203,17 @@ export default function ProductPage({ product, productReviews }) {
 
         {product.whatsNew && (
           <div className="product-whats-new">
-            <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>
+            <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16, fontFamily: "var(--font-display)" }}>
               {product.whatsNewTitle || "What's new in this edition"}
             </p>
             <ul className="product-whats-new-list">
               {product.whatsNew.map((item, i) => (
-                <li key={i}>{item}</li>
+                <li key={i}>
+                  {typeof item === "object"
+                    ? <><strong>{item.bold}:</strong> {item.text}</>
+                    : item
+                  }
+                </li>
               ))}
             </ul>
           </div>

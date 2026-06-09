@@ -943,8 +943,6 @@ button {
   margin-top: 40px;
   padding-top: 32px;
   border-top: 1px solid var(--gray-border);
-  background: #fff;
-  isolation: isolate;
 }
 
 .product-press-label {
@@ -961,6 +959,7 @@ button {
   max-width: 100%;
   display: block;
   mix-blend-mode: multiply;
+  background: #fff;
 }
 
 /* What's new — full-width below press section */
