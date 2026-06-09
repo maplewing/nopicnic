@@ -54,7 +54,7 @@ export default async function handler(req, res) {
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items,
-    payment_method_types: ["card", "paypal"],
+    automatic_payment_methods: { enabled: true },
     ...(hasPhysical && {
       shipping_address_collection: { allowed_countries: ALL_COUNTRIES },
     }),

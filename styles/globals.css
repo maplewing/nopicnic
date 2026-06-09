@@ -13,7 +13,7 @@
   --font-sans: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
   --font-size-base: 14px;
   --max-width: 1100px;
-  --nav-height: 80px;
+  --nav-height: 100px;
 }
 
 html {
@@ -888,6 +888,7 @@ button {
 .product-press img {
   max-width: 100%;
   display: block;
+  mix-blend-mode: multiply;
 }
 
 /* About page */
