@@ -1,5 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { products, reviews } from "../../data/products";
 import { useCart } from "../../components/CartContext";
 import { useState } from "react";
@@ -103,6 +104,73 @@ export default function ProductPage({ product, productReviews }) {
               </button>
             ) : (
               <button className="btn-primary" disabled>Sold out</button>
+            )}
+            {product.inStock && product.limited && (
+              <p style={{ fontSize: 12, color: "#888", marginTop: 8, letterSpacing: "0.03em", textTransform: "uppercase" }}>Limited stock</p>
+            )}
+
+            {product.crossSell && (
+              <p style={{ fontSize: 13, marginTop: 12, color: "#555" }}>
+                Also available with Don&rsquo;t Call It That as part of the{" "}
+                <Link href={`/shop/${product.crossSell.slug}`} style={{ color: "inherit", textDecoration: "underline" }}>
+                  {product.crossSell.name}
+                </Link>
+              </p>
+            )}
+
+            {product.credits?.length > 0 && (
+              <div style={{ marginTop: 32 }}>
+                {product.credits.map((c, i) => (
+                  <p key={i} style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
+                    {c.label}{" "}
+                    {c.url
+                      ? <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{c.name}</a>
+                      : <span>{c.name}</span>
+                    }
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {product.suits?.length > 0 && (
+              <div style={{ marginTop: 32 }}>
+                <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>
+                  The suits
+                </p>
+                {product.suits.map((s, i) => (
+                  <div key={i} style={{ marginBottom: 16 }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{s.name} <span style={{ fontWeight: 400, color: "#888" }}>({s.count} cards)</span></p>
+                    <p style={{ fontSize: 13, lineHeight: 1.6, color: "#555" }}>{s.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {product.topics?.length > 0 && (
+              <div style={{ marginTop: 32 }}>
+                <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>
+                  Topics covered
+                </p>
+                <p style={{ fontSize: 13, lineHeight: 2, color: "#555" }}>
+                  {product.topics.join(" · ")}
+                </p>
+              </div>
+            )}
+
+            {product.contributors?.length > 0 && (
+              <div style={{ marginTop: 32 }}>
+                <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>
+                  Contributors
+                </p>
+                <p style={{ fontSize: 13, lineHeight: 2, color: "#555" }}>
+                  {product.contributors.map((c, i) => (
+                    <span key={i}>
+                      {i > 0 && ", "}
+                      <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>{c.name}</a>
+                    </span>
+                  ))}
+                </p>
+              </div>
             )}
 
             {product.whatsNew && (

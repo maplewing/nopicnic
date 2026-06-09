@@ -22,6 +22,7 @@ export default function Shop() {
               <p className="product-card-name">{product.name}</p>
               <p className="product-card-price">${product.price.toFixed(2)}</p>
               {!product.inStock && <span className="badge-soldout">Sold out</span>}
+              {product.inStock && product.limited && <span className="badge-limited">Limited stock</span>}
             </Link>
           ))}
         </div>

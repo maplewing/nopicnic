@@ -213,6 +213,17 @@ button {
   margin-top: 4px;
 }
 
+.badge-limited {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid var(--gray-border);
+  padding: 2px 6px;
+  margin-top: 4px;
+  color: #888;
+}
+
 .badge-sale {
   display: inline-block;
   font-size: 10px;
