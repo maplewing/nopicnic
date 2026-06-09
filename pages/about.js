@@ -8,6 +8,11 @@ export default function About() {
       </Head>
       <div className="about-page">
         <h1>Eli Altman</h1>
+        <img
+          src="/images/eli-altman.jpg"
+          alt="Eli Altman"
+          style={{ width: "100%", marginBottom: 32, display: "block" }}
+        />
         <p>
           No Picnic Press is the Berkeley, California-based publishing imprint of Eli Altman.
           Eli is the Managing Director at the naming studio{" "}

@@ -8,7 +8,7 @@
   --black: #000;
   --white: #fff;
   --gray-light: #f5f5f5;
-  --gray-mid: #999;
+  --gray-mid: #666;
   --gray-border: #e0e0e0;
   --font-sans: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
   --font-size-base: 14px;
@@ -213,9 +213,10 @@ button {
 }
 
 .product-info h1 {
-  font-size: 22px;
-  font-weight: 400;
+  font-size: 28px;
+  font-weight: 700;
   margin-bottom: 8px;
+  line-height: 1.2;
 }
 
 .product-price {
@@ -609,9 +610,10 @@ button {
 }
 
 .about-page h1 {
-  font-size: 18px;
-  font-weight: 400;
-  margin-bottom: 32px;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  line-height: 1.2;
 }
 
 .about-page p {

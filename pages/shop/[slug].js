@@ -70,7 +70,7 @@ export default function ProductPage({ product, productReviews }) {
           <div className="product-info">
             <h1>{product.name}</h1>
             {product.subtitle && (
-              <p style={{ fontSize: 13, color: "#999", marginBottom: 16 }}>{product.subtitle}</p>
+              <p style={{ fontSize: 13, color: "#666", marginBottom: 16 }}>{product.subtitle}</p>
             )}
             <p className="product-price">${product.price.toFixed(2)}</p>
 

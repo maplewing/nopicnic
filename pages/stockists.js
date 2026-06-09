@@ -19,8 +19,8 @@ export default function Stockists() {
         <title>Stockists — No Picnic Press</title>
       </Head>
       <div className="stockists-page">
-        <h1 style={{ fontSize: 18, fontWeight: 400, marginBottom: 16 }}>You can find No Picnic Press books at these fine establishments.</h1>
-        <p style={{ fontSize: 14, color: "#555", lineHeight: 1.7, marginBottom: 32 }}>
+        <h1 style={{ marginBottom: 16 }}>You can find No Picnic Press books at these fine establishments.</h1>
+        <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 32 }}>
           If you live in or near these countries, it will likely be faster and more cost-effective to buy directly from a stockist near you.
         </p>
         <img src="/images/casa-bosques.jpg" alt="Casa Bosques, Mexico City" style={{ width: "100%", marginBottom: 40, display: "block" }} />
@@ -35,7 +35,7 @@ export default function Stockists() {
                 ) : (
                   s.name
                 )}
-                {s.location && <span style={{ color: "#999" }}> — {s.location}</span>}
+                {s.location && <span style={{ color: "#666" }}> — {s.location}</span>}
               </li>
             ))}
           </ul>

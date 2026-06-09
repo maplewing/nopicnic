@@ -11,7 +11,7 @@ export default function Shop() {
   const filtered =
     activeCategory === "All"
       ? products
-      : products.filter((p) => p.category === activeCategory);
+      : products.filter((p) => p.category === activeCategory || p.alsoIn?.includes(activeCategory));
 
   return (
     <>
@@ -26,7 +26,7 @@ export default function Shop() {
             {"★".repeat(Math.round(aggregateRating.score))}
           </span>
           <span style={{ fontSize: 13, fontWeight: 500 }}>{aggregateRating.score}/5</span>
-          <span style={{ fontSize: 12, color: "#999" }}>({aggregateRating.count} reviews)</span>
+          <span style={{ fontSize: 12, color: "#666" }}>({aggregateRating.count} reviews)</span>
         </div>
       </div>
 
