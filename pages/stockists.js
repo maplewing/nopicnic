@@ -1,4 +1,12 @@
 import Head from "next/head";
+import Carousel from "../components/Carousel";
+
+const carouselSlides = [
+  { name: "Swipe Design", location: "Toronto, Canada", url: "https://www.swipe.com", image: "/images/stockist-swipe.webp" },
+  { name: "Standards Manual", location: "Brooklyn, NY", url: "https://standardsmanual.com", image: "/images/stockist-standards-manual.jpg" },
+  { name: "Casa Bosques", location: "Mexico City, Mexico", url: "https://casabosques.net", image: "/images/stockist-casa-bosques.jpg" },
+  { name: "Basheer Graphic Books", location: "Singapore", url: "https://www.basheergraphic.com", image: "/images/stockist-basheer.jpg" },
+];
 
 // Update this list as needed
 const stockists = [
@@ -23,7 +31,7 @@ export default function Stockists() {
         <p style={{ fontSize: 14, color: "#555", lineHeight: 1.7, marginBottom: 32 }}>
           If you live in or near these countries, it will likely be faster and more cost-effective to buy directly from a stockist near you.
         </p>
-        <img src="/images/casa-bosques.jpg" alt="Casa Bosques, Mexico City" style={{ width: "100%", marginBottom: 40, display: "block" }} />
+        <Carousel slides={carouselSlides} />
         {stockists.length === 0 ? (
           <p style={{ fontSize: 14, color: "#999" }}>Coming soon.</p>
         ) : (

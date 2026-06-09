@@ -639,6 +639,42 @@ button {
   clip: rect(0,0,0,0);
 }
 
+/* Carousel */
+.carousel {
+  margin-bottom: 40px;
+}
+
+.carousel-stage {
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: var(--gray-light);
+}
+
+.carousel-stage a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+
+.carousel-caption {
+  font-size: 12px;
+  margin-top: 8px;
+  color: var(--black);
+}
+
+.carousel-location {
+  color: var(--gray-mid);
+}
+
 @media (max-width: 500px) {
   .nav-links {
     gap: 16px;
