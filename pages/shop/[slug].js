@@ -110,7 +110,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               </div>
             )}
 
-            {product.credits?.length > 0 && (
+            {product.credits?.length > 0 && !product.suits && (
               <div style={{ marginTop: 12 }}>
                 {product.credits.map((c, i) => (
                   <p key={i} style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
@@ -159,20 +159,36 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                 <p className="product-full-section-label">The suits</p>
                 {product.suits.map((s, i) => (
                   <div key={i} style={{ marginBottom: 16 }}>
-                    <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 4 }}>{s.name} <span style={{ fontWeight: 400, color: "#888" }}>({s.count} cards)</span></p>
+                    <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{s.name} <span style={{ fontWeight: 400, color: "#888" }}>({s.count} cards)</span></p>
                     <p style={{ fontSize: 16, lineHeight: 1.6, color: "#555" }}>{s.description}</p>
                   </div>
                 ))}
               </div>
               {product.crossSell && (
                 <div>
+                  {product.credits?.length > 0 && (
+                    <div style={{ marginBottom: 24 }}>
+                      {product.credits.map((c, i) => (
+                        <p key={i} style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
+                          {c.label}{" "}
+                          {c.url
+                            ? <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{c.name}</a>
+                            : <span>{c.name}</span>
+                          }
+                        </p>
+                      ))}
+                    </div>
+                  )}
                   <p className="product-full-section-label">Also available with</p>
-                  <p style={{ fontSize: 20, lineHeight: 1.6, color: "#333" }}>
+                  <p style={{ fontSize: 20, lineHeight: 1.6, color: "#333", marginBottom: 16 }}>
                     Don&rsquo;t Call It That as part of the{" "}
                     <Link href={`/shop/${product.crossSell.slug}`} style={{ color: "inherit", textDecoration: "underline" }}>
                       {product.crossSell.name}
                     </Link>
                   </p>
+                  {product.companionText && (
+                    <p style={{ fontSize: 20, lineHeight: 1.6, color: "#555" }}>{product.companionText}</p>
+                  )}
                 </div>
               )}
             </div>

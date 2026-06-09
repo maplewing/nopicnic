@@ -393,7 +393,8 @@ export const products = [
     productWeightOz: 15.7,
     images: ["/images/gny-cover.jpg", "/images/gny-2.jpg", "/images/gny-3.jpg", "/images/gny-4.jpg", "/images/gny-5.jpg", "/images/gny-6.jpg", "/images/gny-7.jpg", "/images/gny-8.jpg", "/images/gny-9.jpg", "/images/gny-10.jpg"],
     hideReviews: true,
-    description: `Instead of staring at a blank page waiting for brilliance, each card gives you a thought exercise. Go Name Yourself works alongside Don't Call It That — the deck emphasizes creative exercises while the book provides structured guidance.`,
+    description: `Instead of staring at a blank page waiting for brilliance, each card gives you a thought exercise.`,
+    companionText: `Go Name Yourself works alongside Don't Call It That — the deck emphasizes creative exercises while the book provides structured guidance.`,
     details: [
       "90 cards in four suits: Preparation, Ideation, Lessons, Vetting",
       "Originally funded on Kickstarter, Nov. 2019",
