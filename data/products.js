@@ -302,7 +302,7 @@ export const products = [
     inStock: true,
     productWeightOz: 13,
     images: ["/images/dcit-cover.jpg", "/images/dcit-spread.jpg", "/images/dcit-mockup-2.jpg", "/images/dcit-mockup-3.jpg", "/images/dcit_grid-stack_2730x1680.jpg", "/images/dcit_inside-cover_1680x2000.jpg", "/images/dcit_spine-stack_2730x1680.jpg", "/images/dcit_spread-flat-2_2730x1680.jpg"],
-    pressImage: "/images/dcit_press_transparent.png",
+    pressImage: "/images/dcit-press_transparent.jpg",
     description: `Don't Call It That is not a book about naming. It is a step-by-step workbook that walks you through all the ins and outs of the naming process. Go from zero to a great name in the time it takes you work through this concise, beautiful book.`,
     details: [
       "Soft cover, section sewn, with die-cut slipcase",
@@ -337,7 +337,7 @@ export const products = [
     category: "Books",
     inStock: true,
     productWeightOz: 15.7,
-    images: ["/images/rsr-cover-2.png", "/images/rsr-spread.jpg", "/images/rsr-interior.png", "/images/rsr_second-edition_spread-1.jpg", "/images/rsr_second-edition_spread-4.jpg", "/images/rsr_poster.jpg"],
+    images: ["/images/rsr-cover-2.png", "/images/rsr-spread.jpg", "/images/rsr_second-edition_spread-1.jpg", "/images/rsr_second-edition_spread-4.jpg", "/images/rsr_poster.jpg"],
     pressImage: "/images/rsr-press_transparent.jpg",
     description: `Run Studio Run is a step-by-step guide that helps you look at your studio critically — as a business as opposed to an artistic endeavor.`,
     details: [
@@ -459,7 +459,7 @@ export const products = [
     inStock: true,
     productWeightOz: 0,
     images: ["/images/dcit-digital.jpg"],
-    pressImage: "/images/dcit-press.png",
+    pressImage: "/images/dcit-press_transparent.jpg",
     reviewsFor: "Don't Call It That",
     formats: ["epub", "pdf", "mobi"],
     description: "The digital edition of Don't Call It That.",
