@@ -97,10 +97,10 @@ export default async function handler(req, res) {
         console.error("Resend error for session", session.id, error);
       }
 
-      // Add to Loops and fire purchase event to trigger drip sequence
+      // Add to Loops — only subscribe and trigger drip if customer opted in (GDPR)
       const firstName = session.customer_details?.name?.split(" ")[0] || "";
+      const optedIn = session.custom_fields?.find((f) => f.key === "marketing_consent")?.checkbox?.value === true;
       try {
-        // Upsert contact (create or update)
         await fetch("https://app.loops.so/api/v1/contacts/create", {
           method: "POST",
           headers: {
@@ -110,23 +110,25 @@ export default async function handler(req, res) {
           body: JSON.stringify({
             email: toEmail,
             firstName,
-            subscribed: true,
+            subscribed: optedIn,
             userGroup: "customer",
           }),
         });
 
-        // Fire purchase event → triggers drip loop
-        await fetch("https://app.loops.so/api/v1/events/send", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.LOOPS_API_KEY}`,
-          },
-          body: JSON.stringify({
-            email: toEmail,
-            eventName: "purchase",
-          }),
-        });
+        // Only fire purchase drip event if they opted in to marketing
+        if (optedIn) {
+          await fetch("https://app.loops.so/api/v1/events/send", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.LOOPS_API_KEY}`,
+            },
+            body: JSON.stringify({
+              email: toEmail,
+              eventName: "purchase",
+            }),
+          });
+        }
       } catch (loopsErr) {
         console.error("Loops error for session", session.id, loopsErr);
       }

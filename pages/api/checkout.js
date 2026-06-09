@@ -59,6 +59,14 @@ export default async function handler(req, res) {
       shipping_address_collection: { allowed_countries: ALL_COUNTRIES },
     }),
     shipping_options,
+    custom_fields: [
+      {
+        key: "marketing_consent",
+        label: { type: "custom", custom: "Receive very occasional updates from No Picnic?" },
+        type: "checkbox",
+        optional: true,
+      },
+    ],
     allow_promotion_codes: true,
     success_url: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.NEXT_PUBLIC_URL}/`,

@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { products, reviews, aggregateRating } from "../../data/products";
+import { products, reviews } from "../../data/products";
 import { useCart } from "../../components/CartContext";
 import { useState } from "react";
 
@@ -22,6 +22,7 @@ export default function ProductPage({ product, productReviews }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const [showReviews, setShowReviews] = useState(false);
 
   function handleAdd() {
     addItem(product);
@@ -29,7 +30,10 @@ export default function ProductPage({ product, productReviews }) {
     setTimeout(() => setAdded(false), 1500);
   }
 
-  const stars = "★".repeat(Math.round(aggregateRating.score)) + "☆".repeat(5 - Math.round(aggregateRating.score));
+  const score = productReviews.length
+    ? (productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length).toFixed(1)
+    : null;
+  const stars = score ? "★".repeat(Math.round(score)) + "☆".repeat(5 - Math.round(score)) : "";
 
   return (
     <>
@@ -75,12 +79,12 @@ export default function ProductPage({ product, productReviews }) {
             )}
             <p className="product-price">${product.price.toFixed(2)}</p>
 
-            {productReviews.length > 0 && (
-              <div className="rating-bar">
+            {productReviews.length > 0 && !product.hideReviews && (
+              <button className="rating-bar" onClick={() => setShowReviews(true)} aria-label="Read all reviews">
                 <span className="stars" aria-hidden>{stars}</span>
-                <span className="rating-score">{aggregateRating.score}/5</span>
-                <span className="rating-count">({aggregateRating.count} reviews)</span>
-              </div>
+                <span className="rating-score">{score}/5</span>
+                <span className="rating-count">({productReviews.length} {productReviews.length === 1 ? "review" : "reviews"})</span>
+              </button>
             )}
 
             <p className="product-description">{product.description}</p>
@@ -114,20 +118,26 @@ export default function ProductPage({ product, productReviews }) {
               </div>
             )}
 
-            {productReviews.length > 0 && (
-              <div className="reviews-section">
-                <h2>What people are saying</h2>
-                {productReviews.map((r, i) => (
-                  <div key={i} className="review-item">
-                    <p className="review-text">"{r.text}"</p>
-                    <p className="review-author">— {r.author}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-
           </div>
         </div>
+
+        {showReviews && !product.hideReviews && (
+          <div className="reviews-modal-overlay" onClick={() => setShowReviews(false)}>
+            <div className="reviews-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="reviews-modal-header">
+                <h2>What people are saying</h2>
+                <button className="reviews-modal-close" onClick={() => setShowReviews(false)} aria-label="Close">✕</button>
+              </div>
+              {productReviews.map((r, i) => (
+                <div key={i} className="review-item">
+                  <p className="review-stars">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</p>
+                  <p className="review-text">"{r.text}"</p>
+                  <p className="review-author">— {r.author}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {product.pressImage && (
           <div className="product-press">
