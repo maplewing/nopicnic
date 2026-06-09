@@ -156,7 +156,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           <div className="product-full-section">
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48 }}>
               <div>
-                <p className="product-full-section-label">The suits</p>
+                <p className="product-full-section-label" style={{ marginBottom: 20 }}>The suits</p>
                 {product.suits.map((s, i) => (
                   <div key={i} style={{ marginBottom: 16 }}>
                     <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{s.name} <span style={{ fontWeight: 400, color: "#888" }}>({s.count} cards)</span></p>
@@ -179,9 +179,8 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                       ))}
                     </div>
                   )}
-                  <p className="product-full-section-label">Also available with</p>
                   <p style={{ fontSize: 20, lineHeight: 1.6, color: "#333", marginBottom: 16 }}>
-                    Don&rsquo;t Call It That as part of the{" "}
+                    Also available with Don&rsquo;t Call It That as part of the{" "}
                     <Link href={`/shop/${product.crossSell.slug}`} style={{ color: "inherit", textDecoration: "underline" }}>
                       {product.crossSell.name}
                     </Link>
