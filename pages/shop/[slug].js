@@ -171,7 +171,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
         {product.pressImage && (
           <div className="product-full-section">
             <p className="product-full-section-label">As seen in</p>
-            <img src={product.pressImage} alt="Press mentions" style={{ maxWidth: "100%", display: "block" }} />
+            <img src={product.pressImage} alt="Press mentions" style={{ maxWidth: "100%", display: "block", backgroundColor: "#fff" }} />
           </div>
         )}
 
