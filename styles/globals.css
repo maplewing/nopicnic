@@ -847,6 +847,28 @@ button {
   color: #c00;
 }
 
+/* Product page — press / as seen in */
+.product-press {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--gray-border);
+}
+
+.product-press-label {
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+  margin-bottom: 16px;
+}
+
+.product-press img {
+  max-width: 100%;
+  display: block;
+}
+
 /* About page */
 .about-page {
   max-width: 800px;
