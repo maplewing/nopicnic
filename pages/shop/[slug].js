@@ -120,7 +120,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             )}
 
             {product.credits?.length > 0 && (
-              <div style={{ marginTop: 32 }}>
+              <div style={{ marginTop: 12 }}>
                 {product.credits.map((c, i) => (
                   <p key={i} style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
                     {c.label}{" "}
@@ -178,7 +178,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
         {product.topics?.length > 0 && (
           <div className="product-full-section">
             <p className="product-full-section-label">Topics covered</p>
-            <p style={{ fontSize: 14, lineHeight: 2, color: "#555" }}>
+            <p style={{ fontSize: 16, lineHeight: 2, color: "#555" }}>
               {product.topics.join(" · ")}
             </p>
           </div>
@@ -187,7 +187,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
         {product.contributors?.length > 0 && (
           <div className="product-full-section">
             <p className="product-full-section-label">{product.contributorsLabel || "Contributors"}</p>
-            <p style={{ fontSize: 14, lineHeight: 2, color: "#555" }}>
+            <p style={{ fontSize: 16, lineHeight: 2, color: "#555" }}>
               {product.contributors.map((c, i) => (
                 <span key={i}>
                   {i > 0 && ", "}

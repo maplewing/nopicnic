@@ -337,7 +337,7 @@ export const products = [
     category: "Books",
     inStock: true,
     productWeightOz: 15.7,
-    images: ["/images/rsr-cover-2.png", "/images/rsr-spread.jpg", "/images/rsr-interior.png"],
+    images: ["/images/rsr-cover-2.png", "/images/rsr-spread.jpg", "/images/rsr-interior.png", "/images/rsr_poster.jpg", "/images/rsr_second-edition_spread-1.jpg", "/images/rsr_second-edition_spread-4.jpg"],
     pressImage: "/images/rsr-press.png",
     description: `Run Studio Run is a step-by-step guide that helps you look at your studio critically — as a business as opposed to an artistic endeavor.`,
     details: [
