@@ -173,19 +173,6 @@ export default function ProductPage({ product, productReviews }) {
               </div>
             )}
 
-            {product.whatsNew && (
-              <div style={{ marginTop: 32 }}>
-                <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>
-                  {product.whatsNewTitle || "What's new in this edition"}
-                </p>
-                <ul style={{ paddingLeft: 16, fontSize: 13, lineHeight: 2, color: "#555" }}>
-                  {product.whatsNew.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
           </div>
         </div>
 
@@ -211,6 +198,19 @@ export default function ProductPage({ product, productReviews }) {
           <div className="product-press">
             <p className="product-press-label">As seen in</p>
             <img src={product.pressImage} alt="Press mentions" />
+          </div>
+        )}
+
+        {product.whatsNew && (
+          <div className="product-whats-new">
+            <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>
+              {product.whatsNewTitle || "What's new in this edition"}
+            </p>
+            <ul className="product-whats-new-list">
+              {product.whatsNew.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
           </div>
         )}
       </div>

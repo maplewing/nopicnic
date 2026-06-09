@@ -303,7 +303,7 @@ export const products = [
     productWeightOz: 13,
     images: ["/images/dcit-cover.jpg", "/images/dcit-spread.jpg", "/images/dcit-mockup-2.jpg", "/images/dcit-mockup-3.jpg", "/images/dcit_grid-stack_2730x1680.jpg", "/images/dcit_inside-cover_1680x2000.jpg", "/images/dcit_spine-stack_2730x1680.jpg", "/images/dcit_spread-flat-2_2730x1680.jpg"],
     pressImage: "/images/dcit-press.png",
-    description: `Don't Call It That is not a book about naming. It is a step-by-step workbook that walks you through all the ins and outs of the naming process. This book is your best defense against boring names and the people who find them "functional" and "descriptive."`,
+    description: `Don't Call It That is not a book about naming. It is a step-by-step workbook that walks you through all the ins and outs of the naming process. Go from zero to a great name in the time it takes you work through this beautiful book.`,
     details: [
       "Soft cover, section sewn, with die-cut slipcase",
       "216 pages",

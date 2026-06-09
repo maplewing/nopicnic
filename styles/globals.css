@@ -118,7 +118,7 @@ button {
 }
 
 .nav-logo img {
-  height: 34px;
+  height: 39px;
   width: auto;
 }
 
@@ -961,6 +961,29 @@ button {
   max-width: 100%;
   display: block;
   mix-blend-mode: multiply;
+}
+
+/* What's new — full-width below press section */
+.product-whats-new {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--gray-border);
+}
+
+.product-whats-new-list {
+  list-style: disc;
+  padding-left: 20px;
+  columns: 2;
+  column-gap: 48px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #555;
+}
+
+@media (max-width: 640px) {
+  .product-whats-new-list {
+    columns: 1;
+  }
 }
 
 /* About page */
