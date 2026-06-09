@@ -56,7 +56,7 @@ button {
   background: var(--black);
   color: var(--white);
   text-align: center;
-  padding: 9px 24px;
+  padding: 14px 24px;
   font-size: 12px;
   letter-spacing: 0.05em;
   font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
@@ -289,24 +289,29 @@ button {
 .btn-primary {
   display: block;
   width: 100%;
-  background: var(--black);
+  background: #1a6e3c;
   color: var(--white);
   border: none;
-  padding: 14px 24px;
-  font-size: 12px;
-  letter-spacing: 0.1em;
+  padding: 16px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: background 0.15s;
   margin-bottom: 12px;
 }
 
 .btn-primary:hover {
-  opacity: 0.8;
+  background: #155c32;
+}
+
+.btn-primary:active {
+  background: #104a28;
 }
 
 .btn-primary:disabled {
-  opacity: 0.4;
+  background: #888;
   cursor: not-allowed;
 }
 
@@ -418,6 +423,23 @@ button {
 .category-filter button.active {
   color: var(--black);
   border-bottom-color: var(--black);
+}
+
+/* Homepage description */
+.homepage-description {
+  max-width: 680px;
+  padding-top: 48px;
+  padding-bottom: 64px;
+}
+
+.homepage-description p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--gray-mid);
+}
+
+.homepage-description a {
+  color: var(--black);
 }
 
 /* Footer */

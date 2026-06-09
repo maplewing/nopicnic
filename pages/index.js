@@ -27,6 +27,19 @@ export default function Shop() {
         </div>
       </div>
 
+      <div className="homepage-description container">
+        <p>
+          No Picnic Press is the Berkeley, California-based publishing imprint of{" "}
+          <Link href="/about">Eli Altman</Link>, Managing Director at the naming studio{" "}
+          <a href="https://www.ahundredmonkeys.com" target="_blank" rel="noopener">A Hundred Monkeys</a>.
+          He is the author of <Link href="/shop/dont-call-it-that">Don't Call It That</Link>, the naming workbook,
+          now in its third edition. <Link href="/shop/run-studio-run">Run Studio Run</Link> is the go-to guide
+          for running small creative studios. <Link href="/shop/go-name-yourself">Go Name Yourself</Link> is
+          the deck of cards for name generation. <Link href="/shop/assorted-characters">Assorted Characters</Link>{" "}
+          is a three-volume zine dedicated to the names that naming professionals find interesting.
+          If you've made it this far, thank you for buying directly from us instead of all-powerful lord Bezos.
+        </p>
+      </div>
     </>
   );
 }

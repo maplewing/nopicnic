@@ -126,14 +126,15 @@ export default function ProductPage({ product, productReviews }) {
               </div>
             )}
 
-            {product.pressImage && (
-              <div className="product-press">
-                <p className="product-press-label">As seen in</p>
-                <img src={product.pressImage} alt="Press mentions" />
-              </div>
-            )}
           </div>
         </div>
+
+        {product.pressImage && (
+          <div className="product-press">
+            <p className="product-press-label">As seen in</p>
+            <img src={product.pressImage} alt="Press mentions" />
+          </div>
+        )}
       </div>
     </>
   );
