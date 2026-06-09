@@ -129,6 +129,7 @@ button {
   font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
 }
 
 .nav-links a {

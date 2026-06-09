@@ -110,15 +110,6 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               </div>
             )}
 
-            {product.crossSell && (
-              <p style={{ fontSize: 13, marginTop: 12, color: "#555" }}>
-                Also available with Don&rsquo;t Call It That as part of the{" "}
-                <Link href={`/shop/${product.crossSell.slug}`} style={{ color: "inherit", textDecoration: "underline" }}>
-                  {product.crossSell.name}
-                </Link>
-              </p>
-            )}
-
             {product.credits?.length > 0 && (
               <div style={{ marginTop: 12 }}>
                 {product.credits.map((c, i) => (
@@ -129,20 +120,6 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                       : <span>{c.name}</span>
                     }
                   </p>
-                ))}
-              </div>
-            )}
-
-            {product.suits?.length > 0 && (
-              <div style={{ marginTop: 32 }}>
-                <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16 }}>
-                  The suits
-                </p>
-                {product.suits.map((s, i) => (
-                  <div key={i} style={{ marginBottom: 16 }}>
-                    <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>{s.name} <span style={{ fontWeight: 400, color: "#888" }}>({s.count} cards)</span></p>
-                    <p style={{ fontSize: 13, lineHeight: 1.6, color: "#555" }}>{s.description}</p>
-                  </div>
                 ))}
               </div>
             )}
@@ -172,6 +149,33 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           <div className="product-full-section">
             <p className="product-full-section-label">As seen in</p>
             <img src={product.pressImage} alt="Press mentions" style={{ maxWidth: "100%", display: "block", backgroundColor: "#fff" }} />
+          </div>
+        )}
+
+        {product.suits?.length > 0 && (
+          <div className="product-full-section">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48 }}>
+              <div>
+                <p className="product-full-section-label">The suits</p>
+                {product.suits.map((s, i) => (
+                  <div key={i} style={{ marginBottom: 16 }}>
+                    <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 4 }}>{s.name} <span style={{ fontWeight: 400, color: "#888" }}>({s.count} cards)</span></p>
+                    <p style={{ fontSize: 16, lineHeight: 1.6, color: "#555" }}>{s.description}</p>
+                  </div>
+                ))}
+              </div>
+              {product.crossSell && (
+                <div>
+                  <p className="product-full-section-label">Also available with</p>
+                  <p style={{ fontSize: 20, lineHeight: 1.6, color: "#333" }}>
+                    Don&rsquo;t Call It That as part of the{" "}
+                    <Link href={`/shop/${product.crossSell.slug}`} style={{ color: "inherit", textDecoration: "underline" }}>
+                      {product.crossSell.name}
+                    </Link>
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

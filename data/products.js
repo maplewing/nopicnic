@@ -360,7 +360,7 @@ export const products = [
       "Finding Work",
       "Negotiation",
     ],
-    contributorsLabel: "Run Studio Run is filled with insights and tips from the leaders of a diverse range of studios, including:",
+    contributorsLabel: "Run Studio Run is filled with insights and tips from the leaders of a diverse range of studios, including",
     contributors: [
       { name: "Commercial Type", url: "https://commercialtype.com" },
       { name: "Draplin Design Co.", url: "https://draplin.com" },
@@ -395,9 +395,8 @@ export const products = [
     hideReviews: true,
     description: `Instead of staring at a blank page waiting for brilliance, each card gives you a thought exercise. Go Name Yourself works alongside Don't Call It That — the deck emphasizes creative exercises while the book provides structured guidance.`,
     details: [
-      "90 cards",
-      "4 suits: Preparation, Ideation, Lessons, Vetting",
-      "Originally funded on Kickstarter, November 2019",
+      "90 cards in four suits: Preparation, Ideation, Lessons, Vetting",
+      "Originally funded on Kickstarter, Nov. 2019",
     ],
     credits: [
       { label: "Created by", name: "A Hundred Monkeys", url: "https://ahundredmonkeys.com" },
