@@ -16,10 +16,11 @@ export async function getStaticProps({ params }) {
   const product = products.find((p) => p.slug === params.slug);
   const reviewKey = product.reviewsFor || product.name;
   const productReviews = reviews.filter((r) => r.product === reviewKey);
-  return { props: { product, productReviews } };
+  const otherProducts = products.filter((p) => p.slug !== params.slug && p.inStock).slice(0, 3);
+  return { props: { product, productReviews, otherProducts } };
 }
 
-export default function ProductPage({ product, productReviews }) {
+export default function ProductPage({ product, productReviews, otherProducts }) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
@@ -90,14 +91,6 @@ export default function ProductPage({ product, productReviews }) {
 
             <p className="product-description">{product.description}</p>
 
-            {product.details?.length > 0 && (
-              <div className="product-details">
-                {product.details.map((d, i) => (
-                  <div key={i}>{d}</div>
-                ))}
-              </div>
-            )}
-
             {product.inStock ? (
               <button className="btn-primary" onClick={handleAdd}>
                 {added ? "Added ✓" : "Add to cart"}
@@ -107,6 +100,14 @@ export default function ProductPage({ product, productReviews }) {
             )}
             {product.inStock && product.limited && (
               <p style={{ fontSize: 12, color: "#888", marginTop: 8, letterSpacing: "0.03em", textTransform: "uppercase" }}>Limited stock</p>
+            )}
+
+            {product.details?.length > 0 && (
+              <div className="product-details">
+                {product.details.map((d, i) => (
+                  <div key={i}>{d}</div>
+                ))}
+              </div>
             )}
 
             {product.crossSell && (
@@ -146,33 +147,6 @@ export default function ProductPage({ product, productReviews }) {
               </div>
             )}
 
-            {product.topics?.length > 0 && (
-              <div style={{ marginTop: 32 }}>
-                <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>
-                  Topics covered
-                </p>
-                <p style={{ fontSize: 13, lineHeight: 2, color: "#555" }}>
-                  {product.topics.join(" · ")}
-                </p>
-              </div>
-            )}
-
-            {product.contributors?.length > 0 && (
-              <div style={{ marginTop: 32 }}>
-                <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 12 }}>
-                  Contributors
-                </p>
-                <p style={{ fontSize: 13, lineHeight: 2, color: "#555" }}>
-                  {product.contributors.map((c, i) => (
-                    <span key={i}>
-                      {i > 0 && ", "}
-                      <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>{c.name}</a>
-                    </span>
-                  ))}
-                </p>
-              </div>
-            )}
-
           </div>
         </div>
 
@@ -201,6 +175,41 @@ export default function ProductPage({ product, productReviews }) {
           </div>
         )}
 
+        {product.topics?.length > 0 && (
+          <div className="product-full-section">
+            <p className="product-full-section-label">Topics covered</p>
+            <p style={{ fontSize: 14, lineHeight: 2, color: "#555" }}>
+              {product.topics.join(" · ")}
+            </p>
+          </div>
+        )}
+
+        {product.contributors?.length > 0 && (
+          <div className="product-full-section">
+            {product.contributorsLabel
+              ? <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555", marginBottom: 12 }}>{product.contributorsLabel}</p>
+              : <p className="product-full-section-label">Contributors</p>
+            }
+            <p style={{ fontSize: 14, lineHeight: 2, color: "#555" }}>
+              {product.contributors.map((c, i) => (
+                <span key={i}>
+                  {i > 0 && ", "}
+                  <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>{c.name}</a>
+                </span>
+              ))}
+            </p>
+          </div>
+        )}
+
+        {product.kickstarter && (
+          <div className="product-full-section">
+            {product.kickstarter.image && (
+              <img src={product.kickstarter.image} alt="Run Studio Run on Kickstarter" style={{ maxWidth: "100%", display: "block", marginBottom: 16 }} />
+            )}
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555" }}>{product.kickstarter.text}</p>
+          </div>
+        )}
+
         {product.whatsNew && (
           <div className="product-whats-new">
             <p style={{ fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 16, fontFamily: "var(--font-display)" }}>
@@ -216,6 +225,23 @@ export default function ProductPage({ product, productReviews }) {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {otherProducts?.length > 0 && (
+          <div className="product-other-flavors">
+            <p className="product-full-section-label">Other flavors</p>
+            <div className="shop-grid" style={{ paddingTop: 16 }}>
+              {otherProducts.map((p) => (
+                <Link key={p.id} href={`/shop/${p.slug}`} className="product-card">
+                  <div className="product-card-image">
+                    {p.images?.[0] && <img src={p.images[0]} alt={p.name} />}
+                  </div>
+                  <p className="product-card-name">{p.name}</p>
+                  <p className="product-card-price">${p.price.toFixed(2)}</p>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </div>

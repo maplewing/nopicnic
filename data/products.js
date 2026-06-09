@@ -330,21 +330,20 @@ export const products = [
   {
     id: "run-studio-run",
     name: "Run Studio Run",
-    subtitle: "The guide to running a small creative studio",
+    subtitle: "Run Studio Run is a book that details how to manage and grow a small creative studio.",
     price: 25,
     stripePriceId: "price_1TgAFSEiVbcGdXdNSpAiQznm",
     slug: "run-studio-run",
     category: "Books",
     inStock: true,
     productWeightOz: 15.7,
-    images: ["/images/rsr-cover-2.png", "/images/rsr-cover.jpg", "/images/rsr-spread.jpg", "/images/rsr-poster.jpg"],
+    images: ["/images/rsr-cover-2.png", "/images/rsr-cover.jpg", "/images/rsr-spread.jpg", "/images/rsr-interior.png", "/images/rsr-poster.jpg"],
     pressImage: "/images/rsr-press.png",
     description: `Run Studio Run is a step-by-step guide that helps you look at your studio critically — as a business as opposed to an artistic endeavor. Ships with a massive A0 print highlighting a lesson from each chapter.`,
     details: [
       "Hardcover, 2nd edition",
       "Design and illustration by Moniker",
       "Ships with A0 poster (841 × 1189mm)",
-      "Originally funded on Kickstarter (150% of goal)",
     ],
     topics: [
       "Your Offering",
@@ -359,6 +358,7 @@ export const products = [
       "Finding Work",
       "Negotiation",
     ],
+    contributorsLabel: "Run Studio Run is filled with insights and tips from the leaders of a diverse range of studios, including:",
     contributors: [
       { name: "Commercial Type", url: "https://commercialtype.com" },
       { name: "Draplin Design Co.", url: "https://draplin.com" },
@@ -371,6 +371,10 @@ export const products = [
       { name: "Perky Bros.", url: "https://perkybros.com" },
       { name: "Under Consideration", url: "https://underconsideration.com" },
     ],
+    kickstarter: {
+      image: "/images/kickstarter_project_run_studio.jpeg",
+      text: "Run Studio Run started out on Kickstarter where it became a featured project and raised 150% of its goal. The book was designed and illustrated by Moniker in San Francisco.",
+    },
   },
   {
     id: "go-name-yourself",

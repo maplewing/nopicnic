@@ -958,8 +958,21 @@ button {
 .product-press img {
   max-width: 100%;
   display: block;
-  mix-blend-mode: multiply;
-  background: #fff;
+}
+
+/* Full-width sections below press */
+.product-full-section {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--gray-border);
+}
+
+.product-full-section-label {
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
 }
 
 /* What's new — full-width below press section */
@@ -967,6 +980,13 @@ button {
   margin-top: 40px;
   padding-top: 32px;
   border-top: 1px solid var(--gray-border);
+}
+
+.product-other-flavors {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--gray-border);
+  padding-bottom: 48px;
 }
 
 .product-whats-new-list {
