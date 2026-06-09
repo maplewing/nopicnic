@@ -422,14 +422,14 @@ export const products = [
     category: "Books",
     inStock: true,
     productWeightOz: 14,
-    images: ["/images/ac-cover.jpg", "/images/ac-stack.jpg", "/images/assorted_characters_vol1.jpg", "/images/assorted_characters_vol2.jpg", "/images/assorted_characters_vol3.jpg", "/images/ac_interor.jpg", "/images/ac_interor2.jpg", "/images/ac_interor3.jpg", "/images/ac_interor4.jpg", "/images/ac_interior1.jpg", "/images/ac_interior5.jpg"],
+    images: ["/images/ac-cover.jpg", "/images/ac-stack.jpg", "/images/assorted_characters_vol1.jpg", "/images/assorted_characters_vol2.jpg", "/images/assorted_characters_vol3.jpg", "/images/ac_interor.jpg", "/images/ac_interor2.jpg", "/images/ac_interior1.jpg", "/images/ac_interor3.jpg", "/images/ac_interor4.jpg", "/images/ac_interior5.jpg"],
     hideReviews: true,
     description: `When you name things for a living, you become acutely aware of the vast verbiage around you: storefront signage, trucks on the highway, products in the grocery aisle. Assorted Characters is a collection of the names, words, and phrases that made us stop and look twice — the arresting language of everyday life, gathered across three volumes.`,
     details: [
       "Three-volume zine set",
     ],
     credits: [
-      { label: "Designed by", name: "Mark Pernice and Nick Sheeran" },
+      { label: "Designed by", names: [{ name: "Mark Pernice", url: "https://ooo-la.la" }, { name: "Nick Sheeran", url: "https://nicksheeran.com" }] },
     ],
   },
   {

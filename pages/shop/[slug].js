@@ -115,9 +115,11 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                 {product.credits.map((c, i) => (
                   <p key={i} style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
                     {c.label}{" "}
-                    {c.url
-                      ? <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{c.name}</a>
-                      : <span>{c.name}</span>
+                    {c.names
+                      ? c.names.map((n, j) => <span key={j}>{j > 0 && " and "}<a href={n.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{n.name}</a></span>)
+                      : c.url
+                        ? <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{c.name}</a>
+                        : <span>{c.name}</span>
                     }
                   </p>
                 ))}
@@ -171,9 +173,11 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                       {product.credits.map((c, i) => (
                         <p key={i} style={{ fontSize: 13, color: "#555", marginBottom: 4 }}>
                           {c.label}{" "}
-                          {c.url
-                            ? <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{c.name}</a>
-                            : <span>{c.name}</span>
+                          {c.names
+                            ? c.names.map((n, j) => <span key={j}>{j > 0 && " and "}<a href={n.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{n.name}</a></span>)
+                            : c.url
+                              ? <a href={c.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{c.name}</a>
+                              : <span>{c.name}</span>
                           }
                         </p>
                       ))}
