@@ -604,7 +604,7 @@ button {
 
 /* About page */
 .about-page {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 60px 24px;
 }
@@ -616,11 +616,35 @@ button {
   line-height: 1.2;
 }
 
+.about-page h2 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 48px;
+  margin-bottom: 16px;
+}
+
 .about-page p {
   font-size: 14px;
   line-height: 1.8;
   margin-bottom: 20px;
   color: #333;
+}
+
+.about-page ul {
+  list-style: none;
+  font-size: 14px;
+  line-height: 2;
+}
+
+.about-page ul li {
+  border-bottom: 1px solid var(--gray-border);
+  padding: 6px 0;
+}
+
+.about-page ul li:first-child {
+  border-top: 1px solid var(--gray-border);
 }
 
 /* Stockists */
