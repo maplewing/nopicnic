@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Head from "next/head";
-import { products, aggregateRating, siteConfig } from "../data/products";
+import { products, siteConfig } from "../data/products";
 
 const categories = ["All", "Books", "Naming", "Digital"];
 
@@ -19,16 +19,6 @@ export default function Shop() {
         <title>No Picnic Press</title>
         <meta name="description" content={siteConfig.tagline} />
       </Head>
-
-      <div className="container" style={{ paddingTop: 32, paddingBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-          <span style={{ fontSize: 13 }}>
-            {"★".repeat(Math.round(aggregateRating.score))}
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 500 }}>{aggregateRating.score}/5</span>
-          <span style={{ fontSize: 12, color: "#666" }}>({aggregateRating.count} reviews)</span>
-        </div>
-      </div>
 
       <div className="category-filter container">
         {categories.map((cat) => (

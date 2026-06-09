@@ -797,6 +797,56 @@ button {
   text-align: right;
 }
 
+.promo-form {
+  display: flex;
+  gap: 0;
+  margin-top: 16px;
+}
+
+.promo-form input {
+  flex: 1;
+  border: 1px solid var(--gray-border);
+  border-right: none;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: var(--font-body, "Courier Prime", Courier, monospace);
+  outline: none;
+}
+
+.promo-form input:focus {
+  border-color: var(--black);
+}
+
+.promo-form button {
+  border: 1px solid var(--gray-border);
+  background: none;
+  padding: 9px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
+}
+
+.promo-form button:hover {
+  background: var(--black);
+  color: var(--white);
+  border-color: var(--black);
+}
+
+.promo-success {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #2a7a2a;
+}
+
+.promo-error {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #c00;
+}
+
 /* About page */
 .about-page {
   max-width: 800px;

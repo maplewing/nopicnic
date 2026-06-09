@@ -2,6 +2,33 @@ import Head from "next/head";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useCart } from "../components/CartContext";
+import { STANDARD_MAILER_OZ, LARGE_MAILER_OZ } from "../data/products";
+
+const DCIT_IDS = new Set([
+  "dont-call-it-that",
+  "dont-call-it-that-1st-edition",
+  "dont-call-it-that-2nd-edition",
+]);
+
+function getPackagingOz(items) {
+  const ids = new Set(items.map((i) => i.id));
+  const hasDCIT = [...DCIT_IDS].some((id) => ids.has(id));
+  const hasGNY = ids.has("go-name-yourself");
+  const hasBundle = ids.has("name-right-now-bundle");
+  const hasExtraStrength = ids.has("extra-strength");
+  if ((hasDCIT && hasGNY) || hasBundle || hasExtraStrength) return LARGE_MAILER_OZ;
+  return STANDARD_MAILER_OZ;
+}
+
+const FREE_RATE = {
+  token: "promo-free",
+  serviceToken: "free_shipping",
+  service: "Free shipping",
+  amount: "0.00",
+  currency: "USD",
+  estimatedDays: null,
+  durationTerms: "2–8 business days (Media Mail)",
+};
 
 const COUNTRIES = [
   { code: "US", name: "United States" },
@@ -45,14 +72,14 @@ function Field({ label, id, required, children }) {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, total, setIsOpen } = useCart();
+  const { items, total } = useCart();
 
   const physicalItems = items.filter((i) => !i.isDigital);
-  const totalWeightOz = physicalItems.reduce(
-    (sum, i) => sum + (i.shippingWeightOz || 14) * i.qty,
-    0
-  );
   const hasPhysical = physicalItems.length > 0;
+  const totalWeightOz = hasPhysical
+    ? physicalItems.reduce((sum, i) => sum + (i.productWeightOz || 14) * i.qty, 0) +
+      getPackagingOz(physicalItems)
+    : 0;
 
   const [address, setAddress] = useState({
     name: "", street1: "", street2: "", city: "", state: "", zip: "", country: "US",
@@ -62,11 +89,15 @@ export default function CheckoutPage() {
   const [fetchingRates, setFetchingRates] = useState(false);
   const [rateError, setRateError] = useState(null);
   const [proceeding, setProceeding] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState(null);
 
   useEffect(() => {
-    // Reset rates when address country changes
     setRates(null);
     setSelectedRate(null);
+    setPromoApplied(false);
+    setPromoError(null);
   }, [address.country]);
 
   if (items.length === 0) {
@@ -84,6 +115,7 @@ export default function CheckoutPage() {
     setRateError(null);
     setRates(null);
     setSelectedRate(null);
+    setPromoApplied(false);
     try {
       const res = await fetch("/api/shipping-rates", {
         method: "POST",
@@ -99,6 +131,29 @@ export default function CheckoutPage() {
     }
     setFetchingRates(false);
   }
+
+  function handleApplyPromo(e) {
+    e.preventDefault();
+    const code = promoCode.trim().toUpperCase();
+    if (code !== "MOREBETTER") {
+      setPromoError("Invalid promo code.");
+      return;
+    }
+    if (address.country !== "US") {
+      setPromoError("Free shipping is for US orders only.");
+      return;
+    }
+    if (total < 50) {
+      setPromoError("MOREBETTER applies to orders of $50 or more.");
+      return;
+    }
+    setPromoApplied(true);
+    setPromoError(null);
+    setSelectedRate(FREE_RATE);
+  }
+
+  // Prepend free rate when promo is active
+  const displayRates = promoApplied && rates ? [FREE_RATE, ...rates] : rates;
 
   async function handleProceed() {
     setProceeding(true);
@@ -145,7 +200,9 @@ export default function CheckoutPage() {
             {selectedRate && (
               <div className="checkout-summary-row">
                 <span style={{ color: "var(--gray-mid)" }}>{selectedRate.service}</span>
-                <span style={{ color: "var(--gray-mid)" }}>${parseFloat(selectedRate.amount).toFixed(2)}</span>
+                <span style={{ color: "var(--gray-mid)" }}>
+                  {parseFloat(selectedRate.amount) === 0 ? "Free" : `$${parseFloat(selectedRate.amount).toFixed(2)}`}
+                </span>
               </div>
             )}
             {orderTotal !== null && (
@@ -154,9 +211,9 @@ export default function CheckoutPage() {
                 <span>${orderTotal.toFixed(2)}</span>
               </div>
             )}
-            {address.country === "US" && total >= 50 && (
+            {address.country === "US" && total >= 50 && !promoApplied && (
               <p className="checkout-morebetter">
-                Use code <strong>MOREBETTER</strong> at payment for free shipping.
+                Use code <strong>MOREBETTER</strong> for free shipping.
               </p>
             )}
           </div>
@@ -200,7 +257,6 @@ export default function CheckoutPage() {
                   <Field label="ZIP / postal code" id="co-zip" required>
                     <input id="co-zip" type="text" value={address.zip} onChange={set("zip")} required />
                   </Field>
-
                   <button type="submit" className="btn-secondary" disabled={fetchingRates}>
                     {fetchingRates ? "Fetching rates…" : rates ? "Recalculate rates" : "Get shipping rates"}
                   </button>
@@ -209,10 +265,10 @@ export default function CheckoutPage() {
                   )}
                 </form>
 
-                {rates && (
+                {displayRates && (
                   <div className="checkout-rates">
-                    <h3 className="checkout-section-title" style={{ marginTop: 32 }}>Select a shipping method</h3>
-                    {rates.map((rate) => (
+                    <h3 className="checkout-section-title" style={{ marginTop: 32 }}>Shipping method</h3>
+                    {displayRates.map((rate) => (
                       <label
                         key={rate.token}
                         className={`rate-option${selectedRate?.token === rate.token ? " active" : ""}`}
@@ -230,9 +286,30 @@ export default function CheckoutPage() {
                             ? `~${rate.estimatedDays} day${rate.estimatedDays !== 1 ? "s" : ""}`
                             : rate.durationTerms || ""}
                         </span>
-                        <span className="rate-price">${parseFloat(rate.amount).toFixed(2)}</span>
+                        <span className="rate-price">
+                          {parseFloat(rate.amount) === 0 ? "Free" : `$${parseFloat(rate.amount).toFixed(2)}`}
+                        </span>
                       </label>
                     ))}
+
+                    {/* Promo code */}
+                    {!promoApplied && (
+                      <form onSubmit={handleApplyPromo} className="promo-form">
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => { setPromoCode(e.target.value); setPromoError(null); }}
+                          placeholder="Promo code"
+                        />
+                        <button type="submit">Apply</button>
+                      </form>
+                    )}
+                    {promoApplied && (
+                      <p className="promo-success">MOREBETTER applied — shipping is free.</p>
+                    )}
+                    {promoError && (
+                      <p className="promo-error">{promoError}</p>
+                    )}
                   </div>
                 )}
 
@@ -248,7 +325,6 @@ export default function CheckoutPage() {
                 )}
               </>
             ) : (
-              // Digital-only cart
               <>
                 <h2 className="checkout-section-title">Digital delivery</h2>
                 <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
