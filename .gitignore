@@ -16,3 +16,5 @@ out/
 # logs
 *.log
 npm-debug.log*
+.vercel
+.env*
