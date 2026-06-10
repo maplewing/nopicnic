@@ -1,7 +1,8 @@
 // GET /api/download?token=xxx&format=pdf
 //
-// Validates the HMAC token, looks up the blob URL from env vars, generates
-// a short-lived signed URL for private Vercel Blob files, and redirects.
+// Validates the HMAC token, looks up the blob URL from env vars, then
+// fetches the file server-side (private blobs require auth) and streams
+// it directly to the browser.
 //
 // File URLs (base, no query string) stored as env vars after uploading:
 //   DCIT_PDF_URL  — https://xxxx.private.blob.vercel-storage.com/DCIT_3rd_Edition_fillable.pdf
@@ -9,7 +10,6 @@
 //
 // Also requires BLOB_READ_WRITE_TOKEN (auto-added by Vercel when store was created).
 
-import { issueSignedToken, presignUrl } from "@vercel/blob";
 import { verifyDownloadToken } from "../../../lib/downloadToken";
 
 // Maps product slug + format → env var name holding the blob URL.
@@ -18,6 +18,12 @@ const FILE_ENV = {
   "dont-call-it-that-digital": { pdf: "DCIT_PDF_URL" },
   "run-studio-run":            { epub: "RSR_EPUB_URL", pdf: "RSR_PDF_URL" },
   "run-studio-run-digital":    { epub: "RSR_EPUB_URL", pdf: "RSR_PDF_URL" },
+};
+
+const CONTENT_TYPES = {
+  pdf:  "application/pdf",
+  epub: "application/epub+zip",
+  mobi: "application/x-mobipocket-ebook",
 };
 
 export default async function handler(req, res) {
@@ -42,27 +48,29 @@ export default async function handler(req, res) {
     return res.status(503).send("Files are being prepared. Please check back shortly or contact nopicnicpress@gmail.com.");
   }
 
-  // For private Vercel Blob URLs, generate a short-lived signed URL.
-  // Public blob URLs are redirected directly.
-  if (fileUrl.includes(".private.blob.vercel-storage.com")) {
-    try {
-      const pathname = new URL(fileUrl).pathname.replace(/^\//, "");
-      const validUntil = Date.now() + 60 * 60 * 1000; // 1 hour
-      const signedToken = await issueSignedToken({
-        pathname,
-        operations: ["get"],
-        validUntil,
-      });
-      const { presignedUrl } = await presignUrl(signedToken, {
-        pathname,
-        operation: "get",
-      });
-      return res.redirect(302, presignedUrl);
-    } catch (err) {
-      console.error("Blob presign error:", err);
+  // Private Vercel Blob URLs are not publicly reachable — fetch server-side
+  // using the read/write token and stream the bytes to the client.
+  try {
+    const fetchOptions = fileUrl.includes(".private.blob.vercel-storage.com")
+      ? { headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` } }
+      : {};
+
+    const upstream = await fetch(fileUrl, fetchOptions);
+    if (!upstream.ok) {
+      console.error("Blob fetch failed:", upstream.status, fileUrl);
       return res.status(500).send("Could not generate download link. Please contact nopicnicpress@gmail.com.");
     }
-  }
 
-  res.redirect(302, fileUrl);
+    const filename = decodeURIComponent(fileUrl.split("/").pop() || `download.${format}`);
+    res.setHeader("Content-Type", CONTENT_TYPES[format] || "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    const length = upstream.headers.get("content-length");
+    if (length) res.setHeader("Content-Length", length);
+
+    const buffer = await upstream.arrayBuffer();
+    return res.send(Buffer.from(buffer));
+  } catch (err) {
+    console.error("Download error:", err);
+    return res.status(500).send("Could not generate download link. Please contact nopicnicpress@gmail.com.");
+  }
 }
