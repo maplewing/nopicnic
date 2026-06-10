@@ -61,15 +61,6 @@ const COUNTRIES = [
   { code: "IN", name: "India" },
 ];
 
-function Field({ label, id, required, children }) {
-  return (
-    <div className="studio-form-row">
-      <label htmlFor={id}>{label}{required && " *"}</label>
-      {children}
-    </div>
-  );
-}
-
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, updateQty, removeItem, hydrated } = useCart();
@@ -81,9 +72,8 @@ export default function CheckoutPage() {
       getPackagingOz(physicalItems)
     : 0;
 
-  const [address, setAddress] = useState({
-    name: "", street1: "", street2: "", city: "", state: "", zip: "", country: "US",
-  });
+  const [country, setCountry] = useState("US");
+  const [zip, setZip] = useState("");
   const [rates, setRates] = useState(null);
   const [selectedRate, setSelectedRate] = useState(null);
   const [fetchingRates, setFetchingRates] = useState(false);
@@ -94,44 +84,51 @@ export default function CheckoutPage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(null);
 
+  // Auto-fetch rates when zip is complete (US) or country changes (international)
   useEffect(() => {
-    setRates(null);
-    setSelectedRate(null);
-    setPromoApplied(false);
-    setPromoError(null);
-  }, [address.country]);
+    if (!hasPhysical) return;
+
+    const isUS = country === "US";
+    if (isUS && zip.length < 5) {
+      setRates(null);
+      setSelectedRate(null);
+      setRateError(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setFetchingRates(true);
+      setRateError(null);
+      setRates(null);
+      setSelectedRate(null);
+      setPromoApplied(false);
+      setPromoError(null);
+      try {
+        const res = await fetch("/api/shipping-rates", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address: { country, zip },
+            weightOz: totalWeightOz,
+          }),
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        if (!data.rates?.length) throw new Error("no rates");
+        setRates(data.rates);
+      } catch {
+        setRateError("Couldn't fetch rates. Please check your ZIP code and try again.");
+      }
+      setFetchingRates(false);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [zip, country]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hydrated) return null;
   if (items.length === 0) {
     if (typeof window !== "undefined") router.push("/");
     return null;
-  }
-
-  function set(field) {
-    return (e) => setAddress((prev) => ({ ...prev, [field]: e.target.value }));
-  }
-
-  async function handleGetRates(e) {
-    e.preventDefault();
-    setFetchingRates(true);
-    setRateError(null);
-    setRates(null);
-    setSelectedRate(null);
-    setPromoApplied(false);
-    try {
-      const res = await fetch("/api/shipping-rates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, weightOz: totalWeightOz }),
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      if (!data.rates?.length) throw new Error("no rates");
-      setRates(data.rates);
-    } catch {
-      setRateError("Couldn't fetch rates — please double-check the address and try again.");
-    }
-    setFetchingRates(false);
   }
 
   function handleApplyPromo(e) {
@@ -141,7 +138,7 @@ export default function CheckoutPage() {
       setPromoError("Invalid promo code.");
       return;
     }
-    if (address.country !== "US") {
+    if (country !== "US") {
       setPromoError("Free shipping is for US orders only.");
       return;
     }
@@ -154,7 +151,6 @@ export default function CheckoutPage() {
     setSelectedRate(FREE_RATE);
   }
 
-  // Prepend free rate when promo is active
   const displayRates = promoApplied && rates ? [FREE_RATE, ...rates] : rates;
 
   async function handleProceed() {
@@ -181,6 +177,8 @@ export default function CheckoutPage() {
 
   const shippingTotal = selectedRate ? parseFloat(selectedRate.amount) : null;
   const orderTotal = shippingTotal !== null ? total + shippingTotal : null;
+
+  const canProceed = !hasPhysical || selectedRate !== null;
 
   return (
     <>
@@ -230,59 +228,55 @@ export default function CheckoutPage() {
                 <span>${orderTotal.toFixed(2)}</span>
               </div>
             )}
-            {address.country === "US" && total >= 50 && !promoApplied && (
+            {country === "US" && total >= 50 && !promoApplied && (
               <p className="checkout-morebetter">
                 Use code <strong>MOREBETTER</strong> for free shipping.
               </p>
             )}
           </div>
 
-          {/* ── Shipping ── */}
+          {/* ── Shipping / payment ── */}
           <div>
             {hasPhysical ? (
               <>
-                <h2 className="checkout-section-title">Shipping address</h2>
-                <form onSubmit={handleGetRates} className="studio-form" style={{ marginTop: 0 }}>
-                  <Field label="Full name" id="co-name" required>
-                    <input id="co-name" type="text" value={address.name} onChange={set("name")} required />
-                  </Field>
-                  <Field label="Country" id="co-country" required>
-                    <select id="co-country" value={address.country} onChange={set("country")}>
+                <h2 className="checkout-section-title">Shipping</h2>
+
+                <div className="studio-form" style={{ marginTop: 0 }}>
+                  <div className="studio-form-row">
+                    <label htmlFor="co-country">Country *</label>
+                    <select
+                      id="co-country"
+                      value={country}
+                      onChange={(e) => { setCountry(e.target.value); setZip(""); }}
+                    >
                       {COUNTRIES.map((c) => (
                         <option key={c.code} value={c.code}>{c.name}</option>
                       ))}
                     </select>
-                  </Field>
-                  <Field label="Street address" id="co-street1" required>
-                    <input id="co-street1" type="text" value={address.street1} onChange={set("street1")} required />
-                  </Field>
-                  <Field label="Apt / suite" id="co-street2">
-                    <input id="co-street2" type="text" value={address.street2} onChange={set("street2")} />
-                  </Field>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                    <Field label="City" id="co-city" required>
-                      <input id="co-city" type="text" value={address.city} onChange={set("city")} required />
-                    </Field>
-                    {address.country === "US" ? (
-                      <Field label="State" id="co-state" required>
-                        <input id="co-state" type="text" value={address.state} onChange={set("state")} maxLength={2} placeholder="CA" required />
-                      </Field>
-                    ) : (
-                      <Field label="Province / region" id="co-state">
-                        <input id="co-state" type="text" value={address.state} onChange={set("state")} />
-                      </Field>
-                    )}
                   </div>
-                  <Field label="ZIP / postal code" id="co-zip" required>
-                    <input id="co-zip" type="text" value={address.zip} onChange={set("zip")} required />
-                  </Field>
-                  <button type="submit" className="btn-secondary" disabled={fetchingRates}>
-                    {fetchingRates ? "Fetching rates…" : rates ? "Recalculate rates" : "Get shipping rates"}
-                  </button>
-                  {rateError && (
-                    <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{rateError}</p>
-                  )}
-                </form>
+                  <div className="studio-form-row">
+                    <label htmlFor="co-zip">
+                      {country === "US" ? "ZIP code *" : "Postal code"}
+                    </label>
+                    <input
+                      id="co-zip"
+                      type="text"
+                      value={zip}
+                      onChange={(e) => setZip(e.target.value)}
+                      placeholder={country === "US" ? "e.g. 94710" : "Optional"}
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
+
+                {fetchingRates && (
+                  <p style={{ fontSize: 13, color: "var(--gray-mid)", marginTop: 16 }}>
+                    Fetching rates…
+                  </p>
+                )}
+                {rateError && (
+                  <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{rateError}</p>
+                )}
 
                 {displayRates && (
                   <div className="checkout-rates">
@@ -311,7 +305,6 @@ export default function CheckoutPage() {
                       </label>
                     ))}
 
-                    {/* Promo code */}
                     {!promoApplied && (
                       <form onSubmit={handleApplyPromo} className="promo-form">
                         <input
@@ -332,7 +325,7 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {selectedRate && (
+                {canProceed && (
                   <button
                     className="btn-primary"
                     style={{ marginTop: 24 }}
@@ -341,6 +334,9 @@ export default function CheckoutPage() {
                   >
                     {proceeding ? "Redirecting…" : "Proceed to payment →"}
                   </button>
+                )}
+                {checkoutError && (
+                  <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
                 )}
               </>
             ) : (

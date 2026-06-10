@@ -33,10 +33,9 @@ export default async function handler(req, res) {
           country: "US",
         },
         address_to: {
-          name: address.name || "Customer",
-          street1: address.street1,
-          street2: address.street2 || "",
-          city: address.city,
+          name: "Customer",
+          street1: address.street1 || "",
+          city: address.city || "",
           state: address.state || "",
           zip: address.zip || "",
           country: address.country,
