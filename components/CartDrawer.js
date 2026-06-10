@@ -35,11 +35,15 @@ export default function CartDrawer() {
               <div className="cart-item-details">
                 <p className="cart-item-name">{item.name}</p>
                 <p className="cart-item-price">${item.price.toFixed(2)}</p>
-                <div className="cart-item-qty">
-                  <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
-                  <span>{item.qty}</span>
-                  <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
-                </div>
+                {item.isDigital || item.isService ? (
+                  <button className="cart-item-remove" onClick={() => removeItem(item.id)}>Remove</button>
+                ) : (
+                  <div className="cart-item-qty">
+                    <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
+                    <span>{item.qty}</span>
+                    <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                  </div>
+                )}
               </div>
             </div>
           ))}

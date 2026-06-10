@@ -722,6 +722,17 @@ button {
   text-align: center;
 }
 
+.cart-item-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--gray-mid);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .cart-destination {
   margin-bottom: 16px;
 }

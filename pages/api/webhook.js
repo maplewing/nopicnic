@@ -99,7 +99,7 @@ export default async function handler(req, res) {
 
       // Add to Loops — only subscribe and trigger drip if customer opted in (GDPR)
       const firstName = session.customer_details?.name?.split(" ")[0] || "";
-      const optedIn = session.custom_fields?.find((f) => f.key === "marketing_consent")?.checkbox?.value === true;
+      const optedIn = false; // marketing consent checkbox removed from checkout
       try {
         await fetch("https://app.loops.so/api/v1/contacts/create", {
           method: "POST",

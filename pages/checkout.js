@@ -89,6 +89,7 @@ export default function CheckoutPage() {
   const [fetchingRates, setFetchingRates] = useState(false);
   const [rateError, setRateError] = useState(null);
   const [proceeding, setProceeding] = useState(false);
+  const [checkoutError, setCheckoutError] = useState(null);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(null);
@@ -157,15 +158,22 @@ export default function CheckoutPage() {
 
   async function handleProceed() {
     setProceeding(true);
+    setCheckoutError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items, selectedRate }),
       });
-      const { url } = await res.json();
-      window.location.href = url;
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        setCheckoutError(data.error || "Something went wrong. Please try again.");
+        setProceeding(false);
+        return;
+      }
+      window.location.href = data.url;
     } catch {
+      setCheckoutError("Something went wrong. Please try again.");
       setProceeding(false);
     }
   }
@@ -328,11 +336,14 @@ export default function CheckoutPage() {
               <>
                 <h2 className="checkout-section-title">Digital delivery</h2>
                 <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
-                  Your ePub will be delivered to the email address you provide at payment.
+                  Your download link will be delivered to the email address you provide at payment.
                 </p>
                 <button className="btn-primary" onClick={handleProceed} disabled={proceeding}>
                   {proceeding ? "Redirecting…" : "Proceed to payment →"}
                 </button>
+                {checkoutError && (
+                  <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
+                )}
               </>
             )}
           </div>
