@@ -1,8 +1,14 @@
 import Head from "next/head";
+import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useCart } from "../components/CartContext";
 import { STANDARD_MAILER_OZ, LARGE_MAILER_OZ } from "../data/products";
+
+const AddressAutofill = dynamic(
+  () => import("@mapbox/search-js-react").then((m) => ({ default: m.AddressAutofill })),
+  { ssr: false }
+);
 
 const DCIT_IDS = new Set([
   "dont-call-it-that",
@@ -72,8 +78,9 @@ export default function CheckoutPage() {
       getPackagingOz(physicalItems)
     : 0;
 
-  const [country, setCountry] = useState("US");
-  const [zip, setZip] = useState("");
+  const [address, setAddress] = useState({
+    street: "", city: "", state: "", zip: "", country: "US",
+  });
   const [rates, setRates] = useState(null);
   const [selectedRate, setSelectedRate] = useState(null);
   const [fetchingRates, setFetchingRates] = useState(false);
@@ -84,12 +91,26 @@ export default function CheckoutPage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(null);
 
-  // Auto-fetch rates when zip is complete (US) or country changes (international)
+  // Called when user picks a suggestion from Mapbox autocomplete
+  function handleRetrieve(res) {
+    const props = res.features[0]?.properties;
+    if (!props) return;
+    const newCountry = (props.country_code || "").toUpperCase();
+    setAddress({
+      street: props.address_line1 || "",
+      city: props.place || props.address_level2 || "",
+      state: props.region_code || props.address_level1 || "",
+      zip: props.postcode || "",
+      country: COUNTRIES.some((c) => c.code === newCountry) ? newCountry : "US",
+    });
+  }
+
+  // Auto-fetch rates when zip or country changes
   useEffect(() => {
     if (!hasPhysical) return;
 
-    const isUS = country === "US";
-    if (isUS && zip.length < 5) {
+    const isUS = address.country === "US";
+    if (isUS && address.zip.length < 5) {
       setRates(null);
       setSelectedRate(null);
       setRateError(null);
@@ -108,7 +129,13 @@ export default function CheckoutPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            address: { country, zip },
+            address: {
+              country: address.country,
+              zip: address.zip,
+              city: address.city,
+              state: address.state,
+              street1: address.street,
+            },
             weightOz: totalWeightOz,
           }),
         });
@@ -117,13 +144,13 @@ export default function CheckoutPage() {
         if (!data.rates?.length) throw new Error("no rates");
         setRates(data.rates);
       } catch {
-        setRateError("Couldn't fetch rates. Please check your ZIP code and try again.");
+        setRateError("Couldn't fetch rates. Please check your address and try again.");
       }
       setFetchingRates(false);
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [zip, country]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [address.zip, address.country]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hydrated) return null;
   if (items.length === 0) {
@@ -134,18 +161,9 @@ export default function CheckoutPage() {
   function handleApplyPromo(e) {
     e.preventDefault();
     const code = promoCode.trim().toUpperCase();
-    if (code !== "MOREBETTER") {
-      setPromoError("Invalid promo code.");
-      return;
-    }
-    if (country !== "US") {
-      setPromoError("Free shipping is for US orders only.");
-      return;
-    }
-    if (total < 50) {
-      setPromoError("MOREBETTER applies to orders of $50 or more.");
-      return;
-    }
+    if (code !== "MOREBETTER") { setPromoError("Invalid promo code."); return; }
+    if (address.country !== "US") { setPromoError("Free shipping is for US orders only."); return; }
+    if (total < 50) { setPromoError("MOREBETTER applies to orders of $50 or more."); return; }
     setPromoApplied(true);
     setPromoError(null);
     setSelectedRate(FREE_RATE);
@@ -177,14 +195,11 @@ export default function CheckoutPage() {
 
   const shippingTotal = selectedRate ? parseFloat(selectedRate.amount) : null;
   const orderTotal = shippingTotal !== null ? total + shippingTotal : null;
-
   const canProceed = !hasPhysical || selectedRate !== null;
 
   return (
     <>
-      <Head>
-        <title>Checkout — No Picnic Press</title>
-      </Head>
+      <Head><title>Checkout — No Picnic Press</title></Head>
       <div className="container">
         <div className="checkout-page">
 
@@ -228,7 +243,7 @@ export default function CheckoutPage() {
                 <span>${orderTotal.toFixed(2)}</span>
               </div>
             )}
-            {country === "US" && total >= 50 && !promoApplied && (
+            {address.country === "US" && total >= 50 && !promoApplied && (
               <p className="checkout-morebetter">
                 Use code <strong>MOREBETTER</strong> for free shipping.
               </p>
@@ -240,39 +255,56 @@ export default function CheckoutPage() {
             {hasPhysical ? (
               <>
                 <h2 className="checkout-section-title">Shipping</h2>
-
                 <div className="studio-form" style={{ marginTop: 0 }}>
+
                   <div className="studio-form-row">
-                    <label htmlFor="co-country">Country *</label>
+                    <label htmlFor="co-address">Address</label>
+                    <AddressAutofill
+                      accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+                      onRetrieve={handleRetrieve}
+                    >
+                      <input
+                        id="co-address"
+                        type="text"
+                        placeholder="Start typing your address…"
+                        autoComplete="shipping address-line1"
+                        value={address.street}
+                        onChange={(e) => setAddress((prev) => ({ ...prev, street: e.target.value }))}
+                      />
+                    </AddressAutofill>
+                  </div>
+
+                  <div className="studio-form-row">
+                    <label htmlFor="co-country">Country</label>
                     <select
                       id="co-country"
-                      value={country}
-                      onChange={(e) => { setCountry(e.target.value); setZip(""); }}
+                      value={address.country}
+                      onChange={(e) => setAddress((prev) => ({ ...prev, country: e.target.value, zip: "" }))}
                     >
                       {COUNTRIES.map((c) => (
                         <option key={c.code} value={c.code}>{c.name}</option>
                       ))}
                     </select>
                   </div>
+
                   <div className="studio-form-row">
                     <label htmlFor="co-zip">
-                      {country === "US" ? "ZIP code *" : "Postal code"}
+                      {address.country === "US" ? "ZIP code" : "Postal code"}
                     </label>
                     <input
                       id="co-zip"
                       type="text"
-                      value={zip}
-                      onChange={(e) => setZip(e.target.value)}
-                      placeholder={country === "US" ? "e.g. 94710" : "Optional"}
+                      value={address.zip}
+                      onChange={(e) => setAddress((prev) => ({ ...prev, zip: e.target.value }))}
+                      placeholder={address.country === "US" ? "e.g. 94710" : "Optional"}
                       maxLength={10}
                     />
                   </div>
+
                 </div>
 
                 {fetchingRates && (
-                  <p style={{ fontSize: 13, color: "var(--gray-mid)", marginTop: 16 }}>
-                    Fetching rates…
-                  </p>
+                  <p style={{ fontSize: 13, color: "var(--gray-mid)", marginTop: 16 }}>Fetching rates…</p>
                 )}
                 {rateError && (
                   <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{rateError}</p>
@@ -304,7 +336,6 @@ export default function CheckoutPage() {
                         </span>
                       </label>
                     ))}
-
                     {!promoApplied && (
                       <form onSubmit={handleApplyPromo} className="promo-form">
                         <input
@@ -316,12 +347,8 @@ export default function CheckoutPage() {
                         <button type="submit">Apply</button>
                       </form>
                     )}
-                    {promoApplied && (
-                      <p className="promo-success">MOREBETTER applied — shipping is free.</p>
-                    )}
-                    {promoError && (
-                      <p className="promo-error">{promoError}</p>
-                    )}
+                    {promoApplied && <p className="promo-success">MOREBETTER applied — shipping is free.</p>}
+                    {promoError && <p className="promo-error">{promoError}</p>}
                   </div>
                 )}
 
