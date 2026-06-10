@@ -72,7 +72,7 @@ function Field({ label, id, required, children }) {
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, total } = useCart();
+  const { items, total, updateQty, removeItem, hydrated } = useCart();
 
   const physicalItems = items.filter((i) => !i.isDigital);
   const hasPhysical = physicalItems.length > 0;
@@ -101,6 +101,7 @@ export default function CheckoutPage() {
     setPromoError(null);
   }, [address.country]);
 
+  if (!hydrated) return null;
   if (items.length === 0) {
     if (typeof window !== "undefined") router.push("/");
     return null;
@@ -194,10 +195,20 @@ export default function CheckoutPage() {
             <h2 className="checkout-section-title">Order summary</h2>
             {items.map((item) => (
               <div key={item.id} className="checkout-summary-row">
-                <span>
-                  {item.name}
-                  {item.qty > 1 && <span style={{ color: "var(--gray-mid)" }}> ×{item.qty}</span>}
-                </span>
+                <div>
+                  <span>{item.name}</span>
+                  <div style={{ marginTop: 6 }}>
+                    {item.isDigital || item.isService ? (
+                      <button className="cart-item-remove" onClick={() => removeItem(item.id)}>Remove</button>
+                    ) : (
+                      <div className="cart-item-qty">
+                        <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
+                        <span>{item.qty}</span>
+                        <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <span>${(item.price * item.qty).toFixed(2)}</span>
               </div>
             ))}

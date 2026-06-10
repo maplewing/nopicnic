@@ -22,14 +22,13 @@ export async function getStaticProps({ params }) {
 
 export default function ProductPage({ product, productReviews, otherProducts }) {
   const { addItem } = useCart();
-  const [added, setAdded] = useState(false);
+  const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
   const [showReviews, setShowReviews] = useState(false);
 
   function handleAdd() {
     addItem(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    router.push("/checkout");
   }
 
   const score = productReviews.length
@@ -93,7 +92,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
 
             {product.inStock ? (
               <button className="btn-primary" onClick={handleAdd}>
-                {added ? "Added ✓" : "Add to cart"}
+                Add to cart
               </button>
             ) : (
               <button className="btn-primary" disabled>Sold out</button>

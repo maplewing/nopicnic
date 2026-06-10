@@ -4,11 +4,13 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
+  const [hydrated, setHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("npp-cart");
     if (saved) setItems(JSON.parse(saved));
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -25,7 +27,6 @@ export function CartProvider({ children }) {
       }
       return [...prev, { ...product, qty: 1 }];
     });
-    setIsOpen(true);
   }
 
   function removeItem(id) {
@@ -42,7 +43,7 @@ export function CartProvider({ children }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, total, count, isOpen, setIsOpen }}
+      value={{ items, addItem, removeItem, updateQty, total, count, isOpen, setIsOpen, hydrated }}
     >
       {children}
     </CartContext.Provider>
