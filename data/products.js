@@ -449,7 +449,7 @@ export const products = [
   {
     id: "dont-call-it-that-digital",
     name: "Don't Call It That — Digital",
-    subtitle: "ePub edition",
+    subtitle: "PDF edition",
     price: 12.50,
     stripePriceId: "price_1TgAIvEiVbcGdXdN7N70qzJA",
     slug: "dont-call-it-that-digital",
@@ -460,9 +460,9 @@ export const products = [
     images: ["/images/dcit-digital.jpg"],
     pressImage: "/images/dcit-press_transparent.jpg",
     reviewsFor: "Don't Call It That",
-    formats: ["epub", "pdf", "mobi"],
+    formats: ["pdf"],
     description: "The digital edition of Don't Call It That.",
-    details: ["ePub, PDF, and MOBI — delivered via email after purchase"],
+    details: ["Fillable PDF – Ideal digital experience for DCIT's workbook format", "Delivered via email after purchase"],
     isDigital: true,
   },
   {
