@@ -46,7 +46,7 @@ export default async function handler(req, res) {
   // Public blob URLs are redirected directly.
   if (fileUrl.includes(".private.blob.vercel-storage.com")) {
     try {
-      const pathname = new URL(fileUrl).pathname;
+      const pathname = new URL(fileUrl).pathname.replace(/^\//, "");
       const validUntil = Date.now() + 60 * 60 * 1000; // 1 hour
       const signedToken = await issueSignedToken({
         pathname,
