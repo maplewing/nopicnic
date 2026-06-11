@@ -61,6 +61,7 @@ export default async function handler(req, res) {
         shipping_address_collection: { allowed_countries: ALL_COUNTRIES },
       }),
       shipping_options,
+      automatic_tax: { enabled: true },
       allow_promotion_codes: true,
       return_url: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       customer_creation: "always",

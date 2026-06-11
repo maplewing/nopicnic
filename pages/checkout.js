@@ -188,8 +188,13 @@ export default function CheckoutPage() {
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (!data.rates?.length) throw new Error("no rates");
-        setRates(data.rates);
-        setSelectedRate(data.rates[0]); // auto-select cheapest (Media Mail when available)
+        const totalQty = physicalItems.reduce((sum, i) => sum + i.qty, 0);
+        const filteredRates = totalQty > 4
+          ? data.rates.filter((r) => r.serviceToken !== "usps_media_mail")
+          : data.rates;
+        if (!filteredRates.length) throw new Error("no rates");
+        setRates(filteredRates);
+        setSelectedRate(filteredRates[0]);
       } catch {
         setRateError("Couldn't fetch rates. Please check your address and try again.");
       }
