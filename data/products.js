@@ -540,6 +540,8 @@ export const products = [
     productWeightOz: 28.6,
     images: ["/images/extra-strength.jpg"],
     description: "Extra Strength is a naming service from No Picnic Press and A Hundred Monkeys. You get both naming guides plus two rounds of professional feedback on the names you develop — so you don't just learn the process, you get help executing it.",
+    learnMore: { text: "extrastrength.xyz", url: "https://extrastrength.xyz" },
+    bodyText: "We'll mail you Don't Call It That and Go Name Yourself — our established guides to the naming process, and creative name generation. You'll get professional feedback and creative guidance on two sets of names you develop. We'll share everything you need to move forward with a name you feel great about.",
     details: [
       "Don't Call It That (physical)",
       "Go Name Yourself (physical)",
@@ -560,8 +562,8 @@ export const products = [
     inStock: true,
     limited: true,
     productWeightOz: 13.1,
-    images: ["/images/dcit-1st-edition.jpg"],
-    description: "The original 2013 first edition, from a limited run of 1000 copies. Illustrations by Curtis Jinkins, lettering by Cathryn Galloway. Only a handful of copies left.",
+    images: ["/images/dcit-1st-edition.jpg", "/images/ecp_003_01_1500x.jpeg.webp", "/images/ecp_003_02_1500x.jpeg.webp", "/images/ecp_003_03_1500x.jpeg.webp", "/images/ecp_003_05_1500x.jpeg.webp", "/images/ecp_003_06_1500x.jpeg.webp"],
+    description: "The original 2013 first edition, from a limited run of 1000 copies. Illustrations by Curtis Jinkins, lettering by Cathryn Galloway. This edition was sold out — until we found an extra box of books while moving our office. Only a handful of copies left.",
     details: [
       "First edition, 2013",
       "Limited run of 1000 copies",

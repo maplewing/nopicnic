@@ -89,7 +89,12 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               </button>
             )}
 
-            <p className="product-description">{product.description}</p>
+            <p className="product-description">
+              {product.description}
+              {product.learnMore && (
+                <> Learn more at <a href={product.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{product.learnMore.text}</a></>
+              )}
+            </p>
 
             {product.inStock ? (
               <button className="btn-primary" onClick={handleAdd} disabled={added}>
@@ -144,6 +149,12 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {product.bodyText && (
+          <div className="product-full-section">
+            <p style={{ fontSize: 20, lineHeight: 1.7, color: "#555" }}>{product.bodyText}</p>
           </div>
         )}
 

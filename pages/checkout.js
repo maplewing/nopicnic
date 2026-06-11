@@ -428,6 +428,10 @@ export default function CheckoutPage() {
                 </div>
               )}
             </div>
+
+            <p style={{ marginTop: 16, fontSize: 12, color: "var(--gray-mid)" }}>
+              <a href="/shipping-returns" style={{ color: "inherit", textDecoration: "underline" }}>Shipping &amp; returns</a>
+            </p>
           </div>
 
           {/* ── Right column: Stripe embedded checkout ── */}
