@@ -3,7 +3,12 @@
 // International: UPS (Worldwide Expedited, Worldwide Express)
 // Requires SHIPPO_API_KEY and NPP_ORIGIN_ZIP env vars.
 
-const USPS_DOMESTIC = ["usps_media_mail", "usps_priority", "usps_express"];
+const USPS_DOMESTIC = [
+  "usps_media_mail",
+  "usps_ground_advantage", // interim: shown as "Standard Shipping" until Media Mail resolves in Shippo
+  "usps_priority",
+  "usps_priority_express",
+];
 const UPS_INTL = [
   "ups_worldwide_expedited",
   "ups_worldwide_express",
@@ -30,6 +35,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         address_from: {
           name: "No Picnic Press",
+          street1: "1715 9th St.",
           city: "Berkeley",
           state: "CA",
           zip: process.env.NPP_ORIGIN_ZIP || "94710",
@@ -75,23 +81,31 @@ export default async function handler(req, res) {
   console.log("[shipping-rates] raw rates:", (data.rates || []).map((r) => `${r.provider}/${r.servicelevel?.token}=${r.amount} (${r.object_status})`).join(" | ") || "(none)");
   if (data.messages?.length) console.log("[shipping-rates] messages:", JSON.stringify(data.messages));
 
-  const rates = (data.rates || [])
-    .filter(
-      (r) =>
-        r.provider === allowedProvider &&
-        allowedTokens.includes(r.servicelevel?.token) &&
-        r.amount
-    )
-    .map((r) => ({
-      token: r.object_id,
-      serviceToken: r.servicelevel.token,
-      service: r.servicelevel.name,
-      amount: r.amount,           // string, e.g. "5.34"
-      currency: r.currency,
-      estimatedDays: r.estimated_days || null,
-      durationTerms: r.duration_terms || null,
-    }))
+  const toRateShape = (r) => ({
+    token: r.object_id,
+    serviceToken: r.servicelevel.token,
+    service: r.servicelevel.token === "usps_ground_advantage" ? "Standard Shipping" : r.servicelevel.name,
+    amount: r.amount,
+    currency: r.currency,
+    estimatedDays: r.estimated_days || null,
+    durationTerms: r.servicelevel.token === "usps_ground_advantage" ? "2–8 business days" : (r.duration_terms || null),
+  });
+
+  const allProviderRates = (data.rates || []).filter(
+    (r) => r.provider === allowedProvider && r.amount
+  );
+
+  let rates = allProviderRates
+    .filter((r) => allowedTokens.includes(r.servicelevel?.token))
+    .map(toRateShape)
     .sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount));
+
+  // Fallback: if the token allow-list filtered everything out, return whatever
+  // the carrier returned so the checkout doesn't break on new service types.
+  if (rates.length === 0 && allProviderRates.length > 0) {
+    console.warn("[shipping-rates] allow-list filtered all rates — returning all provider rates as fallback");
+    rates = allProviderRates.map(toRateShape).sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount));
+  }
 
   res.json({ rates });
 }

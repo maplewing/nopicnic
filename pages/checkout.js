@@ -282,56 +282,7 @@ export default function CheckoutPage() {
       <div className="container">
         <div className="checkout-page">
 
-          {/* ── Order summary ── */}
-          <div className="checkout-summary">
-            <h2 className="checkout-section-title">Order summary</h2>
-            {items.map((item) => (
-              <div key={item.id} className="checkout-summary-row" style={{ alignItems: "flex-start", gap: 12 }}>
-                {item.images?.[0] && (
-                  <img
-                    src={item.images[0]}
-                    alt={item.name}
-                    style={{ width: 52, height: 52, objectFit: "cover", flexShrink: 0, borderRadius: 2 }}
-                  />
-                )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span>{item.name}</span>
-                  <div style={{ marginTop: 6 }}>
-                    {item.isDigital || item.isService ? (
-                      <button className="cart-item-remove" onClick={() => removeItem(item.id)}>Remove</button>
-                    ) : (
-                      <div className="cart-item-qty">
-                        <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
-                        <span>{item.qty}</span>
-                        <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <span style={{ flexShrink: 0 }}>${(item.price * item.qty).toFixed(2)}</span>
-              </div>
-            ))}
-            <div className="checkout-summary-row checkout-summary-subtotal">
-              <span>Subtotal</span>
-              <span>${total.toFixed(2)}</span>
-            </div>
-            {selectedRate && (
-              <div className="checkout-summary-row">
-                <span style={{ color: "var(--gray-mid)" }}>{selectedRate.service}</span>
-                <span style={{ color: "var(--gray-mid)" }}>
-                  {parseFloat(selectedRate.amount) === 0 ? "Free" : `$${parseFloat(selectedRate.amount).toFixed(2)}`}
-                </span>
-              </div>
-            )}
-            {orderTotal !== null && (
-              <div className="checkout-summary-row checkout-summary-total">
-                <span>Total</span>
-                <span>${orderTotal.toFixed(2)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* ── Shipping / payment ── */}
+          {/* ── Left column: shipping form + order summary ── */}
           <div>
             {hasPhysical ? (
               <>
@@ -424,13 +375,63 @@ export default function CheckoutPage() {
               </>
             )}
 
-            {checkoutError && (
-              <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
-            )}
+            {/* Order summary */}
+            <div className="checkout-summary" style={{ marginTop: 40 }}>
+              <h2 className="checkout-section-title">Order summary</h2>
+              {items.map((item) => (
+                <div key={item.id} className="checkout-summary-row" style={{ alignItems: "flex-start", gap: 12 }}>
+                  {item.images?.[0] && (
+                    <img
+                      src={item.images[0]}
+                      alt={item.name}
+                      style={{ width: 52, height: 52, objectFit: "cover", flexShrink: 0, borderRadius: 2 }}
+                    />
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span>{item.name}</span>
+                    <div style={{ marginTop: 6 }}>
+                      {item.isDigital || item.isService ? (
+                        <button className="cart-item-remove" onClick={() => removeItem(item.id)}>Remove</button>
+                      ) : (
+                        <div className="cart-item-qty">
+                          <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
+                          <span>{item.qty}</span>
+                          <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span style={{ flexShrink: 0 }}>${(item.price * item.qty).toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="checkout-summary-row checkout-summary-subtotal">
+                <span>Subtotal</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              {selectedRate && (
+                <div className="checkout-summary-row">
+                  <span style={{ color: "var(--gray-mid)" }}>{selectedRate.service}</span>
+                  <span style={{ color: "var(--gray-mid)" }}>
+                    {parseFloat(selectedRate.amount) === 0 ? "Free" : `$${parseFloat(selectedRate.amount).toFixed(2)}`}
+                  </span>
+                </div>
+              )}
+              {orderTotal !== null && (
+                <div className="checkout-summary-row checkout-summary-total">
+                  <span>Total</span>
+                  <span>${orderTotal.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-            {/* Payment section — auto-loads once checkout is ready */}
+          {/* ── Right column: Stripe embedded checkout ── */}
+          <div>
+            {checkoutError && (
+              <p style={{ marginBottom: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
+            )}
             {canProceed && (
-              <div style={{ marginTop: 32 }}>
+              <>
                 {proceeding && !clientSecret && (
                   <p style={{ fontSize: 13, color: "var(--gray-mid)" }}>Loading payment…</p>
                 )}
@@ -442,7 +443,7 @@ export default function CheckoutPage() {
                     <EmbeddedCheckout />
                   </EmbeddedCheckoutProvider>
                 )}
-              </div>
+              </>
             )}
           </div>
 
