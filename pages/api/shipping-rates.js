@@ -37,11 +37,11 @@ export default async function handler(req, res) {
         },
         address_to: {
           name: "Customer",
-          street1: address.street1 || "",
-          city: address.city || "",
-          state: address.state || "",
           zip: address.zip || "",
           country: address.country,
+          ...(address.street1 && { street1: address.street1 }),
+          ...(address.city && { city: address.city }),
+          ...(address.state && { state: address.state }),
         },
         parcels: [
           {

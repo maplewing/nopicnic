@@ -162,7 +162,7 @@ export default function CheckoutPage() {
     if (!hasPhysical) return;
 
     const isUS = address.country === "US";
-    if (isUS && address.zip.length < 5) {
+    if (address.zip.length < (isUS ? 5 : 2)) {
       setRates(null);
       setSelectedRate(null);
       setRateError(null);
