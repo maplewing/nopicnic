@@ -62,6 +62,7 @@ export default async function handler(req, res) {
       }),
       shipping_options,
       automatic_tax: { enabled: true },
+      saved_payment_method_options: { payment_method_save: "disabled" },
       allow_promotion_codes: true,
       return_url: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
       customer_creation: "always",
