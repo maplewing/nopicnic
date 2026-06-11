@@ -1,10 +1,12 @@
-// Fetches live USPS rates from Shippo based on destination address and parcel weight.
+// Fetches live shipping rates from Shippo based on destination address and parcel weight.
+// Domestic: USPS (Media Mail, Priority, Express)
+// International: UPS (Worldwide Expedited, Worldwide Express)
 // Requires SHIPPO_API_KEY and NPP_ORIGIN_ZIP env vars.
 
 const USPS_DOMESTIC = ["usps_media_mail", "usps_priority", "usps_express"];
-const USPS_INTL = [
-  "usps_first_class_package_international_service",
-  "usps_priority_mail_international",
+const UPS_INTL = [
+  "ups_worldwide_expedited",
+  "ups_worldwide_express",
 ];
 
 export default async function handler(req, res) {
@@ -14,7 +16,8 @@ export default async function handler(req, res) {
   if (!address || !weightOz) return res.status(400).json({ error: "Missing address or weight" });
 
   const isIntl = address.country !== "US";
-  const allowedTokens = isIntl ? USPS_INTL : USPS_DOMESTIC;
+  const allowedTokens = isIntl ? UPS_INTL : USPS_DOMESTIC;
+  const allowedProvider = isIntl ? "UPS" : "USPS";
 
   let shippoRes;
   try {
@@ -69,7 +72,7 @@ export default async function handler(req, res) {
   const rates = (data.rates || [])
     .filter(
       (r) =>
-        r.provider === "USPS" &&
+        r.provider === allowedProvider &&
         allowedTokens.includes(r.servicelevel?.token) &&
         r.amount
     )

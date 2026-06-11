@@ -1,9 +1,13 @@
 import Head from "next/head";
 import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
+import { loadStripe } from "@stripe/stripe-js";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useCart } from "../components/CartContext";
 import { STANDARD_MAILER_OZ, LARGE_MAILER_OZ } from "../data/products";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 const AddressAutofill = dynamic(
   () => import("@mapbox/search-js-react").then((m) => ({ default: m.AddressAutofill })),
@@ -38,33 +42,99 @@ const FREE_RATE = {
 
 const COUNTRIES = [
   { code: "US", name: "United States" },
-  { code: "CA", name: "Canada" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "AU", name: "Australia" },
-  { code: "NZ", name: "New Zealand" },
-  { code: "DE", name: "Germany" },
-  { code: "FR", name: "France" },
-  { code: "NL", name: "Netherlands" },
-  { code: "SE", name: "Sweden" },
-  { code: "NO", name: "Norway" },
-  { code: "DK", name: "Denmark" },
-  { code: "IE", name: "Ireland" },
-  { code: "BE", name: "Belgium" },
-  { code: "CH", name: "Switzerland" },
-  { code: "AT", name: "Austria" },
-  { code: "IT", name: "Italy" },
-  { code: "ES", name: "Spain" },
-  { code: "PT", name: "Portugal" },
-  { code: "PL", name: "Poland" },
-  { code: "JP", name: "Japan" },
-  { code: "KR", name: "South Korea" },
-  { code: "SG", name: "Singapore" },
-  { code: "HK", name: "Hong Kong" },
-  { code: "MX", name: "Mexico" },
-  { code: "BR", name: "Brazil" },
   { code: "AR", name: "Argentina" },
-  { code: "ZA", name: "South Africa" },
+  { code: "AM", name: "Armenia" },
+  { code: "AU", name: "Australia" },
+  { code: "AT", name: "Austria" },
+  { code: "AZ", name: "Azerbaijan" },
+  { code: "BH", name: "Bahrain" },
+  { code: "BD", name: "Bangladesh" },
+  { code: "BE", name: "Belgium" },
+  { code: "BO", name: "Bolivia" },
+  { code: "BA", name: "Bosnia and Herzegovina" },
+  { code: "BR", name: "Brazil" },
+  { code: "BN", name: "Brunei" },
+  { code: "BG", name: "Bulgaria" },
+  { code: "KH", name: "Cambodia" },
+  { code: "CA", name: "Canada" },
+  { code: "CL", name: "Chile" },
+  { code: "CN", name: "China" },
+  { code: "CO", name: "Colombia" },
+  { code: "CR", name: "Costa Rica" },
+  { code: "HR", name: "Croatia" },
+  { code: "CY", name: "Cyprus" },
+  { code: "CZ", name: "Czech Republic" },
+  { code: "DK", name: "Denmark" },
+  { code: "DO", name: "Dominican Republic" },
+  { code: "EC", name: "Ecuador" },
+  { code: "EG", name: "Egypt" },
+  { code: "EE", name: "Estonia" },
+  { code: "FI", name: "Finland" },
+  { code: "FR", name: "France" },
+  { code: "GE", name: "Georgia" },
+  { code: "DE", name: "Germany" },
+  { code: "GH", name: "Ghana" },
+  { code: "GR", name: "Greece" },
+  { code: "GT", name: "Guatemala" },
+  { code: "HK", name: "Hong Kong" },
+  { code: "HU", name: "Hungary" },
+  { code: "IS", name: "Iceland" },
   { code: "IN", name: "India" },
+  { code: "ID", name: "Indonesia" },
+  { code: "IE", name: "Ireland" },
+  { code: "IL", name: "Israel" },
+  { code: "IT", name: "Italy" },
+  { code: "JM", name: "Jamaica" },
+  { code: "JP", name: "Japan" },
+  { code: "JO", name: "Jordan" },
+  { code: "KZ", name: "Kazakhstan" },
+  { code: "KE", name: "Kenya" },
+  { code: "KW", name: "Kuwait" },
+  { code: "LV", name: "Latvia" },
+  { code: "LB", name: "Lebanon" },
+  { code: "LT", name: "Lithuania" },
+  { code: "LU", name: "Luxembourg" },
+  { code: "MO", name: "Macau" },
+  { code: "MY", name: "Malaysia" },
+  { code: "MT", name: "Malta" },
+  { code: "MX", name: "Mexico" },
+  { code: "MA", name: "Morocco" },
+  { code: "NL", name: "Netherlands" },
+  { code: "NZ", name: "New Zealand" },
+  { code: "NG", name: "Nigeria" },
+  { code: "NO", name: "Norway" },
+  { code: "OM", name: "Oman" },
+  { code: "PK", name: "Pakistan" },
+  { code: "PA", name: "Panama" },
+  { code: "PY", name: "Paraguay" },
+  { code: "PE", name: "Peru" },
+  { code: "PH", name: "Philippines" },
+  { code: "PL", name: "Poland" },
+  { code: "PT", name: "Portugal" },
+  { code: "PR", name: "Puerto Rico" },
+  { code: "QA", name: "Qatar" },
+  { code: "RO", name: "Romania" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "RS", name: "Serbia" },
+  { code: "SG", name: "Singapore" },
+  { code: "SK", name: "Slovakia" },
+  { code: "SI", name: "Slovenia" },
+  { code: "ZA", name: "South Africa" },
+  { code: "KR", name: "South Korea" },
+  { code: "ES", name: "Spain" },
+  { code: "LK", name: "Sri Lanka" },
+  { code: "SE", name: "Sweden" },
+  { code: "CH", name: "Switzerland" },
+  { code: "TW", name: "Taiwan" },
+  { code: "TH", name: "Thailand" },
+  { code: "TT", name: "Trinidad and Tobago" },
+  { code: "TN", name: "Tunisia" },
+  { code: "TR", name: "Turkey" },
+  { code: "UA", name: "Ukraine" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "UY", name: "Uruguay" },
+  { code: "VN", name: "Vietnam" },
 ];
 
 export default function CheckoutPage() {
@@ -87,6 +157,7 @@ export default function CheckoutPage() {
   const [rateError, setRateError] = useState(null);
   const [proceeding, setProceeding] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
+  const [clientSecret, setClientSecret] = useState(null);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(null);
@@ -101,7 +172,7 @@ export default function CheckoutPage() {
       city: props.place || props.address_level2 || "",
       state: props.region_code || props.address_level1 || "",
       zip: props.postcode || "",
-      country: COUNTRIES.some((c) => c.code === newCountry) ? newCountry : "US",
+      country: newCountry || "US",
     });
   }
 
@@ -143,6 +214,7 @@ export default function CheckoutPage() {
         const data = await res.json();
         if (!data.rates?.length) throw new Error("no rates");
         setRates(data.rates);
+        setSelectedRate(data.rates[0]); // auto-select cheapest (Media Mail when available)
       } catch {
         setRateError("Couldn't fetch rates. Please check your address and try again.");
       }
@@ -171,6 +243,19 @@ export default function CheckoutPage() {
 
   const displayRates = promoApplied && rates ? [FREE_RATE, ...rates] : rates;
 
+  const fetchClientSecret = useCallback(() => {
+    return fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items, selectedRate, address }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.clientSecret) throw new Error(data.error || "No client secret");
+        return data.clientSecret;
+      });
+  }, [items, selectedRate, address]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function handleProceed() {
     setProceeding(true);
     setCheckoutError(null);
@@ -178,15 +263,17 @@ export default function CheckoutPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, selectedRate }),
+        body: JSON.stringify({ items, selectedRate, address }),
       });
       const data = await res.json();
-      if (!res.ok || !data.url) {
+      if (!res.ok || !data.clientSecret) {
         setCheckoutError(data.error || "Something went wrong. Please try again.");
         setProceeding(false);
         return;
       }
-      window.location.href = data.url;
+      setClientSecret(data.clientSecret);
+      setProceeding(false);
+      setTimeout(() => document.getElementById("payment-section")?.scrollIntoView({ behavior: "smooth" }), 100);
     } catch {
       setCheckoutError("Something went wrong. Please try again.");
       setProceeding(false);
@@ -243,11 +330,6 @@ export default function CheckoutPage() {
                 <span>${orderTotal.toFixed(2)}</span>
               </div>
             )}
-            {address.country === "US" && total >= 50 && !promoApplied && (
-              <p className="checkout-morebetter">
-                Use code <strong>MOREBETTER</strong> for free shipping.
-              </p>
-            )}
           </div>
 
           {/* ── Shipping / payment ── */}
@@ -275,28 +357,13 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="studio-form-row">
-                    <label htmlFor="co-country">Country</label>
-                    <select
-                      id="co-country"
-                      value={address.country}
-                      onChange={(e) => setAddress((prev) => ({ ...prev, country: e.target.value, zip: "" }))}
-                    >
-                      {COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="studio-form-row">
-                    <label htmlFor="co-zip">
-                      {address.country === "US" ? "ZIP code" : "Postal code"}
-                    </label>
+                    <label htmlFor="co-zip">ZIP / Postal code</label>
                     <input
                       id="co-zip"
                       type="text"
                       value={address.zip}
                       onChange={(e) => setAddress((prev) => ({ ...prev, zip: e.target.value }))}
-                      placeholder={address.country === "US" ? "e.g. 94710" : "Optional"}
+                      placeholder="e.g. 94710"
                       maxLength={10}
                     />
                   </div>
@@ -352,14 +419,14 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                {canProceed && (
+                {canProceed && !clientSecret && (
                   <button
                     className="btn-primary"
                     style={{ marginTop: 24 }}
                     onClick={handleProceed}
                     disabled={proceeding}
                   >
-                    {proceeding ? "Redirecting…" : "Proceed to payment →"}
+                    {proceeding ? "Loading…" : "Proceed to payment →"}
                   </button>
                 )}
                 {checkoutError && (
@@ -372,13 +439,27 @@ export default function CheckoutPage() {
                 <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
                   Your download link will be delivered to the email address you provide at payment.
                 </p>
-                <button className="btn-primary" onClick={handleProceed} disabled={proceeding}>
-                  {proceeding ? "Redirecting…" : "Proceed to payment →"}
-                </button>
+                {!clientSecret && (
+                  <button className="btn-primary" onClick={handleProceed} disabled={proceeding}>
+                    {proceeding ? "Loading…" : "Proceed to payment →"}
+                  </button>
+                )}
                 {checkoutError && (
                   <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
                 )}
               </>
+            )}
+
+            {clientSecret && (
+              <div id="payment-section" style={{ marginTop: 40 }}>
+                <h2 className="checkout-section-title">Payment</h2>
+                <EmbeddedCheckoutProvider
+                  stripe={stripePromise}
+                  options={{ clientSecret }}
+                >
+                  <EmbeddedCheckout />
+                </EmbeddedCheckoutProvider>
+              </div>
             )}
           </div>
 

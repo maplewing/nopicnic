@@ -1,5 +1,4 @@
 import Head from "next/head";
-import { useRouter } from "next/router";
 import Link from "next/link";
 import { products, reviews } from "../../data/products";
 import { useCart } from "../../components/CartContext";
@@ -22,13 +21,15 @@ export async function getStaticProps({ params }) {
 
 export default function ProductPage({ product, productReviews, otherProducts }) {
   const { addItem } = useCart();
-  const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
   const [showReviews, setShowReviews] = useState(false);
 
+  const [added, setAdded] = useState(false);
+
   function handleAdd() {
     addItem(product);
-    router.push("/checkout");
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
   }
 
   const score = productReviews.length
@@ -91,8 +92,8 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             <p className="product-description">{product.description}</p>
 
             {product.inStock ? (
-              <button className="btn-primary" onClick={handleAdd}>
-                Add to cart
+              <button className="btn-primary" onClick={handleAdd} disabled={added}>
+                {added ? "Added!" : "Add to cart"}
               </button>
             ) : (
               <button className="btn-primary" disabled>Sold out</button>

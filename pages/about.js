@@ -23,25 +23,12 @@ export default function About() {
           <a href="https://ahundredmonkeys.com" target="_blank" rel="noopener">A Hundred Monkeys</a>.
         </p>
         <p>
-          He is the author of{" "}
-          <a href="/shop/dont-call-it-that">Don't Call It That</a>, the naming workbook,
-          now in its third edition.{" "}
-          <a href="/shop/run-studio-run">Run Studio Run</a> is the go-to guide for running
-          small creative studios.{" "}
-          <a href="/shop/go-name-yourself">Go Name Yourself</a> is the deck of cards for
-          name generation.{" "}
-          <a href="/shop/assorted-characters">Assorted Characters</a> is a three-volume zine
-          dedicated to the names that naming professionals find interesting.
-        </p>
-        <p>
-          As seen in the Boston Globe, The Guardian, New York Times, NPR, and the Harvard Law Review.
-        </p>
-        <p>
-          <a href="mailto:nopicnicpress@gmail.com">nopicnicpress@gmail.com</a>
+          If you want to say hi,{" "}
+          <a href="mailto:nopicnicpress@gmail.com">reach out here</a>.
         </p>
 
         <h2>Speaking</h2>
-        <ul>
+        <ul style={{ fontSize: 13, fontFamily: "var(--font-body)" }}>
           <li>
             <a href="https://underconsideration.com/firstround/2022-san-francisco/" target="_blank" rel="noopener">First Round Conference</a>
             {" "}— San Francisco
@@ -69,7 +56,7 @@ export default function About() {
         </ul>
 
         <h2>Press</h2>
-        <ul>
+        <ul style={{ fontSize: 13, fontFamily: "var(--font-body)" }}>
           <li>
             <a href="https://monocle.com/shop/product/1969445/" target="_blank" rel="noopener">Monocle</a>
             {" "}— The Entrepreneurs, Issue 4
@@ -113,7 +100,7 @@ export default function About() {
         </ul>
 
         <h2>Podcasts</h2>
-        <ul>
+        <ul style={{ fontSize: 13, fontFamily: "var(--font-body)" }}>
           <li>
             <a href="https://www.thefutur.com/the-importance-of-a-name-with-eli-altman/" target="_blank" rel="noopener">The Futur</a>
             {" "}— Episode 47

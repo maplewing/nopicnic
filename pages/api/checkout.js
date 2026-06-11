@@ -11,7 +11,7 @@ const ALL_COUNTRIES = [
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { items, selectedRate } = req.body;
+  const { items, selectedRate, address } = req.body;
 
   const line_items = items.map((item) => ({
     price: item.stripePriceId,
@@ -54,22 +54,21 @@ export default async function handler(req, res) {
   let session;
   try {
     session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items,
-    ...(hasPhysical && {
-      shipping_address_collection: { allowed_countries: ALL_COUNTRIES },
-    }),
-    shipping_options,
-    allow_promotion_codes: true,
-    success_url: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${process.env.NEXT_PUBLIC_URL}/`,
-    customer_creation: "always",
-  });
-
+      ui_mode: "embedded",
+      mode: "payment",
+      line_items,
+      ...(hasPhysical && {
+        shipping_address_collection: { allowed_countries: ALL_COUNTRIES },
+      }),
+      shipping_options,
+      allow_promotion_codes: true,
+      return_url: `${process.env.NEXT_PUBLIC_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+      customer_creation: "always",
+    });
   } catch (err) {
     console.error("Stripe checkout error:", err.message);
     return res.status(500).json({ error: err.message });
   }
 
-  res.json({ url: session.url });
+  res.json({ clientSecret: session.client_secret });
 }
