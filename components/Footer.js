@@ -37,7 +37,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-signup">
-          <h3>Stay in the loop</h3>
+          <h3>You'll be hearing from us. Rarely.</h3>
           {status === "success" ? (
             <p style={{ fontSize: 13, color: "#666" }}>Thank you!</p>
           ) : (

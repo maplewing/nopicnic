@@ -1,6 +1,5 @@
 import Head from "next/head";
-import dynamic from "next/dynamic";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
@@ -8,11 +7,6 @@ import { useCart } from "../components/CartContext";
 import { STANDARD_MAILER_OZ, LARGE_MAILER_OZ } from "../data/products";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
-const AddressAutofill = dynamic(
-  () => import("@mapbox/search-js-react").then((m) => ({ default: m.AddressAutofill })),
-  { ssr: false }
-);
 
 const DCIT_IDS = new Set([
   "dont-call-it-that",
@@ -148,9 +142,7 @@ export default function CheckoutPage() {
       getPackagingOz(physicalItems)
     : 0;
 
-  const [address, setAddress] = useState({
-    street: "", city: "", state: "", zip: "", country: "US",
-  });
+  const [address, setAddress] = useState({ zip: "", country: "US" });
   const [rates, setRates] = useState(null);
   const [selectedRate, setSelectedRate] = useState(null);
   const [fetchingRates, setFetchingRates] = useState(false);
@@ -162,19 +154,8 @@ export default function CheckoutPage() {
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(null);
 
-  // Called when user picks a suggestion from Mapbox autocomplete
-  function handleRetrieve(res) {
-    const props = res.features[0]?.properties;
-    if (!props) return;
-    const newCountry = (props.country_code || "").toUpperCase();
-    setAddress({
-      street: props.address_line1 || "",
-      city: props.place || props.address_level2 || "",
-      state: props.region_code || props.address_level1 || "",
-      zip: props.postcode || "",
-      country: newCountry || "US",
-    });
-  }
+  // Track which session key we last successfully created so we don't duplicate
+  const activeSessionKeyRef = useRef(null);
 
   // Auto-fetch rates when zip or country changes
   useEffect(() => {
@@ -200,13 +181,7 @@ export default function CheckoutPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            address: {
-              country: address.country,
-              zip: address.zip,
-              city: address.city,
-              state: address.state,
-              street1: address.street,
-            },
+            address: { country: address.country, zip: address.zip },
             weightOz: totalWeightOz,
           }),
         });
@@ -223,6 +198,61 @@ export default function CheckoutPage() {
 
     return () => clearTimeout(timer);
   }, [address.zip, address.country]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Derive a key that represents the current "ready" checkout state.
+  // null = not ready to create a session yet.
+  const canProceed = !hasPhysical || selectedRate !== null;
+  const sessionKey = canProceed && items.length > 0
+    ? JSON.stringify({
+        items: items.map((i) => `${i.id}:${i.qty}`),
+        rate: selectedRate?.token ?? null,
+      })
+    : null;
+
+  // Auto-create Stripe Checkout Session whenever the session key changes.
+  useEffect(() => {
+    if (!sessionKey) {
+      setClientSecret(null);
+      setCheckoutError(null);
+      activeSessionKeyRef.current = null;
+      return;
+    }
+    // Already created for this exact config
+    if (sessionKey === activeSessionKeyRef.current && clientSecret) return;
+
+    activeSessionKeyRef.current = sessionKey;
+    setClientSecret(null);
+    setCheckoutError(null);
+    setProceeding(true);
+
+    let cancelled = false;
+    fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items, selectedRate, address }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (!data.clientSecret) {
+          setCheckoutError(data.error || "Something went wrong. Please try again.");
+          activeSessionKeyRef.current = null;
+        } else {
+          setClientSecret(data.clientSecret);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCheckoutError("Something went wrong. Please try again.");
+          activeSessionKeyRef.current = null;
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setProceeding(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [sessionKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hydrated) return null;
   if (items.length === 0) {
@@ -243,46 +273,8 @@ export default function CheckoutPage() {
 
   const displayRates = promoApplied && rates ? [FREE_RATE, ...rates] : rates;
 
-  const fetchClientSecret = useCallback(() => {
-    return fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, selectedRate, address }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.clientSecret) throw new Error(data.error || "No client secret");
-        return data.clientSecret;
-      });
-  }, [items, selectedRate, address]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function handleProceed() {
-    setProceeding(true);
-    setCheckoutError(null);
-    try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, selectedRate, address }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.clientSecret) {
-        setCheckoutError(data.error || "Something went wrong. Please try again.");
-        setProceeding(false);
-        return;
-      }
-      setClientSecret(data.clientSecret);
-      setProceeding(false);
-      setTimeout(() => document.getElementById("payment-section")?.scrollIntoView({ behavior: "smooth" }), 100);
-    } catch {
-      setCheckoutError("Something went wrong. Please try again.");
-      setProceeding(false);
-    }
-  }
-
   const shippingTotal = selectedRate ? parseFloat(selectedRate.amount) : null;
   const orderTotal = shippingTotal !== null ? total + shippingTotal : null;
-  const canProceed = !hasPhysical || selectedRate !== null;
 
   return (
     <>
@@ -294,8 +286,15 @@ export default function CheckoutPage() {
           <div className="checkout-summary">
             <h2 className="checkout-section-title">Order summary</h2>
             {items.map((item) => (
-              <div key={item.id} className="checkout-summary-row">
-                <div>
+              <div key={item.id} className="checkout-summary-row" style={{ alignItems: "flex-start", gap: 12 }}>
+                {item.images?.[0] && (
+                  <img
+                    src={item.images[0]}
+                    alt={item.name}
+                    style={{ width: 52, height: 52, objectFit: "cover", flexShrink: 0, borderRadius: 2 }}
+                  />
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <span>{item.name}</span>
                   <div style={{ marginTop: 6 }}>
                     {item.isDigital || item.isService ? (
@@ -309,7 +308,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
                 </div>
-                <span>${(item.price * item.qty).toFixed(2)}</span>
+                <span style={{ flexShrink: 0 }}>${(item.price * item.qty).toFixed(2)}</span>
               </div>
             ))}
             <div className="checkout-summary-row checkout-summary-subtotal">
@@ -340,24 +339,20 @@ export default function CheckoutPage() {
                 <div className="studio-form" style={{ marginTop: 0 }}>
 
                   <div className="studio-form-row">
-                    <label htmlFor="co-address">Address</label>
-                    <AddressAutofill
-                      accessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-                      onRetrieve={handleRetrieve}
+                    <label htmlFor="co-country">Country</label>
+                    <select
+                      id="co-country"
+                      value={address.country}
+                      onChange={(e) => setAddress((prev) => ({ ...prev, country: e.target.value }))}
                     >
-                      <input
-                        id="co-address"
-                        type="text"
-                        placeholder="Start typing your address…"
-                        autoComplete="shipping address-line1"
-                        value={address.street}
-                        onChange={(e) => setAddress((prev) => ({ ...prev, street: e.target.value }))}
-                      />
-                    </AddressAutofill>
+                      {COUNTRIES.map((c) => (
+                        <option key={c.code} value={c.code}>{c.name}</option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="studio-form-row">
-                    <label htmlFor="co-zip">ZIP / Postal code</label>
+                    <label htmlFor="co-zip">Postal code</label>
                     <input
                       id="co-zip"
                       type="text"
@@ -365,6 +360,7 @@ export default function CheckoutPage() {
                       onChange={(e) => setAddress((prev) => ({ ...prev, zip: e.target.value }))}
                       placeholder="e.g. 94710"
                       maxLength={10}
+                      autoComplete="postal-code"
                     />
                   </div>
 
@@ -418,20 +414,6 @@ export default function CheckoutPage() {
                     {promoError && <p className="promo-error">{promoError}</p>}
                   </div>
                 )}
-
-                {canProceed && !clientSecret && (
-                  <button
-                    className="btn-primary"
-                    style={{ marginTop: 24 }}
-                    onClick={handleProceed}
-                    disabled={proceeding}
-                  >
-                    {proceeding ? "Loading…" : "Proceed to payment →"}
-                  </button>
-                )}
-                {checkoutError && (
-                  <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
-                )}
               </>
             ) : (
               <>
@@ -439,26 +421,27 @@ export default function CheckoutPage() {
                 <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
                   Your download link will be delivered to the email address you provide at payment.
                 </p>
-                {!clientSecret && (
-                  <button className="btn-primary" onClick={handleProceed} disabled={proceeding}>
-                    {proceeding ? "Loading…" : "Proceed to payment →"}
-                  </button>
-                )}
-                {checkoutError && (
-                  <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
-                )}
               </>
             )}
 
-            {clientSecret && (
-              <div id="payment-section" style={{ marginTop: 40 }}>
-                <h2 className="checkout-section-title">Payment</h2>
-                <EmbeddedCheckoutProvider
-                  stripe={stripePromise}
-                  options={{ clientSecret }}
-                >
-                  <EmbeddedCheckout />
-                </EmbeddedCheckoutProvider>
+            {checkoutError && (
+              <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
+            )}
+
+            {/* Payment section — auto-loads once checkout is ready */}
+            {canProceed && (
+              <div style={{ marginTop: 32 }}>
+                {proceeding && !clientSecret && (
+                  <p style={{ fontSize: 13, color: "var(--gray-mid)" }}>Loading payment…</p>
+                )}
+                {clientSecret && (
+                  <EmbeddedCheckoutProvider
+                    stripe={stripePromise}
+                    options={{ clientSecret }}
+                  >
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
+                )}
               </div>
             )}
           </div>
