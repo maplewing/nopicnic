@@ -69,6 +69,12 @@ export default async function handler(req, res) {
 
   const data = await shippoRes.json();
 
+  // Diagnostic logging — remove once rates are confirmed working
+  console.log("[shipping-rates] shipment status:", data.status, "| country:", address.country, "| zip:", address.zip, "| weightOz:", weightOz);
+  console.log("[shipping-rates] address_from validation:", data.address_from?.validation_results?.is_valid, "| address_to validation:", data.address_to?.validation_results?.is_valid);
+  console.log("[shipping-rates] raw rates:", (data.rates || []).map((r) => `${r.provider}/${r.servicelevel?.token}=${r.amount} (${r.object_status})`).join(" | ") || "(none)");
+  if (data.messages?.length) console.log("[shipping-rates] messages:", JSON.stringify(data.messages));
+
   const rates = (data.rates || [])
     .filter(
       (r) =>

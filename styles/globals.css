@@ -258,16 +258,13 @@ button {
 }
 
 .product-image-main {
-  aspect-ratio: 4/3;
-  background: var(--gray-light);
-  overflow: hidden;
   margin-bottom: 8px;
 }
 
 .product-image-main img {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
+  display: block;
 }
 
 .product-info h1 {
