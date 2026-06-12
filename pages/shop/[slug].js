@@ -90,11 +90,16 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             )}
 
             <p className="product-description">
-              {product.description}
+              {product.descriptionAttribution ? <em>{product.description}</em> : product.description}
               {product.learnMore && (
                 <> Learn more at <a href={product.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{product.learnMore.text}</a></>
               )}
             </p>
+            {product.descriptionAttribution && (
+              <p style={{ marginTop: -8, marginBottom: 20 }}>
+                <img src={`/images/${product.descriptionAttribution.toLowerCase()}-logo.png`} alt={product.descriptionAttribution} style={{ height: 14, display: "inline-block", opacity: 0.75 }} />
+              </p>
+            )}
 
             {product.inStock ? (
               <button className="btn-primary" onClick={handleAdd} disabled={added}>
@@ -158,6 +163,15 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           </div>
         )}
 
+        {product.topics?.length > 0 && (
+          <div className="product-full-section">
+            <p className="product-full-section-label">Let&rsquo;s figure out</p>
+            <p style={{ fontSize: 20, lineHeight: 2, color: "#555" }}>
+              {product.topics.join(" · ")}
+            </p>
+          </div>
+        )}
+
         {product.pressImage && (
           <div className="product-full-section">
             <p className="product-full-section-label">As seen in</p>
@@ -206,15 +220,6 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                 </div>
               )}
             </div>
-          </div>
-        )}
-
-        {product.topics?.length > 0 && (
-          <div className="product-full-section">
-            <p className="product-full-section-label">Let&rsquo;s figure out</p>
-            <p style={{ fontSize: 20, lineHeight: 2, color: "#555" }}>
-              {product.topics.join(" · ")}
-            </p>
           </div>
         )}
 
