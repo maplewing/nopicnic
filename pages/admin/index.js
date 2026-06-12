@@ -20,6 +20,110 @@ function fmtShort(iso) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+// ─── Manual Order Helpers ──────────────────────────────────────────────────────
+
+function inferCarrier(t = "") {
+  const n = t.replace(/\s/g, "");
+  if (/^1Z/i.test(n)) return "UPS";
+  if (/^9\d{19,21}$/.test(n)) return "USPS";
+  if (/^\d{12}$|^\d{15}$|^\d{20,22}$/.test(n)) return "FedEx";
+  if (/^\d{10}$/.test(n)) return "DHL";
+  return "";
+}
+
+function parseOrderText(raw) {
+  const lines = raw.split(/\n/).map((l) => l.trim()).filter(Boolean);
+  const out = {
+    date: new Date().toISOString().slice(0, 10),
+    recipient: { name: "", address: "", eori: "", vatId: "" },
+    items: [],
+    tracking: "", carrier: "", via: "",
+    shippingCost: 0, notes: "",
+  };
+  const QTY_RE = /(?:qty:\s*)?(\d+)\s*@\s*\$?([\d.]+)/i;
+  let lastWasTracking = false;
+  const addrLines = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^(To:|: Order|: Shipping|: Total|: Payment|Make check|Or Paypal|Many thanks)/i.test(line)) continue;
+
+    // Date: "17 DEC 2025"
+    const dm = line.match(/^(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{4})$/i);
+    if (dm) {
+      const mo = { jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11 };
+      out.date = new Date(+dm[3], mo[dm[2].toLowerCase()], +dm[1]).toISOString().slice(0, 10);
+      lastWasTracking = false; continue;
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(line)) { out.date = line; lastWasTracking = false; continue; }
+
+    const em = line.match(/^EORI\s+(.+)$/i);
+    if (em) { out.recipient.eori = em[1]; lastWasTracking = false; continue; }
+    const vm = line.match(/^VAT\s+ID[:\s]+(.+)$/i);
+    if (vm) { out.recipient.vatId = vm[1]; lastWasTracking = false; continue; }
+
+    // Qty line: pull previous addrLine as product name
+    const qm = line.match(QTY_RE);
+    if (qm) {
+      const item = { name: "", qty: +qm[1], unitPrice: +qm[2], discount: 0 };
+      if (addrLines.length > 0) item.name = addrLines.pop();
+      if (i + 1 < lines.length) {
+        const nd = lines[i + 1].match(/^x?\s*(\d+(?:\.\d+)?)\s*%/i);
+        if (nd) { item.discount = +nd[1]; i++; }
+      }
+      out.items.push(item);
+      lastWasTracking = false; continue;
+    }
+
+    // Tracking number
+    const tm = line.match(/^(1Z[A-Z0-9]+|\d{10,})$/i);
+    if (tm) { out.tracking = tm[1]; out.carrier = inferCarrier(tm[1]); lastWasTracking = true; continue; }
+
+    // Line after tracking: non-dollar = via, dollar = shipping
+    if (lastWasTracking) {
+      const sm = line.match(/^\$?([\d.]+)$/);
+      if (!sm) { out.via = line; lastWasTracking = false; continue; }
+      out.shippingCost = +sm[1]; lastWasTracking = false; continue;
+    }
+
+    const viam = line.match(/^via\s+(.+)$/i);
+    if (viam) { out.via = viam[1]; lastWasTracking = false; continue; }
+
+    const sm = line.match(/^\$?([\d.]+)$/);
+    if (sm && !out.shippingCost) {
+      const v = +sm[1];
+      if (v > 0 && v < 500) { out.shippingCost = v; lastWasTracking = false; continue; }
+    }
+
+    addrLines.push(line);
+    lastWasTracking = false;
+  }
+
+  if (addrLines.length > 0) {
+    out.recipient.name = addrLines[0];
+    out.recipient.address = addrLines.slice(1).join("\n");
+  }
+  return out;
+}
+
+function manualTotal(order) {
+  const sub = (order.items || []).reduce((sum, it) => {
+    const base = (it.qty || 0) * (it.unitPrice || 0);
+    return sum + (it.discount > 0 ? base * (1 - it.discount / 100) : base);
+  }, 0);
+  return sub + (order.shippingCost || 0);
+}
+
+function blankForm() {
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    recipient: { name: "", address: "", eori: "", vatId: "" },
+    items: [{ name: "", qty: 1, unitPrice: 0, discount: 0 }],
+    tracking: "", carrier: "", via: "",
+    shippingCost: "", notes: "",
+  };
+}
+
 // ─── Color Palette ────────────────────────────────────────────────────────────
 
 const PALETTE = {
@@ -494,6 +598,249 @@ function TopPagesTable({ pages }) {
   );
 }
 
+// ─── Manual Orders Section ────────────────────────────────────────────────────
+
+function ManualOrdersSection({ orders, onChange }) {
+  const [showForm, setShowForm] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [form, setForm] = useState(blankForm());
+  const [saving, setSaving] = useState(false);
+
+  function setF(path, val) {
+    setForm((prev) => {
+      const next = { ...prev };
+      const parts = path.split(".");
+      let obj = next;
+      for (let i = 0; i < parts.length - 1; i++) {
+        obj[parts[i]] = { ...obj[parts[i]] };
+        obj = obj[parts[i]];
+      }
+      obj[parts[parts.length - 1]] = val;
+      return next;
+    });
+  }
+
+  function updateItem(i, key, val) {
+    setForm((prev) => {
+      const items = prev.items.map((it, idx) => (idx === i ? { ...it, [key]: val } : it));
+      return { ...prev, items };
+    });
+  }
+
+  function handleParse() {
+    if (!pasteText.trim()) return;
+    const parsed = parseOrderText(pasteText);
+    if (parsed.items.length === 0) parsed.items = [{ name: "", qty: 1, unitPrice: 0, discount: 0 }];
+    setForm(parsed);
+  }
+
+  async function handleSave() {
+    if (!form.recipient.name || !form.items.length) {
+      alert("Recipient name and at least one item are required.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = { ...form, shippingCost: parseFloat(form.shippingCost) || 0 };
+      const res = await fetch("/api/admin/manual-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      const { order } = await res.json();
+      onChange([order, ...orders]);
+      setShowForm(false);
+      setForm(blankForm());
+      setPasteText("");
+      window.open(`/admin/invoice/${order.id}`, "_blank");
+    } catch {
+      alert("Error saving order.");
+    }
+    setSaving(false);
+  }
+
+  async function handleDelete(id) {
+    if (!confirm(`Delete order ${id}? This cannot be undone.`)) return;
+    const res = await fetch(`/api/admin/manual-orders?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (res.ok) onChange(orders.filter((o) => o.id !== id));
+  }
+
+  const inp = {
+    border: "1px solid #ddd", padding: "6px 8px", fontSize: 13,
+    fontFamily: MONO, width: "100%", outline: "none", background: "#fff", color: "#111",
+  };
+  const lbl = {
+    display: "block", fontSize: 11, fontWeight: 600, textTransform: "uppercase",
+    letterSpacing: "0.07em", color: "#888", marginBottom: 4,
+  };
+  const carrier = inferCarrier(form.tracking);
+
+  return (
+    <div style={{ ...s.section, marginTop: 40 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
+        <h2 style={s.sectionHeading}>Manual Orders</h2>
+        <button
+          onClick={() => { setShowForm((v) => !v); if (showForm) { setForm(blankForm()); setPasteText(""); } }}
+          style={{ ...s.filterBtn, ...(showForm ? { background: PALETTE.pine, color: PALETTE.chiffon, border: `1px solid ${PALETTE.pine}` } : {}) }}
+        >
+          {showForm ? "Cancel" : "+ New Manual Order"}
+        </button>
+      </div>
+
+      {showForm && (
+        <div style={{ background: "#fff", border: "1px solid #e0e0e0", padding: "24px 24px 28px", marginBottom: 24 }}>
+          {/* Paste to fill */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={lbl}>Paste to fill</label>
+            <textarea
+              value={pasteText} rows={5}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder={"17 DEC 2025\nBuchhandlung Walther König\nDieselstr. 2\n50996 Köln\nRun Studio Run (RSR2)\n3 @ $25.00\n50%\n9449050206...\nWoodland Group\n$5.97"}
+              style={{ ...inp, resize: "vertical", lineHeight: 1.5 }}
+            />
+            <button
+              onClick={handleParse}
+              style={{ marginTop: 8, ...s.filterBtn, background: PALETTE.pine, color: PALETTE.chiffon, border: `1px solid ${PALETTE.pine}` }}
+            >
+              Parse
+            </button>
+          </div>
+
+          <div style={{ borderTop: "1px solid #eee", paddingTop: 20, display: "grid", gap: 16 }}>
+            {/* Date + Recipient */}
+            <div style={{ display: "grid", gridTemplateColumns: "160px 1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={lbl}>Date</label>
+                <input type="date" value={form.date} onChange={(e) => setF("date", e.target.value)} style={inp} />
+              </div>
+              <div>
+                <label style={lbl}>Recipient name / company</label>
+                <input value={form.recipient.name} onChange={(e) => setF("recipient.name", e.target.value)} style={inp} />
+              </div>
+              <div>
+                <label style={lbl}>Address</label>
+                <textarea
+                  value={form.recipient.address} rows={2}
+                  onChange={(e) => setF("recipient.address", e.target.value)}
+                  style={{ ...inp, resize: "none", lineHeight: 1.4 }}
+                />
+              </div>
+            </div>
+
+            {/* EORI + VAT */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 12 }}>
+              <div>
+                <label style={lbl}>EORI <span style={{ fontWeight: 400, textTransform: "none" }}>(optional)</span></label>
+                <input value={form.recipient.eori} onChange={(e) => setF("recipient.eori", e.target.value)} style={inp} placeholder="De 7542917" />
+              </div>
+              <div>
+                <label style={lbl}>VAT ID <span style={{ fontWeight: 400, textTransform: "none" }}>(optional)</span></label>
+                <input value={form.recipient.vatId} onChange={(e) => setF("recipient.vatId", e.target.value)} style={inp} placeholder="DE122788828" />
+              </div>
+            </div>
+
+            {/* Line items */}
+            <div>
+              <label style={lbl}>Line Items</label>
+              <div style={{ display: "grid", gridTemplateColumns: "3fr 56px 90px 72px 28px", gap: 6, marginBottom: 4, fontSize: 11, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <span>Product</span><span>Qty</span><span>Unit $</span><span>Disc %</span><span />
+              </div>
+              {form.items.map((item, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "3fr 56px 90px 72px 28px", gap: 6, marginBottom: 6 }}>
+                  <input value={item.name} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Run Studio Run (RSR2)" style={inp} />
+                  <input type="number" min="1" value={item.qty} onChange={(e) => updateItem(i, "qty", +e.target.value)} style={inp} />
+                  <input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => updateItem(i, "unitPrice", +e.target.value)} style={inp} placeholder="25.00" />
+                  <input type="number" min="0" max="100" value={item.discount} onChange={(e) => updateItem(i, "discount", +e.target.value)} style={inp} placeholder="0" />
+                  <button onClick={() => updateItem.length > 1 && setForm((p) => ({ ...p, items: p.items.filter((_, idx) => idx !== i) }))}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#bbb", fontSize: 18, padding: 0, lineHeight: 1 }}>×</button>
+                </div>
+              ))}
+              <button onClick={() => setForm((p) => ({ ...p, items: [...p.items, { name: "", qty: 1, unitPrice: 0, discount: 0 }] }))}
+                style={{ fontSize: 12, color: PALETTE.pine, background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 2 }}>
+                + Add item
+              </button>
+            </div>
+
+            {/* Tracking + shipping */}
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 120px", gap: 12 }}>
+              <div>
+                <label style={lbl}>Tracking number</label>
+                <div style={{ position: "relative" }}>
+                  <input value={form.tracking} onChange={(e) => setF("tracking", e.target.value)} style={inp} placeholder="9449050206217019961368" />
+                  {carrier && (
+                    <span style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#888", pointerEvents: "none" }}>
+                      {carrier}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label style={lbl}>Shipper / via</label>
+                <input value={form.via} onChange={(e) => setF("via", e.target.value)} style={inp} placeholder="Woodland Group" />
+              </div>
+              <div>
+                <label style={lbl}>Shipping $</label>
+                <input type="number" min="0" step="0.01" value={form.shippingCost} onChange={(e) => setF("shippingCost", e.target.value)} style={inp} placeholder="5.97" />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                onClick={handleSave} disabled={saving}
+                style={{ background: PALETTE.tangerine, color: PALETTE.chiffon, border: "none", padding: "9px 24px", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: DISPLAY, cursor: saving ? "wait" : "pointer" }}
+              >
+                {saving ? "Saving…" : "Save & Open Invoice"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual orders table */}
+      {orders.length > 0 ? (
+        <table style={s.table}>
+          <thead>
+            <tr>
+              {["Order #", "Date", "Recipient", "Items", "Total", ""].map((h) => (
+                <th key={h} style={s.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((order) => (
+              <tr key={order.id} style={s.tr}>
+                <td style={s.td}><span style={{ fontFamily: MONO, fontWeight: 600 }}>{order.id}</span></td>
+                <td style={s.td}>{fmtDate(order.date + "T12:00:00")}</td>
+                <td style={s.td}>{order.recipient.name}</td>
+                <td style={s.td}>
+                  <span style={{ fontSize: 12, color: "#444" }}>
+                    {(order.items || []).map((it) => `${it.qty}× ${it.name}`).join(", ")}
+                  </span>
+                </td>
+                <td style={s.tdNum}>{fmt(manualTotal(order))}</td>
+                <td style={{ ...s.td, whiteSpace: "nowrap" }}>
+                  <a href={`/admin/invoice/${order.id}`} target="_blank" rel="noreferrer"
+                    style={{ color: PALETTE.tangerine, textDecoration: "none", fontSize: 12, fontWeight: 600 }}>
+                    Invoice
+                  </a>
+                  <span style={{ color: "#ddd", margin: "0 6px" }}>·</span>
+                  <button onClick={() => handleDelete(order.id)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#bbb", fontSize: 12, padding: 0 }}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : !showForm && (
+        <p style={{ color: "#999", fontSize: 13 }}>No manual orders yet.</p>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
@@ -505,28 +852,32 @@ export default function AdminDashboard() {
   const [inventory, setInventory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [manualOrders, setManualOrders] = useState([]);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [statsRes, ordersRes, analyticsRes, inventoryRes] = await Promise.all([
+      const [statsRes, ordersRes, analyticsRes, inventoryRes, manualRes] = await Promise.all([
         fetch("/api/admin/stats"),
         fetch("/api/admin/orders?days=365"),
         fetch("/api/admin/analytics?days=30"),
         fetch("/api/admin/inventory"),
+        fetch("/api/admin/manual-orders"),
       ]);
       if (!statsRes.ok || !ordersRes.ok) throw new Error("Failed to load data");
-      const [statsData, ordersData, analyticsData, inventoryData] = await Promise.all([
+      const [statsData, ordersData, analyticsData, inventoryData, manualData] = await Promise.all([
         statsRes.json(),
         ordersRes.json(),
         analyticsRes.ok ? analyticsRes.json() : { daily: [], topPages: [], totalViews: 0 },
         inventoryRes.ok ? inventoryRes.json() : { products: [] },
+        manualRes.ok ? manualRes.json() : { orders: [] },
       ]);
       setStats(statsData);
       setOrders(ordersData.orders);
       setAnalytics(analyticsData);
       setInventory(inventoryData.products);
+      setManualOrders(manualData.orders);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -714,18 +1065,21 @@ export default function AdminDashboard() {
 
           {/* ── ORDERS TAB ──────────────────────────────────────────────── */}
           {!loading && orders && tab === "orders" && (
-            <div style={s.section}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
-                <h2 style={s.sectionHeading}>Orders</h2>
-                {orders.some((o) => o.orderNumber === null) && (
-                  <span style={{ fontSize: 12, color: "#999" }}>
-                    Orders without a # were placed before the dashboard was installed. New orders auto-number from #{" "}
-                    {Math.max(...orders.filter((o) => o.orderNumber !== null).map((o) => o.orderNumber), 2683) + 1}.
-                  </span>
-                )}
+            <>
+              <div style={s.section}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
+                  <h2 style={s.sectionHeading}>Orders</h2>
+                  {orders.some((o) => o.orderNumber === null) && (
+                    <span style={{ fontSize: 12, color: "#999" }}>
+                      Orders without a # were placed before the dashboard was installed. New orders auto-number from #{" "}
+                      {Math.max(...orders.filter((o) => o.orderNumber !== null).map((o) => o.orderNumber), 2683) + 1}.
+                    </span>
+                  )}
+                </div>
+                <OrdersTable orders={orders} />
               </div>
-              <OrdersTable orders={orders} />
-            </div>
+              <ManualOrdersSection orders={manualOrders} onChange={setManualOrders} />
+            </>
           )}
 
           {/* ── INVENTORY TAB ────────────────────────────────────────────── */}
@@ -960,7 +1314,7 @@ const s = {
   filterBtnActive: {
     background: PALETTE.pine,
     color: PALETTE.chiffon,
-    borderColor: PALETTE.pine,
+    border: `1px solid ${PALETTE.pine}`,
   },
   toggleBtn: {
     padding: "5px 12px",
