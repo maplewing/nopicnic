@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { Montserrat, Courier_Prime } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
 import { CartProvider } from "../components/CartContext";
 import Nav from "../components/Nav";
 import CartDrawer from "../components/CartDrawer";
@@ -83,6 +84,7 @@ export default function App({ Component, pageProps }) {
         </main>
         <Footer />
         <SpeedInsights />
+        <Analytics />
       </div>
     </CartProvider>
   );
