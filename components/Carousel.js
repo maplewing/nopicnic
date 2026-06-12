@@ -16,7 +16,7 @@ export default function Carousel({ slides, interval = 4000 }) {
     <div className="carousel">
       <div className="carousel-stage">
         <a href={slide.url} target="_blank" rel="noopener noreferrer">
-          <img src={slide.image} alt={slide.name} />
+          <img src={slide.image} alt={slide.name} loading="lazy" />
         </a>
       </div>
       <div className="carousel-caption">

@@ -16,7 +16,7 @@ export default function Shop() {
             <Link key={product.id} href={`/shop/${product.slug}`} className="product-card">
               <div className="product-card-image">
                 {product.images?.[0] && (
-                  <img src={product.images[0]} alt={product.name} />
+                  <img src={product.images[0]} alt={product.name} loading="lazy" />
                 )}
               </div>
               <p className="product-card-name">{product.name}</p>

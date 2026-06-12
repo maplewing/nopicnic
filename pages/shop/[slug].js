@@ -67,7 +67,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                       border: i === activeImg ? "1px solid #000" : "1px solid transparent",
                     }}
                   >
-                    <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={img} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   </div>
                 ))}
               </div>
@@ -161,7 +161,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
         {product.pressImage && (
           <div className="product-full-section">
             <p className="product-full-section-label">As seen in</p>
-            <img src={product.pressImage} alt="Press mentions" style={{ maxWidth: "100%", display: "block", backgroundColor: "#fff" }} />
+            <img src={product.pressImage} alt="Press mentions" loading="lazy" style={{ maxWidth: "100%", display: "block", backgroundColor: "#fff" }} />
           </div>
         )}
 
@@ -236,7 +236,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           <div className="product-full-section">
             <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555", marginBottom: 16 }}>{product.kickstarter.text}</p>
             {product.kickstarter.image && (
-              <img src={product.kickstarter.image} alt="Run Studio Run on Kickstarter" style={{ maxWidth: "100%", display: "block", marginBottom: 16 }} />
+              <img src={product.kickstarter.image} alt="Run Studio Run on Kickstarter" loading="lazy" style={{ maxWidth: "100%", display: "block", marginBottom: 16 }} />
             )}
             {product.kickstarter.postText && (
               <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555" }}>
@@ -274,7 +274,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               {otherProducts.map((p) => (
                 <Link key={p.id} href={`/shop/${p.slug}`} className="product-card">
                   <div className="product-card-image">
-                    {p.images?.[0] && <img src={p.images[0]} alt={p.name} />}
+                    {p.images?.[0] && <img src={p.images[0]} alt={p.name} loading="lazy" />}
                   </div>
                   <p className="product-card-name">{p.name}</p>
                   <p className="product-card-price">${p.price.toFixed(2)}</p>
