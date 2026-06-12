@@ -7,7 +7,6 @@ export default function About() {
         <title>Eli — No Picnic Press</title>
       </Head>
       <div className="about-page">
-        <h1>Eli Altman</h1>
         <img
           src="/images/eli-altman.jpg"
           alt="Eli Altman"
