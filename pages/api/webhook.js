@@ -19,6 +19,7 @@ import { Resend } from "resend";
 import { orderConfirmationEmail } from "../../lib/orderEmail";
 import { createDownloadToken } from "../../lib/downloadToken";
 import { products } from "../../data/products";
+import { assignOrderNumber } from "../../lib/orderNumbers";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -61,6 +62,14 @@ export default async function handler(req, res) {
         { expand: ["line_items", "line_items.data.price.product"] }
       );
 
+      // Assign a sequential order number (starting at #2684)
+      let orderNumber = null;
+      try {
+        orderNumber = await assignOrderNumber(session.id);
+      } catch (numErr) {
+        console.error("Order number assignment failed:", numErr.message);
+      }
+
       const toEmail = session.customer_details?.email;
       if (!toEmail) {
         console.warn("No customer email on session:", session.id);
@@ -90,7 +99,7 @@ export default async function handler(req, res) {
         from: "No Picnic Press <orders@nopicnicpress.com>",
         to: toEmail,
         subject: "Your No Picnic Press order is confirmed",
-        html: orderConfirmationEmail(session, downloadLinks),
+        html: orderConfirmationEmail(session, downloadLinks, orderNumber),
       });
 
       if (error) {

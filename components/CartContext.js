@@ -18,6 +18,12 @@ export function CartProvider({ children }) {
   }, [items]);
 
   function addItem(product) {
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "add_to_cart", product: product.id }),
+    }).catch(() => {});
+
     setItems((prev) => {
       const existing = prev.find((i) => i.id === product.id);
       if (existing) {

@@ -1,4 +1,6 @@
 import "../styles/globals.css";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 import { Montserrat, Courier_Prime } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { CartProvider } from "../components/CartContext";
@@ -20,7 +22,54 @@ const courierPrime = Courier_Prime({
   variable: "--font-body",
 });
 
+function trackPageView(url) {
+  if (url.startsWith("/admin") || url.startsWith("/api")) return;
+  const body = { page: url };
+  try {
+    const KEY = "npp-sess";
+    const state = sessionStorage.getItem(KEY);
+    if (!state) {
+      // First page of this browser session → visitor
+      sessionStorage.setItem(KEY, "1");
+      body.sessionStart = true;
+    } else if (state === "1") {
+      // Second page in same session → engaged (not a bounce)
+      sessionStorage.setItem(KEY, "2+");
+      body.sessionEngaged = true;
+    }
+    // 3rd+ pages: just track the page view, no extra flags
+  } catch (_) {
+    // sessionStorage unavailable (e.g. SSR context)
+  }
+  fetch("/api/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch(() => {});
+}
+
 export default function App({ Component, pageProps }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Track initial page load
+    trackPageView(router.asPath);
+    // Track subsequent navigations
+    router.events.on("routeChangeComplete", trackPageView);
+    return () => {
+      router.events.off("routeChangeComplete", trackPageView);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Admin pages opt out of the site shell
+  if (Component.noLayout) {
+    return (
+      <div className={`${montserrat.variable} ${courierPrime.variable}`}>
+        <Component {...pageProps} />
+      </div>
+    );
+  }
+
   return (
     <CartProvider>
       <div className={`${montserrat.variable} ${courierPrime.variable}`}>
