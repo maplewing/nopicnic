@@ -5,7 +5,12 @@ export async function getServerSideProps({ req, params }) {
   if (!checkAdminAuth(req)) {
     return { redirect: { destination: "/admin/login", permanent: false } };
   }
-  const order = await getManualOrder(params.id);
+  let order = null;
+  for (let i = 0; i < 5; i++) {
+    order = await getManualOrder(params.id);
+    if (order) break;
+    await new Promise((r) => setTimeout(r, 400));
+  }
   if (!order) return { notFound: true };
   return { props: { order } };
 }
@@ -73,7 +78,7 @@ export default function InvoicePage({ order }) {
             <div className="invoice-title">INVOICE</div>
             <div>{fmtDate(date)}</div>
           </div>
-          <img src="/npp-logo.png" className="logo" alt="" />
+          <img src="/images/npp-logo.png" className="logo" alt="" />
         </div>
 
         <div className="block">
@@ -133,7 +138,7 @@ export default function InvoicePage({ order }) {
         </div>
 
         <div className="signature">
-          <img src="/npp-logo.png" className="sig-logo" alt="" />
+          <img src="/images/npp-logo.png" className="sig-logo" alt="" />
           <div>Many thanks.</div>
         </div>
 
