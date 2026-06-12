@@ -339,7 +339,7 @@ export const products = [
     productWeightOz: 15.7,
     images: ["/images/rsr-cover-2.png", "/images/rsr-spread.jpg", "/images/rsr_second-edition_spread-1.jpg", "/images/rsr_second-edition_spread-4.jpg", "/images/rsr_poster.jpg"],
     pressImage: "/images/rsr-press_transparent.jpg",
-    description: `How to manage and grow a small creative studio as a business and not just an artistic endeavour.`,
+    description: `Run Studio Run details how to manage and grow a small creative studio as a business and not just an artistic endeavour.`,
     descriptionAttribution: "Monocle",
     details: [
       "Hardcover, 2nd edition",
