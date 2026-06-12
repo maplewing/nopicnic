@@ -9,9 +9,8 @@ export default async function handler(req, res) {
 
   const dates = [];
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    dates.push(d.toISOString().slice(0, 10));
+    const d = new Date(Date.now() - i * 86400000);
+    dates.push(d.toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" }));
   }
 
   const { blobs } = await list({ prefix: "admin/analytics/", limit: 1000 });

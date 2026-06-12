@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
   const blobPath = `admin/analytics/${today}.json`;
 
   try {
