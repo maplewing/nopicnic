@@ -20,6 +20,27 @@ function fmtShort(iso) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+// ─── Color Palette ────────────────────────────────────────────────────────────
+
+const PALETTE = {
+  sacramento: "#162114",
+  pine: "#294122",
+  salmon: "#FFBBA6",
+  tangerine: "#EB3D00",
+  chiffon: "#FFEDD2",
+};
+
+// Per-stage funnel colors (fill + text colors)
+// Dark fills (sacramento, pine, tangerine) → chiffon text
+// Light fills (salmon, chiffon) → sacramento text
+const FUNNEL_COLORS = [
+  { fill: PALETTE.sacramento, text: PALETTE.chiffon,    sub: "rgba(255,237,210,0.5)" },
+  { fill: PALETTE.pine,       text: PALETTE.chiffon,    sub: "rgba(255,237,210,0.5)" },
+  { fill: PALETTE.salmon,     text: PALETTE.sacramento, sub: "rgba(22,33,20,0.5)" },
+  { fill: PALETTE.tangerine,  text: PALETTE.chiffon,    sub: "rgba(255,237,210,0.5)" },
+  { fill: PALETTE.chiffon,    text: PALETTE.sacramento, sub: "rgba(22,33,20,0.5)" },
+];
+
 // ─── Funnel Chart ────────────────────────────────────────────────────────────
 
 function FunnelChart({ stages }) {
@@ -54,15 +75,16 @@ function FunnelChart({ stages }) {
           i > 0 && maxCount > 0
             ? Math.round((stage.count / maxCount) * 100) + "%"
             : null;
+        const { fill, text, sub } = FUNNEL_COLORS[i % FUNNEL_COLORS.length];
 
         return (
           <g key={stage.label}>
-            <polygon points={pts} fill="#111" opacity={1 - i * 0.07} />
+            <polygon points={pts} fill={fill} />
             <text
               x={W / 2}
               y={y + stageH / 2 - 9}
               textAnchor="middle"
-              fill="rgba(255,255,255,0.65)"
+              fill={sub}
               fontSize={8}
               fontWeight={700}
               fontFamily="var(--font-display),'Helvetica Neue',sans-serif"
@@ -74,7 +96,7 @@ function FunnelChart({ stages }) {
               x={W / 2}
               y={y + stageH / 2 + 13}
               textAnchor="middle"
-              fill="#fff"
+              fill={text}
               fontSize={21}
               fontFamily="var(--font-body),'Courier New',monospace"
             >
@@ -342,8 +364,8 @@ function InventoryTable({ products, onToggle }) {
                   disabled={pending[p.id]}
                   style={{
                     ...s.toggleBtn,
-                    background: p.inStock ? "#111" : "#e0e0e0",
-                    color: p.inStock ? "#fff" : "#666",
+                    background: p.inStock ? PALETTE.pine : "#e0e0e0",
+                    color: p.inStock ? PALETTE.chiffon : "#666",
                     opacity: pending[p.id] ? 0.5 : 1,
                   }}
                 >
@@ -416,10 +438,9 @@ function SalesByProductTable({ orders }) {
                 <td style={s.td}>
                   <div style={{
                     height: 6,
-                    background: "#111",
+                    background: PALETTE.tangerine,
                     width: `${totalRevenue > 0 ? (revenue / totalRevenue) * 100 : 0}%`,
                     minWidth: 2,
-                    opacity: 0.7,
                   }} />
                 </td>
               </tr>
@@ -456,10 +477,9 @@ function TopPagesTable({ pages }) {
               <div
                 style={{
                   height: 6,
-                  background: "#111",
+                  background: PALETTE.pine,
                   width: `${(views / max) * 100}%`,
                   minWidth: 2,
-                  opacity: 0.7,
                 }}
               />
             </td>
@@ -656,12 +676,12 @@ export default function AdminDashboard() {
               <div style={s.chartsGrid}>
                 <div style={s.chartCard}>
                   <div style={s.chartTitle}>Revenue — last 30 days</div>
-                  <BarChart data={stats.daily} valueKey="revenue" color="#111" />
+                  <BarChart data={stats.daily} valueKey="revenue" color={PALETTE.tangerine} />
                 </div>
                 <div style={s.chartCard}>
                   <div style={s.chartTitle}>Page views — last 30 days</div>
                   {analytics && analytics.daily.length > 0 ? (
-                    <BarChart data={analytics.daily} valueKey="totalViews" color="#666" />
+                    <BarChart data={analytics.daily} valueKey="totalViews" color={PALETTE.pine} />
                   ) : (
                     <div style={{ fontSize: 12, color: "#aaa", paddingTop: 8 }}>
                       No data yet — tracking will start after your next visit to the site.
@@ -791,7 +811,7 @@ const s = {
   },
   tabBtnActive: {
     color: "#111",
-    borderBottomColor: "#111",
+    borderBottomColor: PALETTE.tangerine,
   },
   kpiGrid: {
     display: "grid",
@@ -934,9 +954,9 @@ const s = {
     color: "#666",
   },
   filterBtnActive: {
-    background: "#111",
-    color: "#fff",
-    borderColor: "#111",
+    background: PALETTE.pine,
+    color: PALETTE.chiffon,
+    borderColor: PALETTE.pine,
   },
   toggleBtn: {
     padding: "5px 12px",
