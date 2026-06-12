@@ -5,12 +5,7 @@ export async function getServerSideProps({ req, params }) {
   if (!checkAdminAuth(req)) {
     return { redirect: { destination: "/admin/login", permanent: false } };
   }
-  let order = null;
-  for (let i = 0; i < 5; i++) {
-    order = await getManualOrder(params.id);
-    if (order) break;
-    await new Promise((r) => setTimeout(r, 400));
-  }
+  const order = await getManualOrder(params.id);
   if (!order) return { notFound: true };
   return { props: { order } };
 }
