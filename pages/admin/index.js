@@ -20,6 +20,74 @@ function fmtShort(iso) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+// ─── Funnel Chart ────────────────────────────────────────────────────────────
+
+function FunnelChart({ stages }) {
+  if (!stages.length) {
+    return (
+      <p style={{ color: "#999", fontSize: 13 }}>
+        No data yet — funnel appears after your first tracked visitor.
+      </p>
+    );
+  }
+  const maxCount = stages[0].count || 1;
+  const W = 520;
+  const stageH = 72;
+  const totalH = stages.length * stageH;
+  const widthFor = (n) => Math.max(0.14, n / maxCount) * W;
+
+  return (
+    <svg
+      width="100%"
+      viewBox={`0 0 ${W} ${totalH}`}
+      style={{ display: "block", maxWidth: 600 }}
+    >
+      {stages.map((stage, i) => {
+        const topW = widthFor(stage.count);
+        const botW =
+          i < stages.length - 1 ? widthFor(stages[i + 1].count) : topW * 0.86;
+        const topX = (W - topW) / 2;
+        const botX = (W - botW) / 2;
+        const y = i * stageH;
+        const pts = `${topX},${y} ${topX + topW},${y} ${botX + botW},${y + stageH} ${botX},${y + stageH}`;
+        const pct =
+          i > 0 && maxCount > 0
+            ? Math.round((stage.count / maxCount) * 100) + "%"
+            : null;
+
+        return (
+          <g key={stage.label}>
+            <polygon points={pts} fill="#111" opacity={1 - i * 0.07} />
+            <text
+              x={W / 2}
+              y={y + stageH / 2 - 9}
+              textAnchor="middle"
+              fill="rgba(255,255,255,0.65)"
+              fontSize={8}
+              fontWeight={700}
+              fontFamily="var(--font-display),'Helvetica Neue',sans-serif"
+              letterSpacing="2"
+            >
+              {stage.label.toUpperCase()}
+            </text>
+            <text
+              x={W / 2}
+              y={y + stageH / 2 + 13}
+              textAnchor="middle"
+              fill="#fff"
+              fontSize={21}
+              fontFamily="var(--font-body),'Courier New',monospace"
+            >
+              {stage.count.toLocaleString()}
+              {pct ? `  ·  ${pct}` : ""}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 // ─── Chart Components ────────────────────────────────────────────────────────
 
 function BarChart({ data, valueKey, color = "#111", height = 100 }) {
@@ -479,7 +547,14 @@ export default function AdminDashboard() {
         {/* Header */}
         <header style={s.header}>
           <div style={s.headerInner}>
-            <span style={s.headerLogo}>No Picnic Press <span style={s.headerSlash}>·</span> Admin</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <img
+                src="/images/npp-logo.png"
+                alt="No Picnic Press"
+                style={{ height: 22, filter: "invert(1)", display: "block" }}
+              />
+              <span style={s.headerAdmin}>Admin</span>
+            </div>
             <button onClick={handleLogout} style={s.logoutBtn}>Sign out</button>
           </div>
         </header>
@@ -550,59 +625,28 @@ export default function AdminDashboard() {
                 />
               </div>
 
-              {/* Conversion funnel callout */}
+              {/* Conversion funnel */}
               {(() => {
                 const visitors = analytics?.totalSessions || 0;
                 const bounced = analytics?.bouncedSessions || 0;
-                const bounceRate = analytics?.bounceRate;
                 const addToCart = analytics?.totalAddToCart || 0;
                 const started = stats.funnel.checkoutsStarted;
                 const completed = stats.funnel.checkoutsCompleted;
-                const checkoutConv = stats.funnel.conversionRate;
+                const stages = [
+                  visitors > 0 && { label: "Visitors", count: visitors },
+                  visitors > 0 && { label: "Non-bounced", count: visitors - bounced },
+                  addToCart > 0 && { label: "Add to cart", count: addToCart },
+                  started > 0 && { label: "Checkout started", count: started },
+                  { label: "Completed", count: completed },
+                ].filter(Boolean);
                 return (
-                  <div style={s.funnelBar}>
-                    {visitors > 0 && (
-                      <>
-                        <div style={s.funnelItem}>
-                          <span style={s.funnelNum}>{visitors}</span>
-                          <span style={s.funnelLabel}>Visitors</span>
-                        </div>
-                        <span style={s.funnelArrow}>→</span>
-                        <div style={s.funnelItem}>
-                          <span style={s.funnelNum}>{bounced}</span>
-                          <span style={s.funnelLabel}>Bounced</span>
-                          {bounceRate != null && <span style={s.funnelRate}>{bounceRate}% of visitors</span>}
-                        </div>
-                        <span style={s.funnelArrow}>→</span>
-                      </>
-                    )}
-                    {addToCart > 0 && (
-                      <>
-                        <div style={s.funnelItem}>
-                          <span style={s.funnelNum}>{addToCart}</span>
-                          <span style={s.funnelLabel}>Add to cart</span>
-                        </div>
-                        <span style={s.funnelArrow}>→</span>
-                      </>
-                    )}
-                    <div style={s.funnelItem}>
-                      <span style={s.funnelNum}>{started}</span>
-                      <span style={s.funnelLabel}>Checkout started</span>
-                    </div>
-                    <span style={s.funnelArrow}>→</span>
-                    <div style={s.funnelItem}>
-                      <span style={s.funnelNum}>{completed}</span>
-                      <span style={s.funnelLabel}>Completed</span>
-                    </div>
-                    <span style={s.funnelArrow}>→</span>
-                    <div style={s.funnelItem}>
-                      <span style={s.funnelNum}>{checkoutConv}%</span>
-                      <span style={s.funnelLabel}>Checkout conv.</span>
-                    </div>
-                    {parseFloat(checkoutConv) < 40 && started > 3 && (
-                      <div style={s.funnelTip}>
+                  <div style={s.funnelCard}>
+                    <div style={s.chartTitle}>Conversion funnel — 30 days</div>
+                    <FunnelChart stages={stages} />
+                    {parseFloat(stats.funnel.conversionRate) < 40 && started > 3 && (
+                      <p style={s.funnelTip}>
                         Tip: A checkout conv. rate under 40% often indicates shipping cost surprise or checkout friction.
-                      </div>
+                      </p>
                     )}
                   </div>
                 );
@@ -677,11 +721,14 @@ AdminDashboard.noLayout = true;
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
+const DISPLAY = "var(--font-display),'Helvetica Neue',Helvetica,Arial,sans-serif";
+const MONO = "var(--font-body),'Courier New',Courier,monospace";
+
 const s = {
   root: {
     minHeight: "100vh",
     background: "#f5f5f5",
-    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    fontFamily: DISPLAY,
     color: "#111",
   },
   header: {
@@ -700,21 +747,23 @@ const s = {
     alignItems: "center",
     justifyContent: "space-between",
   },
-  headerLogo: {
-    fontSize: 13,
+  headerAdmin: {
+    fontSize: 10,
     fontWeight: 600,
-    letterSpacing: "0.04em",
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: "rgba(255,255,255,0.45)",
+    fontFamily: DISPLAY,
   },
-  headerSlash: { opacity: 0.4, margin: "0 6px" },
   logoutBtn: {
     background: "transparent",
     border: "1px solid rgba(255,255,255,0.25)",
     color: "#fff",
-    fontSize: 12,
+    fontSize: 11,
     padding: "5px 12px",
     cursor: "pointer",
-    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-    letterSpacing: "0.04em",
+    fontFamily: DISPLAY,
+    letterSpacing: "0.06em",
   },
   body: {
     maxWidth: 1200,
@@ -734,7 +783,7 @@ const s = {
     padding: "10px 18px",
     fontSize: 13,
     cursor: "pointer",
-    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    fontFamily: DISPLAY,
     color: "#888",
     fontWeight: 500,
     marginBottom: -1,
@@ -765,8 +814,9 @@ const s = {
   },
   cardValue: {
     fontSize: 26,
-    fontWeight: 700,
-    letterSpacing: "-0.02em",
+    fontWeight: 400,
+    fontFamily: MONO,
+    letterSpacing: "-0.01em",
     lineHeight: 1,
     marginBottom: 4,
   },
@@ -775,29 +825,19 @@ const s = {
     color: "#aaa",
     marginTop: 4,
   },
-  funnelBar: {
+  funnelCard: {
     background: "#fff",
     border: "1px solid #e0e0e0",
-    padding: "16px 24px",
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
+    padding: "20px 24px",
     marginBottom: 24,
-    flexWrap: "wrap",
   },
-  funnelItem: { display: "flex", flexDirection: "column", alignItems: "center", minWidth: 80 },
-  funnelNum: { fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em" },
-  funnelLabel: { fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: 2 },
-  funnelRate: { fontSize: 11, color: "#aaa", marginTop: 2 },
-  funnelArrow: { fontSize: 20, color: "#ccc" },
   funnelTip: {
-    marginLeft: "auto",
     fontSize: 12,
     color: "#666",
     background: "#fffbea",
     border: "1px solid #f5e7a0",
     padding: "8px 12px",
-    maxWidth: 320,
+    marginTop: 16,
   },
   chartsGrid: {
     display: "grid",
@@ -890,7 +930,7 @@ const s = {
     padding: "4px 12px",
     fontSize: 12,
     cursor: "pointer",
-    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    fontFamily: DISPLAY,
     color: "#666",
   },
   filterBtnActive: {
@@ -906,7 +946,7 @@ const s = {
     textTransform: "uppercase",
     border: "none",
     cursor: "pointer",
-    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    fontFamily: DISPLAY,
     transition: "opacity 0.15s",
   },
 };
