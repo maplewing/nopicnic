@@ -36,7 +36,7 @@ export default function InvoicePage({ order }) {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: "Courier New", Courier, monospace; font-size: 13px; line-height: 1.6; color: #000; background: #fff; }
         .page { max-width: 640px; margin: 60px auto; padding: 0 40px; }
@@ -65,7 +65,7 @@ export default function InvoicePage({ order }) {
           body { margin: 0; }
           .page { margin: 40px; }
         }
-      `}</style>
+      ` }} />
 
       <div className="page">
         <div className="header">

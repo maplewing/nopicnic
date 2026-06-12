@@ -1169,7 +1169,7 @@ const s = {
   },
   tabBtnActive: {
     color: "#111",
-    borderBottomColor: PALETTE.tangerine,
+    borderBottom: `2px solid ${PALETTE.tangerine}`,
   },
   kpiGrid: {
     display: "grid",
