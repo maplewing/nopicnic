@@ -90,16 +90,17 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             )}
 
             <p className="product-description">
-              {product.descriptionAttribution ? <em>{product.description}</em> : product.description}
+              {product.descriptionAttribution ? (
+                <>
+                  <em>&ldquo;{product.description}&rdquo;</em>
+                  {" "}
+                  <img src={`/images/${product.descriptionAttribution.toLowerCase()}-logo.png`} alt={product.descriptionAttribution} style={{ height: 13, display: "inline-block", verticalAlign: "middle", opacity: 0.75 }} />
+                </>
+              ) : product.description}
               {product.learnMore && (
                 <> Learn more at <a href={product.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{product.learnMore.text}</a></>
               )}
             </p>
-            {product.descriptionAttribution && (
-              <p style={{ marginTop: -8, marginBottom: 20 }}>
-                <img src={`/images/${product.descriptionAttribution.toLowerCase()}-logo.png`} alt={product.descriptionAttribution} style={{ height: 14, display: "inline-block", opacity: 0.75 }} />
-              </p>
-            )}
 
             {product.inStock ? (
               <button className="btn-primary" onClick={handleAdd} disabled={added}>
