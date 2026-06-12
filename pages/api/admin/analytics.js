@@ -28,7 +28,9 @@ export default async function handler(req, res) {
     const blob = blobByDate[date];
     if (blob) {
       try {
-        const r = await fetch(blob.downloadUrl);
+        const r = await fetch(blob.url, {
+          headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+        });
         if (r.ok) {
           const data = await r.json();
           daily.push({ date, totalViews: data.totalViews || 0, pages: data.pages || {} });

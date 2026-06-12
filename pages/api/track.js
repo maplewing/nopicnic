@@ -23,7 +23,9 @@ export default async function handler(req, res) {
 
     const blob = blobs.find((b) => b.pathname === blobPath);
     if (blob) {
-      const fetchRes = await fetch(blob.downloadUrl);
+      const fetchRes = await fetch(blob.url, {
+        headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+      });
       if (fetchRes.ok) {
         const existing = await fetchRes.json();
         data = { events: {}, ...existing };
