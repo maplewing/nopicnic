@@ -56,6 +56,7 @@ export default async function handler(req, res) {
       access: "private",
       contentType: "application/json",
       addRandomSuffix: false,
+      allowOverwrite: true,
     });
   } catch (err) {
     console.error("Track error:", err.message);
