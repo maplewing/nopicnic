@@ -130,7 +130,7 @@ export default function ReviewPage() {
 
           {status === "error" && (
             <p style={{ fontSize: 13, color: "red", marginTop: 12 }}>
-              Something went wrong. Please try again or email nopicnicpress@gmail.com.
+              Something went wrong. Please try again or email hi@nopicnicpress.com.
             </p>
           )}
         </form>

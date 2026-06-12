@@ -104,7 +104,7 @@ export default function StudioSessions() {
             {status === "error" && (
               <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>
                 Something went wrong — please email{" "}
-                <a href="mailto:nopicnicpress@gmail.com">nopicnicpress@gmail.com</a> directly.
+                <a href="mailto:hi@nopicnicpress.com">hi@nopicnicpress.com</a> directly.
               </p>
             )}
           </form>

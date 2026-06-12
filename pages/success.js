@@ -15,7 +15,7 @@ export default function Success() {
           Thank you.
         </h1>
         <p style={{ fontSize: 14, lineHeight: 1.8, color: "#555", marginBottom: 32 }}>
-          You'll receive a confirmation email shortly. For physical orders, we'll send a tracking number once your order ships. For digital orders, your download links will be in your confirmation email. Questions? <a href="mailto:nopicnicpress@gmail.com">nopicnicpress@gmail.com</a>
+          You'll receive a confirmation email shortly. For physical orders, we'll send a tracking number once your order ships. For digital orders, your download links will be in your confirmation email. Questions? <a href="mailto:hi@nopicnicpress.com">hi@nopicnicpress.com</a>
         </p>
         <Link href="/" style={{ fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", borderBottom: "1px solid #000" }}>
           Back to shop

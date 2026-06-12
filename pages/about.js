@@ -24,7 +24,7 @@ export default function About() {
         </p>
         <p>
           If you want to say hi,{" "}
-          <a href="mailto:nopicnicpress@gmail.com">reach out here</a>.
+          <a href="mailto:hi@nopicnicpress.com">reach out here</a>.
         </p>
 
         <h2>Speaking</h2>

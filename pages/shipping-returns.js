@@ -44,7 +44,7 @@ export default function ShippingReturns() {
         </p>
         <p>
           To initiate a return or with any questions, email{" "}
-          <a href="mailto:nopicnicpress@gmail.com">nopicnicpress@gmail.com</a>.
+          <a href="mailto:hi@nopicnicpress.com">hi@nopicnicpress.com</a>.
         </p>
       </div>
     </>
