@@ -52,56 +52,60 @@ function FunnelChart({ stages }) {
     );
   }
   const maxCount = stages[0].count || 1;
-  const W = 520;
-  const stageH = 72;
-  const totalH = stages.length * stageH;
-  const widthFor = (n) => Math.max(0.14, n / maxCount) * W;
+  const W = 700;
+  const H = 120;
+  const LABEL_H = 28;
+  const stageW = W / stages.length;
+  const heightFor = (n) => Math.max(0.15, n / maxCount) * H;
 
   return (
     <svg
       width="100%"
-      viewBox={`0 0 ${W} ${totalH}`}
-      style={{ display: "block", maxWidth: 600 }}
+      viewBox={`0 0 ${W} ${H + LABEL_H}`}
+      style={{ display: "block" }}
     >
       {stages.map((stage, i) => {
-        const topW = widthFor(stage.count);
-        const botW =
-          i < stages.length - 1 ? widthFor(stages[i + 1].count) : topW * 0.86;
-        const topX = (W - topW) / 2;
-        const botX = (W - botW) / 2;
-        const y = i * stageH;
-        const pts = `${topX},${y} ${topX + topW},${y} ${botX + botW},${y + stageH} ${botX},${y + stageH}`;
+        const leftH = heightFor(stage.count);
+        const rightH =
+          i < stages.length - 1 ? heightFor(stages[i + 1].count) : leftH * 0.82;
+        const x = i * stageW;
+        const topLeft  = H / 2 - leftH  / 2;
+        const botLeft  = H / 2 + leftH  / 2;
+        const topRight = H / 2 - rightH / 2;
+        const botRight = H / 2 + rightH / 2;
+        const pts = `${x},${topLeft} ${x + stageW},${topRight} ${x + stageW},${botRight} ${x},${botLeft}`;
         const pct =
           i > 0 && maxCount > 0
             ? Math.round((stage.count / maxCount) * 100) + "%"
             : null;
-        const { fill, text, sub } = FUNNEL_COLORS[i % FUNNEL_COLORS.length];
+        const { fill, text } = FUNNEL_COLORS[i % FUNNEL_COLORS.length];
+        const cx = x + stageW / 2;
 
         return (
           <g key={stage.label}>
             <polygon points={pts} fill={fill} />
             <text
-              x={W / 2}
-              y={y + stageH / 2 - 9}
-              textAnchor="middle"
-              fill={sub}
-              fontSize={8}
-              fontWeight={700}
-              fontFamily="var(--font-display),'Helvetica Neue',sans-serif"
-              letterSpacing="2"
-            >
-              {stage.label.toUpperCase()}
-            </text>
-            <text
-              x={W / 2}
-              y={y + stageH / 2 + 13}
+              x={cx}
+              y={H / 2 + 6}
               textAnchor="middle"
               fill={text}
-              fontSize={21}
+              fontSize={15}
               fontFamily="var(--font-body),'Courier New',monospace"
             >
               {stage.count.toLocaleString()}
-              {pct ? `  ·  ${pct}` : ""}
+              {pct ? `  ${pct}` : ""}
+            </text>
+            <text
+              x={cx}
+              y={H + 18}
+              textAnchor="middle"
+              fill={PALETTE.sacramento}
+              fontSize={7}
+              fontWeight={700}
+              fontFamily="var(--font-display),'Helvetica Neue',sans-serif"
+              letterSpacing="1.5"
+            >
+              {stage.label.toUpperCase()}
             </text>
           </g>
         );
