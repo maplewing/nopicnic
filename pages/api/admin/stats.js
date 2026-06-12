@@ -27,10 +27,12 @@ export default async function handler(req, res) {
 
   const now = Math.floor(Date.now() / 1000);
   const since30 = now - 30 * 86400;
+  // STATS_SINCE lets you set a go-live timestamp (Unix seconds) to exclude test sessions
+  const statsSince = process.env.STATS_SINCE ? Math.max(since30, parseInt(process.env.STATS_SINCE)) : since30;
 
   // All sessions in last 30 days (for funnel)
   const allSessions = await fetchAllSessions({
-    created: { gte: since30 },
+    created: { gte: statsSince },
     expand: ["data.payment_intent.latest_charge"],
   });
 
