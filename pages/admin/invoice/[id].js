@@ -42,7 +42,7 @@ export default function InvoicePage({ order }) {
         .page { max-width: 640px; margin: 60px auto; padding: 0 40px; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
         .invoice-title { text-decoration: underline; font-weight: bold; font-size: 13px; }
-        .logo { width: 72px; opacity: 0.85; }
+        .logo { width: 324px; opacity: 0.85; }
         .block { margin-bottom: 24px; }
         .section-label { font-weight: bold; }
         .underline { text-decoration: underline; }
@@ -59,7 +59,7 @@ export default function InvoicePage({ order }) {
           letter-spacing: 1px;
         }
         .signature { margin-top: 32px; }
-        .sig-logo { width: 60px; display: block; margin-bottom: 4px; }
+        .sig-logo { width: 150px; display: block; margin-bottom: 4px; }
         @media print {
           .print-btn { display: none; }
           body { margin: 0; }
