@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       created: { gte: since },
       status: "complete",
       limit: 100,
-      expand: ["data.line_items"],
+      expand: ["data.line_items", "data.payment_intent"],
       ...(startingAfter && { starting_after: startingAfter }),
     });
     sessions.push(...batch.data);
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   const { mapping } = await getOrderNumbers();
 
   const orders = sessions
-    .filter((s) => s.payment_status === "paid")
+    .filter((s) => s.payment_status === "paid" && !(s.payment_intent?.amount_refunded > 0))
     .map((session) => ({
       orderNumber: mapping[session.id] ?? null,
       stripeSessionId: session.id,

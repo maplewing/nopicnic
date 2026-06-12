@@ -29,10 +29,16 @@ export default async function handler(req, res) {
   const since30 = now - 30 * 86400;
 
   // All sessions in last 30 days (for funnel)
-  const allSessions = await fetchAllSessions({ created: { gte: since30 } });
+  const allSessions = await fetchAllSessions({
+    created: { gte: since30 },
+    expand: ["data.payment_intent"],
+  });
 
-  // Only completed + paid sessions
-  const completed = allSessions.filter(
+  // Exclude fully refunded sessions everywhere
+  const nonRefunded = allSessions.filter((s) => !(s.payment_intent?.amount_refunded > 0));
+
+  // Only completed + paid sessions (non-refunded)
+  const completed = nonRefunded.filter(
     (s) => s.status === "complete" && s.payment_status === "paid"
   );
 
@@ -86,11 +92,11 @@ export default async function handler(req, res) {
       month: { revenue: sum(monthC), orders: monthC.length },
     },
     funnel: {
-      checkoutsStarted: allSessions.length,
+      checkoutsStarted: nonRefunded.length,
       checkoutsCompleted: completed.length,
       conversionRate:
-        allSessions.length > 0
-          ? ((completed.length / allSessions.length) * 100).toFixed(1)
+        nonRefunded.length > 0
+          ? ((completed.length / nonRefunded.length) * 100).toFixed(1)
           : "0.0",
     },
   });
