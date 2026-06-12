@@ -31,11 +31,11 @@ export default async function handler(req, res) {
   // All sessions in last 30 days (for funnel)
   const allSessions = await fetchAllSessions({
     created: { gte: since30 },
-    expand: ["data.payment_intent"],
+    expand: ["data.payment_intent.latest_charge"],
   });
 
   // Exclude fully refunded sessions everywhere
-  const nonRefunded = allSessions.filter((s) => !(s.payment_intent?.amount_refunded > 0));
+  const nonRefunded = allSessions.filter((s) => !(s.payment_intent?.latest_charge?.amount_refunded > 0));
 
   // Only completed + paid sessions (non-refunded)
   const completed = nonRefunded.filter(
