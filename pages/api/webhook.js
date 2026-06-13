@@ -20,6 +20,7 @@ import { orderConfirmationEmail } from "../../lib/orderEmail";
 import { createDownloadToken } from "../../lib/downloadToken";
 import { products } from "../../data/products";
 import { assignOrderNumber } from "../../lib/orderNumbers";
+import { decrementStock } from "../../lib/stock";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -92,6 +93,17 @@ export default async function handler(req, res) {
               url: `${siteUrl}/api/download?token=${token}&format=${format}`,
             })),
           });
+        }
+      }
+
+      // Decrement stock for physical products in this order
+      for (const item of session.line_items?.data || []) {
+        const stripePriceId = item.price?.id;
+        const product = products.find((p) => p.stripePriceId === stripePriceId);
+        if (product && !product.isDigital && !product.isService) {
+          await decrementStock(product.id, item.quantity ?? 1).catch((err) =>
+            console.error("Stock decrement error:", err)
+          );
         }
       }
 

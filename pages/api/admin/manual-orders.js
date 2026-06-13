@@ -4,6 +4,7 @@ import {
   createManualOrder,
   deleteManualOrder,
 } from "../../../lib/manualOrders";
+import { decrementStock } from "../../../lib/stock";
 
 export default async function handler(req, res) {
   if (!checkAdminAuth(req)) return res.status(401).json({ error: "Unauthorized" });
@@ -19,6 +20,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "date, recipient.name, and items are required" });
     }
     const order = await createManualOrder({ date, recipient, items, tracking, carrier, via, shippingCost, notes });
+    for (const item of order.items || []) {
+      if (item.productId) {
+        await decrementStock(item.productId, item.qty ?? 1).catch((err) =>
+          console.error("Stock decrement error:", err)
+        );
+      }
+    }
     return res.status(201).json({ order });
   }
 

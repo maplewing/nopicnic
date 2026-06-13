@@ -118,7 +118,7 @@ function blankForm() {
   return {
     date: new Date().toISOString().slice(0, 10),
     recipient: { name: "", address: "", eori: "", vatId: "" },
-    items: [{ name: "", qty: 1, unitPrice: 0, discount: 0 }],
+    items: [{ name: "", qty: 1, unitPrice: 0, discount: 0, productId: "" }],
     tracking: "", carrier: "", via: "",
     shippingCost: "", notes: "",
   };
@@ -428,8 +428,10 @@ function OrdersTable({ orders }) {
 
 // ─── Inventory Table ──────────────────────────────────────────────────────────
 
-function InventoryTable({ products, onToggle }) {
+function InventoryTable({ products, onToggle, stock, onSetStock }) {
   const [pending, setPending] = useState({});
+  const [qtyInputs, setQtyInputs] = useState({});
+  const [stockPending, setStockPending] = useState({});
 
   async function handleToggle(id, currentVal) {
     setPending((p) => ({ ...p, [id]: true }));
@@ -437,51 +439,91 @@ function InventoryTable({ products, onToggle }) {
     setPending((p) => ({ ...p, [id]: false }));
   }
 
+  async function handleSetStock(id) {
+    const val = qtyInputs[id];
+    if (val === undefined || val === "") return;
+    setStockPending((p) => ({ ...p, [id]: true }));
+    await onSetStock(id, Number(val));
+    setStockPending((p) => ({ ...p, [id]: false }));
+  }
+
   return (
     <div style={{ overflowX: "auto" }}>
       <p style={{ fontSize: 12, color: "#999", marginBottom: 12 }}>
-        Stock changes commit to GitHub and redeploy in ~30 seconds.
+        In Stock toggle commits to GitHub and redeploys in ~30 seconds. QTY is saved instantly.
       </p>
       <table style={s.table}>
         <thead>
           <tr>
-            {["Product", "Price", "Weight", "Type", "In Stock"].map((h) => (
+            {["Product", "Price", "Weight", "QTY", "Type", "In Stock"].map((h) => (
               <th key={h} style={s.th}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {products.map((p) => (
-            <tr key={p.id} style={s.tr}>
-              <td style={s.td}>
-                <div style={{ fontWeight: 500 }}>{p.name}</div>
-                <div style={{ fontSize: 11, color: "#888", fontFamily: "monospace" }}>{p.id}</div>
-              </td>
-              <td style={s.td}>{fmt(p.price)}</td>
-              <td style={s.td}>
-                {p.productWeightOz ? `${p.productWeightOz} oz` : "—"}
-              </td>
-              <td style={s.td}>
-                <span style={{ fontSize: 11, color: "#888" }}>
-                  {p.isDigital ? "Digital" : p.isService ? "Service" : "Physical"}
-                </span>
-              </td>
-              <td style={s.td}>
-                <button
-                  onClick={() => handleToggle(p.id, p.inStock)}
-                  disabled={pending[p.id]}
-                  style={{
-                    ...s.toggleBtn,
-                    background: p.inStock ? PALETTE.pine : "#e0e0e0",
-                    color: p.inStock ? PALETTE.chiffon : "#666",
-                    opacity: pending[p.id] ? 0.5 : 1,
-                  }}
-                >
-                  {pending[p.id] ? "…" : p.inStock ? "In Stock" : "Out of Stock"}
-                </button>
-              </td>
-            </tr>
-          ))}
+          {products.map((p) => {
+            const isPhysical = !p.isDigital && !p.isService;
+            const stockVal = stock[p.id];
+            const inputVal = p.id in qtyInputs ? qtyInputs[p.id] : (stockVal !== undefined ? String(stockVal) : "");
+            return (
+              <tr key={p.id} style={s.tr}>
+                <td style={s.td}>
+                  <div style={{ fontWeight: 500 }}>{p.name}</div>
+                  <div style={{ fontSize: 11, color: "#888", fontFamily: "monospace" }}>{p.id}</div>
+                </td>
+                <td style={s.td}>{fmt(p.price)}</td>
+                <td style={s.td}>
+                  {p.productWeightOz ? `${p.productWeightOz} oz` : "—"}
+                </td>
+                <td style={s.td}>
+                  {isPhysical ? (
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      <input
+                        type="number"
+                        min="0"
+                        value={inputVal}
+                        onChange={(e) => setQtyInputs((q) => ({ ...q, [p.id]: e.target.value }))}
+                        style={{
+                          width: 56, border: "1px solid #ddd", padding: "4px 6px", fontSize: 12,
+                          fontFamily: "monospace", outline: "none",
+                          color: stockVal === 0 ? "#c00" : "#111",
+                        }}
+                        placeholder="—"
+                      />
+                      <button
+                        onClick={() => handleSetStock(p.id)}
+                        disabled={stockPending[p.id]}
+                        style={{ fontSize: 11, padding: "4px 8px", border: "1px solid #ddd", background: "#f8f8f8", cursor: "pointer", fontFamily: "monospace" }}
+                      >
+                        {stockPending[p.id] ? "…" : "Set"}
+                      </button>
+                    </div>
+                  ) : (
+                    <span style={{ color: "#aaa" }}>—</span>
+                  )}
+                </td>
+                <td style={s.td}>
+                  <span style={{ fontSize: 11, color: "#888" }}>
+                    {p.isDigital ? "Digital" : p.isService ? "Service" : "Physical"}
+                  </span>
+                </td>
+                <td style={s.td}>
+                  <button
+                    onClick={() => handleToggle(p.id, p.inStock)}
+                    disabled={pending[p.id]}
+                    style={{
+                      ...s.toggleBtn,
+                      background: p.inStock ? PALETTE.pine : "#e0e0e0",
+                      color: p.inStock ? PALETTE.chiffon : "#666",
+                      opacity: pending[p.id] ? 0.5 : 1,
+                    }}
+                  >
+                    {pending[p.id] ? "…" : p.inStock ? "In Stock" : "Out of Stock"}
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -600,7 +642,7 @@ function TopPagesTable({ pages }) {
 
 // ─── Manual Orders Section ────────────────────────────────────────────────────
 
-function ManualOrdersSection({ orders, onChange }) {
+function ManualOrdersSection({ orders, onChange, inventory }) {
   const [showForm, setShowForm] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [form, setForm] = useState(blankForm());
@@ -630,7 +672,11 @@ function ManualOrdersSection({ orders, onChange }) {
   function handleParse() {
     if (!pasteText.trim()) return;
     const parsed = parseOrderText(pasteText);
-    if (parsed.items.length === 0) parsed.items = [{ name: "", qty: 1, unitPrice: 0, discount: 0 }];
+    if (parsed.items.length === 0) {
+      parsed.items = [{ name: "", qty: 1, unitPrice: 0, discount: 0, productId: "" }];
+    } else {
+      parsed.items = parsed.items.map((it) => ({ productId: "", ...it }));
+    }
     setForm(parsed);
   }
 
@@ -665,6 +711,8 @@ function ManualOrdersSection({ orders, onChange }) {
     const res = await fetch(`/api/admin/manual-orders?id=${encodeURIComponent(id)}`, { method: "DELETE" });
     if (res.ok) onChange(orders.filter((o) => o.id !== id));
   }
+
+  const physicalProducts = (inventory || []).filter((p) => !p.isDigital && !p.isService);
 
   const inp = {
     border: "1px solid #ddd", padding: "6px 8px", fontSize: 13,
@@ -743,11 +791,33 @@ function ManualOrdersSection({ orders, onChange }) {
             {/* Line items */}
             <div>
               <label style={lbl}>Line Items</label>
-              <div style={{ display: "grid", gridTemplateColumns: "3fr 56px 90px 72px 28px", gap: 6, marginBottom: 4, fontSize: 11, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                <span>Product</span><span>Qty</span><span>Unit $</span><span>Disc %</span><span />
+              <div style={{ display: "grid", gridTemplateColumns: "150px 2fr 56px 90px 72px 28px", gap: 6, marginBottom: 4, fontSize: 11, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <span>Catalog</span><span>Name</span><span>Qty</span><span>Unit $</span><span>Disc %</span><span />
               </div>
               {form.items.map((item, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "3fr 56px 90px 72px 28px", gap: 6, marginBottom: 6 }}>
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "150px 2fr 56px 90px 72px 28px", gap: 6, marginBottom: 6 }}>
+                  <select
+                    value={item.productId || ""}
+                    onChange={(e) => {
+                      const pid = e.target.value;
+                      const prod = physicalProducts.find((p) => p.id === pid);
+                      setForm((prev) => {
+                        const items = prev.items.map((it, idx) => {
+                          if (idx !== i) return it;
+                          const updated = { ...it, productId: pid };
+                          if (prod) { updated.name = prod.name; updated.unitPrice = prod.price; }
+                          return updated;
+                        });
+                        return { ...prev, items };
+                      });
+                    }}
+                    style={{ ...inp, color: item.productId ? "#111" : "#aaa" }}
+                  >
+                    <option value="">Custom</option>
+                    {physicalProducts.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
                   <input value={item.name} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Run Studio Run (RSR2)" style={inp} />
                   <input type="number" min="1" value={item.qty} onChange={(e) => updateItem(i, "qty", +e.target.value)} style={inp} />
                   <input type="number" min="0" step="0.01" value={item.unitPrice} onChange={(e) => updateItem(i, "unitPrice", +e.target.value)} style={inp} placeholder="25.00" />
@@ -756,7 +826,7 @@ function ManualOrdersSection({ orders, onChange }) {
                     style={{ background: "none", border: "none", cursor: "pointer", color: "#bbb", fontSize: 18, padding: 0, lineHeight: 1 }}>×</button>
                 </div>
               ))}
-              <button onClick={() => setForm((p) => ({ ...p, items: [...p.items, { name: "", qty: 1, unitPrice: 0, discount: 0 }] }))}
+              <button onClick={() => setForm((p) => ({ ...p, items: [...p.items, { name: "", qty: 1, unitPrice: 0, discount: 0, productId: "" }] }))}
                 style={{ fontSize: 12, color: PALETTE.pine, background: "none", border: "none", cursor: "pointer", padding: 0, marginTop: 2 }}>
                 + Add item
               </button>
@@ -850,6 +920,7 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [inventory, setInventory] = useState(null);
+  const [stock, setStock] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [manualOrders, setManualOrders] = useState([]);
@@ -858,26 +929,29 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [statsRes, ordersRes, analyticsRes, inventoryRes, manualRes] = await Promise.all([
+      const [statsRes, ordersRes, analyticsRes, inventoryRes, manualRes, stockRes] = await Promise.all([
         fetch("/api/admin/stats"),
         fetch("/api/admin/orders?days=365"),
         fetch("/api/admin/analytics?days=30"),
         fetch("/api/admin/inventory"),
         fetch("/api/admin/manual-orders"),
+        fetch("/api/admin/stock"),
       ]);
       if (!statsRes.ok || !ordersRes.ok) throw new Error("Failed to load data");
-      const [statsData, ordersData, analyticsData, inventoryData, manualData] = await Promise.all([
+      const [statsData, ordersData, analyticsData, inventoryData, manualData, stockData] = await Promise.all([
         statsRes.json(),
         ordersRes.json(),
         analyticsRes.ok ? analyticsRes.json() : { daily: [], topPages: [], totalViews: 0 },
         inventoryRes.ok ? inventoryRes.json() : { products: [] },
         manualRes.ok ? manualRes.json() : { orders: [] },
+        stockRes.ok ? stockRes.json() : { stock: {} },
       ]);
       setStats(statsData);
       setOrders(ordersData.orders);
       setAnalytics(analyticsData);
       setInventory(inventoryData.products);
       setManualOrders(manualData.orders);
+      setStock(stockData.stock);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -905,6 +979,20 @@ export default function AdminDashboard() {
       setInventory((inv) =>
         inv.map((p) => (p.id === productId ? { ...p, inStock: newValue } : p))
       );
+    } else {
+      const err = await res.json();
+      alert("Error: " + err.error);
+    }
+  }
+
+  async function handleSetStock(productId, qty) {
+    const res = await fetch("/api/admin/stock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId, qty }),
+    });
+    if (res.ok) {
+      setStock((s) => ({ ...s, [productId]: qty }));
     } else {
       const err = await res.json();
       alert("Error: " + err.error);
@@ -1078,7 +1166,7 @@ export default function AdminDashboard() {
                 </div>
                 <OrdersTable orders={orders} />
               </div>
-              <ManualOrdersSection orders={manualOrders} onChange={setManualOrders} />
+              <ManualOrdersSection orders={manualOrders} onChange={setManualOrders} inventory={inventory} />
             </>
           )}
 
@@ -1086,7 +1174,7 @@ export default function AdminDashboard() {
           {!loading && inventory && tab === "inventory" && (
             <div style={s.section}>
               <h2 style={s.sectionHeading}>Inventory</h2>
-              <InventoryTable products={inventory} onToggle={handleInventoryToggle} />
+              <InventoryTable products={inventory} onToggle={handleInventoryToggle} stock={stock} onSetStock={handleSetStock} />
             </div>
           )}
         </div>
