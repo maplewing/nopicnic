@@ -441,6 +441,7 @@ export const products = [
     stripePriceId: "price_1TgAIAEiVbcGdXdNC2aBnAi0",
     slug: "name-right-now-bundle",
     category: "Naming",
+    isBundle: true,
     inStock: true,
     productWeightOz: 28.6,
     images: ["/images/bundle.jpg"],

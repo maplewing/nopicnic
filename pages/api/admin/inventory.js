@@ -15,6 +15,7 @@ export default async function handler(req, res) {
         limited: p.limited || false,
         isDigital: p.isDigital || false,
         isService: p.isService || false,
+        isBundle: p.isBundle || false,
         stripePriceId: p.stripePriceId || "",
         slug: p.slug,
       })),

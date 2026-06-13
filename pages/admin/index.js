@@ -462,7 +462,7 @@ function InventoryTable({ products, onToggle, stock, onSetStock }) {
         </thead>
         <tbody>
           {products.map((p) => {
-            const isPhysical = !p.isDigital && !p.isService;
+            const isPhysical = !p.isDigital && !p.isService && !p.isBundle;
             const stockVal = stock[p.id];
             const inputVal = p.id in qtyInputs ? qtyInputs[p.id] : (stockVal !== undefined ? String(stockVal) : "");
             return (
@@ -712,7 +712,7 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
     if (res.ok) onChange(orders.filter((o) => o.id !== id));
   }
 
-  const physicalProducts = (inventory || []).filter((p) => !p.isDigital && !p.isService);
+  const physicalProducts = (inventory || []).filter((p) => !p.isDigital && !p.isService && !p.isBundle);
 
   const inp = {
     border: "1px solid #ddd", padding: "6px 8px", fontSize: 13,
