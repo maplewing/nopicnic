@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     try {
       const session = await stripe.checkout.sessions.retrieve(
         event.data.object.id,
-        { expand: ["line_items", "line_items.data.price.product"] }
+        { expand: ["line_items", "line_items.data.price.product", "shipping_cost.shipping_rate"] }
       );
 
       // Assign a sequential order number (starting at #2684)
@@ -129,20 +129,27 @@ export default async function handler(req, res) {
       const shippingLabel = session.shipping_cost?.amount_total != null
         ? `$${(session.shipping_cost.amount_total / 100).toFixed(2)}`
         : "—";
+      const shippingMethod = session.shipping_cost?.shipping_rate
+        ? (typeof session.shipping_cost.shipping_rate === "object"
+            ? session.shipping_cost.shipping_rate.display_name
+            : null)
+        : null;
+      const shipLine = addr
+        ? `Via:      ${shippingMethod || "—"} (${shippingLabel})\n\nShip to:\n${addrLine}`
+        : "Digital / no shipping address";
       await resend.emails.send({
         from: "No Picnic Press <orders@nopicnicpress.com>",
         to: "hi@nopicnicpress.com",
-        subject: `New order${orderNumber ? ` #${orderNumber}` : ""} — ${session.customer_details?.name || toEmail}`,
+        subject: `📚 New order${orderNumber ? ` #${orderNumber}` : ""} — ${session.customer_details?.name || toEmail}`,
         html: `<pre style="font-family:monospace;font-size:14px;line-height:1.6;">
 New order${orderNumber ? ` #${orderNumber}` : ""}
 
 Customer: ${session.customer_details?.name || ""} &lt;${toEmail}&gt;
-Total:    $${(session.amount_total / 100).toFixed(2)} (shipping ${shippingLabel})
+Total:    $${(session.amount_total / 100).toFixed(2)}
 
 ${itemLines}
 
-Ship to:
-${addrLine}
+${shipLine}
 </pre>`,
       });
 
