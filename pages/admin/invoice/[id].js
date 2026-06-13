@@ -59,7 +59,7 @@ export default function InvoicePage({ order }) {
           letter-spacing: 1px;
         }
         .signature { margin-top: 32px; }
-        .sig-logo { width: 150px; display: block; margin-bottom: 4px; }
+        .sig-logo { width: 60px; display: block; margin-bottom: 4px; }
         @media print {
           .print-btn { display: none; }
           body { margin: 0; }
@@ -134,6 +134,7 @@ export default function InvoicePage({ order }) {
 
         <div className="signature">
           <div>Many thanks.</div>
+          <br />
           <img src="/images/favicon.png" className="sig-logo" alt="" />
         </div>
 
