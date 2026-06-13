@@ -87,7 +87,7 @@ async function handleDomestic(res, address, weightOz) {
         parcels: [{
           length: "12", width: "9", height: "2",
           distance_unit: "in",
-          weight: String(weightOz),
+          weight: parseFloat(weightOz).toFixed(2),
           mass_unit: "oz",
         }],
         async: false,
