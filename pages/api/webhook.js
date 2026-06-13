@@ -118,6 +118,34 @@ export default async function handler(req, res) {
         console.error("Resend error for session", session.id, error);
       }
 
+      // Admin notification
+      const itemLines = (session.line_items?.data || [])
+        .map((i) => `${i.description}${i.quantity > 1 ? ` × ${i.quantity}` : ""} — $${(i.amount_total / 100).toFixed(2)}`)
+        .join("<br>");
+      const addr = session.shipping_details?.address;
+      const addrLine = addr
+        ? `${addr.line1}${addr.line2 ? ", " + addr.line2 : ""}, ${addr.city}, ${addr.state} ${addr.postal_code}, ${addr.country}`
+        : "Digital / no shipping address";
+      const shippingLabel = session.shipping_cost?.amount_total != null
+        ? `$${(session.shipping_cost.amount_total / 100).toFixed(2)}`
+        : "—";
+      await resend.emails.send({
+        from: "No Picnic Press <orders@nopicnicpress.com>",
+        to: "hi@nopicnicpress.com",
+        subject: `New order${orderNumber ? ` #${orderNumber}` : ""} — ${session.customer_details?.name || toEmail}`,
+        html: `<pre style="font-family:monospace;font-size:14px;line-height:1.6;">
+New order${orderNumber ? ` #${orderNumber}` : ""}
+
+Customer: ${session.customer_details?.name || ""} &lt;${toEmail}&gt;
+Total:    $${(session.amount_total / 100).toFixed(2)} (shipping ${shippingLabel})
+
+${itemLines}
+
+Ship to:
+${addrLine}
+</pre>`,
+      });
+
       // Add to Loops — only subscribe and trigger drip if customer opted in (GDPR)
       const firstName = session.customer_details?.name?.split(" ")[0] || "";
       const optedIn = false; // marketing consent checkbox removed from checkout
