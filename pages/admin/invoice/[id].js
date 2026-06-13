@@ -42,7 +42,7 @@ export default function InvoicePage({ order }) {
         .page { max-width: 640px; margin: 60px auto; padding: 0 40px; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
         .invoice-title { text-decoration: underline; font-weight: bold; font-size: 13px; }
-        .logo { width: 324px; opacity: 0.85; }
+        .logo { width: 243px; opacity: 0.85; }
         .block { margin-bottom: 24px; }
         .section-label { font-weight: bold; }
         .underline { text-decoration: underline; }
