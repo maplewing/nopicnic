@@ -15,12 +15,18 @@ const MEDIA_MAIL_RATE = {
 };
 
 const UPS_SERVICE_NAMES = {
-  UPSWWExpedited:   "UPS Worldwide Expedited",
-  UPSWWSaver:       "UPS Worldwide Saver",
-  UPSWWExpress:     "UPS Worldwide Express",
-  UPSWWExpressPlus: "UPS Worldwide Express Plus",
-  UPSStandard:      "UPS Standard",
-  UPSExpedited:     "UPS Expedited",
+  // EasyPost / UPSDAP service tokens
+  UPSWorldwideEconomyDDU: "UPS Worldwide Economy",
+  Expedited:              "UPS Worldwide Expedited",
+  UPSSaver:               "UPS Worldwide Saver",
+  Express:                "UPS Worldwide Express",
+  ExpressPlus:            "UPS Worldwide Express Plus",
+  // Legacy / alternate tokens
+  UPSWWExpedited:         "UPS Worldwide Expedited",
+  UPSWWSaver:             "UPS Worldwide Saver",
+  UPSWWExpress:           "UPS Worldwide Express",
+  UPSWWExpressPlus:       "UPS Worldwide Express Plus",
+  UPSStandard:            "UPS Standard",
 };
 
 const ORIGIN = {
@@ -174,25 +180,56 @@ async function handleInternational(res, address, weightOz) {
   // EasyPost routes UPS through "UPS" or "UPSDAP" depending on account type
   const isUPS = (r) => r.carrier === "UPS" || r.carrier === "UPSDAP";
 
-  const rates = (data.rates || [])
+  const toRate = (r) => ({
+    token: r.id,
+    serviceToken: r.service,
+    service: UPS_SERVICE_NAMES[r.service] || r.service,
+    amount: r.rate,
+    currency: r.currency?.toUpperCase() || "USD",
+    estimatedDays: r.delivery_days || r.est_delivery_days || null,
+    durationTerms: (() => {
+      const days = r.delivery_days || r.est_delivery_days;
+      if (!days) return null;
+      return days === 1 ? "Next business day" : `${days} business days`;
+    })(),
+  });
+
+  const allRates = (data.rates || [])
     .filter((r) => isUPS(r) && r.rate)
-    .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
-    .map((r) => ({
-      token: r.id,
-      serviceToken: r.service,
-      service: UPS_SERVICE_NAMES[r.service] || r.service,
-      amount: r.rate,
-      currency: r.currency?.toUpperCase() || "USD",
-      estimatedDays: r.delivery_days || r.est_delivery_days || null,
-      durationTerms: null,
-    }));
+    .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
 
   // If no UPS rates returned, log all carriers for debugging
-  if (rates.length === 0) {
+  if (allRates.length === 0) {
     const carriers = [...new Set((data.rates || []).map(r => r.carrier))];
     console.log("EasyPost: no UPS/UPSDAP rates. Available carriers:", carriers);
     console.log("EasyPost messages:", data.messages);
+    return res.json({ rates: [] });
   }
+
+  // Pick cheapest, cheapest 1-day, and a middle option
+  const cheapest = allRates[0];
+
+  // Cheapest 1-day rate; omitted if none available
+  const oneDayRates = allRates.filter(r => (r.delivery_days || r.est_delivery_days) === 1);
+  const fastest = oneDayRates.length > 0
+    ? oneDayRates[0] // already sorted by price
+    : null;
+
+  // Middle: exclude cheapest and fastest, pick the one closest to the midpoint price
+  const others = allRates.filter(r => r.id !== cheapest.id && r.id !== fastest.id);
+  const middle = others.length > 0
+    ? others[Math.floor(others.length / 2)]
+    : null;
+
+  const seen = new Set();
+  const rates = [cheapest, middle, fastest]
+    .filter(Boolean)
+    .filter(r => {
+      if (seen.has(r.id)) return false;
+      seen.add(r.id);
+      return true;
+    })
+    .map(toRate);
 
   return res.json({ rates });
 }
