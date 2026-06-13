@@ -330,7 +330,7 @@ export const products = [
   {
     id: "run-studio-run",
     name: "Run Studio Run",
-    subtitle: "Run Studio Run is a book that details how to manage and grow a small creative studio.",
+    subtitle: "The business book for creative people that isn't boring, repetitive, or blatantly sexist.",
     price: 25,
     stripePriceId: "price_1TgAFSEiVbcGdXdNSpAiQznm",
     slug: "run-studio-run",
