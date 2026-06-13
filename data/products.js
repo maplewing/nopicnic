@@ -299,7 +299,7 @@ export const products = [
     slug: "dont-call-it-that",
     category: "Books",
     alsoIn: ["Naming"],
-    inStock: false,
+    inStock: true,
     productWeightOz: 13,
     images: ["/images/dcit-cover.jpg", "/images/dcit-spread.jpg", "/images/dcit-mockup-2.jpg", "/images/dcit-mockup-3.jpg", "/images/dcit_grid-stack_2730x1680.jpg", "/images/dcit_inside-cover_1680x2000.jpg", "/images/dcit_spine-stack_2730x1680.jpg", "/images/dcit_spread-flat-2_2730x1680.jpg"],
     pressImage: "/images/dcit-press_transparent.jpg",
