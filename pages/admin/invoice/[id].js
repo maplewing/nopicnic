@@ -133,8 +133,8 @@ export default function InvoicePage({ order }) {
         </div>
 
         <div className="signature">
-          <img src="/images/npp-logo.png" className="sig-logo" alt="" />
           <div>Many thanks.</div>
+          <img src="/images/favicon.png" className="sig-logo" alt="" />
         </div>
 
         <button className="print-btn" onClick={() => window.print()}>
