@@ -361,7 +361,7 @@ export const products = [
       "Finding Work",
       "Negotiation",
     ],
-    contributorsLabel: "Run Studio Run is filled with insights and tips from the leaders of a diverse range of studios, including",
+    contributorsLabel: "Including insights and tips from",
     contributors: [
       { name: "Commercial Type", url: "https://commercialtype.com" },
       { name: "Draplin Design Co.", url: "https://draplin.com" },
@@ -507,7 +507,7 @@ export const products = [
       "Finding Work",
       "Negotiation",
     ],
-    contributorsLabel: "Run Studio Run is filled with insights and tips from the leaders of a diverse range of studios, including",
+    contributorsLabel: "Including insights and tips from",
     contributors: [
       { name: "Commercial Type", url: "https://commercialtype.com" },
       { name: "Draplin Design Co.", url: "https://draplin.com" },
