@@ -29,6 +29,19 @@ const UPS_SERVICE_NAMES = {
   UPSStandard:            "UPS Standard",
 };
 
+// Fallback transit estimates when EasyPost doesn't return delivery_days
+const UPS_DURATION_FALLBACK = {
+  UPSWorldwideEconomyDDU: "8–12 business days",
+  Expedited:              "2–5 business days",
+  UPSSaver:               "2–3 business days",
+  Express:                "1–3 business days",
+  ExpressPlus:            "1–2 business days",
+  UPSWWExpedited:         "2–5 business days",
+  UPSWWSaver:             "2–3 business days",
+  UPSWWExpress:           "1–3 business days",
+  UPSWWExpressPlus:       "1–2 business days",
+};
+
 const ORIGIN = {
   name: "No Picnic Press",
   street1: "1715 9th St.",
@@ -190,8 +203,8 @@ async function handleInternational(res, address, weightOz) {
     estimatedDays: r.delivery_days || r.est_delivery_days || null,
     durationTerms: (() => {
       const days = r.delivery_days || r.est_delivery_days;
-      if (!days) return null;
-      return days === 1 ? "Next business day" : `${days} business days`;
+      if (days) return days === 1 ? "Next business day" : `${days} business days`;
+      return UPS_DURATION_FALLBACK[r.service] || null;
     })(),
   });
 
