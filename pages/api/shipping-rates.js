@@ -174,7 +174,8 @@ async function handleInternational(res, address, weightOz) {
 
   // Log what EasyPost returns so we can see carriers/services in Vercel logs
   console.log("EasyPost rates raw:", JSON.stringify((data.rates || []).map(r => ({
-    carrier: r.carrier, service: r.service, rate: r.rate, currency: r.currency
+    carrier: r.carrier, service: r.service, rate: r.rate, currency: r.currency,
+    delivery_days: r.delivery_days, est_delivery_days: r.est_delivery_days,
   }))));
 
   // EasyPost routes UPS through "UPS" or "UPSDAP" depending on account type
@@ -216,7 +217,7 @@ async function handleInternational(res, address, weightOz) {
     : null;
 
   // Middle: exclude cheapest and fastest, pick the one closest to the midpoint price
-  const others = allRates.filter(r => r.id !== cheapest.id && r.id !== fastest.id);
+  const others = allRates.filter(r => r.id !== cheapest.id && r.id !== fastest?.id);
   const middle = others.length > 0
     ? others[Math.floor(others.length / 2)]
     : null;
