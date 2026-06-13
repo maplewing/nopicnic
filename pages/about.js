@@ -4,7 +4,8 @@ export default function About() {
   return (
     <>
       <Head>
-        <title>Eli — No Picnic Press</title>
+        <title>Eli Altman — No Picnic Press</title>
+        <meta name="description" content="Eli Altman is the author of Don't Call It That and Run Studio Run, and Managing Director of naming studio A Hundred Monkeys. No Picnic Press is his Berkeley, California-based publishing imprint." />
       </Head>
       <div className="about-page">
         <img

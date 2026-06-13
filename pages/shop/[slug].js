@@ -50,6 +50,12 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           <meta property="og:image" content={`${process.env.NEXT_PUBLIC_URL}${product.images[0]}`} />
         )}
         <meta property="og:site_name" content="No Picnic Press" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${product.name} — No Picnic Press`} />
+        <meta name="twitter:description" content={product.description} />
+        {product.images?.[0] && (
+          <meta name="twitter:image" content={`${process.env.NEXT_PUBLIC_URL}${product.images[0]}`} />
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -60,6 +66,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               description: product.description,
               image: product.images?.map((img) => `${process.env.NEXT_PUBLIC_URL}${img}`),
               brand: { "@type": "Brand", name: "No Picnic Press" },
+              author: { "@type": "Person", name: "Eli Altman" },
               offers: {
                 "@type": "Offer",
                 price: product.price,
