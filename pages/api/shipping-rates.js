@@ -166,8 +166,16 @@ async function handleInternational(res, address, weightOz) {
 
   const data = await epRes.json();
 
+  // Log what EasyPost returns so we can see carriers/services in Vercel logs
+  console.log("EasyPost rates raw:", JSON.stringify((data.rates || []).map(r => ({
+    carrier: r.carrier, service: r.service, rate: r.rate, currency: r.currency
+  }))));
+
+  // EasyPost routes UPS through "UPS" or "UPSDAP" depending on account type
+  const isUPS = (r) => r.carrier === "UPS" || r.carrier === "UPSDAP";
+
   const rates = (data.rates || [])
-    .filter((r) => r.carrier === "UPS" && r.rate)
+    .filter((r) => isUPS(r) && r.rate)
     .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate))
     .map((r) => ({
       token: r.id,
@@ -178,6 +186,13 @@ async function handleInternational(res, address, weightOz) {
       estimatedDays: r.delivery_days || r.est_delivery_days || null,
       durationTerms: null,
     }));
+
+  // If no UPS rates returned, log all carriers for debugging
+  if (rates.length === 0) {
+    const carriers = [...new Set((data.rates || []).map(r => r.carrier))];
+    console.log("EasyPost: no UPS/UPSDAP rates. Available carriers:", carriers);
+    console.log("EasyPost messages:", data.messages);
+  }
 
   return res.json({ rates });
 }
