@@ -3,9 +3,15 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const ALL_COUNTRIES = [
-  "US", "CA", "GB", "AU", "NZ", "DE", "FR", "NL", "SE", "NO", "DK",
-  "IE", "BE", "CH", "AT", "IT", "ES", "PT", "PL", "JP", "KR",
-  "SG", "HK", "MX", "BR", "AR", "ZA", "IN",
+  "US", "AR", "AM", "AU", "AT", "AZ", "BH", "BD", "BE", "BO", "BA",
+  "BR", "BN", "BG", "KH", "CA", "CL", "CN", "CO", "CR", "HR", "CY",
+  "CZ", "DK", "DO", "EC", "EG", "EE", "FI", "FR", "GE", "DE", "GH",
+  "GR", "GT", "HK", "HU", "IS", "IN", "ID", "IE", "IL", "IT", "JM",
+  "JP", "JO", "KZ", "KE", "KW", "LV", "LB", "LT", "LU", "MO", "MY",
+  "MT", "MX", "MA", "NL", "NZ", "NG", "NO", "OM", "PK", "PA", "PY",
+  "PE", "PH", "PL", "PT", "PR", "QA", "RO", "SA", "RS", "SG", "SK",
+  "SI", "ZA", "KR", "ES", "LK", "SE", "CH", "TW", "TH", "TT", "TN",
+  "TR", "UA", "AE", "GB", "UY", "VN",
 ];
 
 export default async function handler(req, res) {

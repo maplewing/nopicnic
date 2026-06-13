@@ -40,8 +40,58 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
   return (
     <>
       <Head>
-        <title>{product.name} — No Picnic Press</title>
+        <title>{`${product.name} — No Picnic Press`}</title>
         <meta name="description" content={product.description} />
+        <meta property="og:title" content={`${product.name} — No Picnic Press`} />
+        <meta property="og:description" content={product.description} />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`} />
+        {product.images?.[0] && (
+          <meta property="og:image" content={`${process.env.NEXT_PUBLIC_URL}${product.images[0]}`} />
+        )}
+        <meta property="og:site_name" content="No Picnic Press" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Product",
+              name: product.name,
+              description: product.description,
+              image: product.images?.map((img) => `${process.env.NEXT_PUBLIC_URL}${img}`),
+              brand: { "@type": "Brand", name: "No Picnic Press" },
+              offers: {
+                "@type": "Offer",
+                price: product.price,
+                priceCurrency: "USD",
+                availability: product.inStock
+                  ? "https://schema.org/InStock"
+                  : "https://schema.org/OutOfStock",
+                url: `${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`,
+                seller: { "@type": "Organization", name: "No Picnic Press" },
+              },
+              ...(productReviews.length > 0 && {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: parseFloat(score),
+                  reviewCount: productReviews.length,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+                review: productReviews.slice(0, 5).map((r) => ({
+                  "@type": "Review",
+                  author: { "@type": "Person", name: r.author },
+                  reviewRating: {
+                    "@type": "Rating",
+                    ratingValue: r.rating,
+                    bestRating: 5,
+                  },
+                  reviewBody: r.text,
+                })),
+              }),
+            }),
+          }}
+        />
       </Head>
 
       <div className="container">
