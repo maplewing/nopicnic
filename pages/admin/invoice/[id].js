@@ -142,9 +142,9 @@ export default function InvoicePage({ order }) {
           <img src="/images/favicon.png" className="sig-logo" alt="" />
         </div>
 
-        <button className="print-btn" onClick={() => window.print()}>
+        <a href={`/api/admin/invoice-print/${id}`} target="_blank" className="print-btn">
           PRINT / SAVE PDF
-        </button>
+        </a>
       </div>
     </>
   );
