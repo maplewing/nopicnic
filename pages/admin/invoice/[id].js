@@ -63,12 +63,10 @@ export default function InvoicePage({ order }) {
           }
           .signature { margin-top: 32px; }
           .sig-logo { width: 60px; display: block; margin-bottom: 4px; }
-          @page { margin: 1in; }
           @media print {
-            html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+            html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; margin: 0 !important; padding: 0 !important; }
             .print-btn { display: none; }
-            body { margin: 0; }
-            .page { max-width: none; margin: 0; padding: 0; }
+            .page { max-width: none; width: 100%; margin: 0; padding: 0; }
           }
         `}</style>
       </Head>

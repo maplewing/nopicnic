@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     if (blob) {
       const fetchRes = await fetch(blob.url, {
         headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+        cache: "no-store",
       });
       if (fetchRes.ok) {
         const existing = await fetchRes.json();
