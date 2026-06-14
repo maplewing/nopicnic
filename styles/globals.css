@@ -255,6 +255,7 @@ button {
 .product-images {
   position: sticky;
   top: calc(var(--nav-height) + 24px);
+  min-width: 0;
 }
 
 .product-image-main {

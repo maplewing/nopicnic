@@ -76,6 +76,22 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                   : "https://schema.org/OutOfStock",
                 url: `${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`,
                 seller: { "@type": "Organization", name: "No Picnic Press" },
+                hasMerchantReturnPolicy: {
+                  "@type": "MerchantReturnPolicy",
+                  applicableCountry: "US",
+                  returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+                  merchantReturnDays: product.isDigital ? 2 : 14,
+                  returnMethod: "https://schema.org/ReturnByMail",
+                  returnFees: product.isDigital
+                    ? "https://schema.org/FreeReturn"
+                    : "https://schema.org/ReturnShippingFees",
+                },
+                ...((product.isDigital || product.isService) && {
+                  shippingDetails: {
+                    "@type": "OfferShippingDetails",
+                    doesNotShip: true,
+                  },
+                }),
               },
               ...(productReviews.length > 0 && {
                 aggregateRating: {
@@ -110,7 +126,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               )}
             </div>
             {product.images?.length > 1 && (
-              <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
                 {product.images.map((img, i) => (
                   <div
                     key={i}
