@@ -111,7 +111,11 @@ function generateHTML(order) {
     </div>
 
     <div class="block">
-      <div>Or Paypal at hi@elialtman.com</div>
+      <div>Or wire transfer:</div>
+      <div>San Francisco Fire Credit Union</div>
+      <div>Account: 75600043670026</div>
+      <div>Routing: 321076506</div>
+      <div>SWIFT: SFFEUS66</div>
     </div>
 
     <div class="signature">
