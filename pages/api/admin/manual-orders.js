@@ -2,6 +2,7 @@ import { checkAdminAuth } from "../../../lib/adminAuth";
 import {
   getManualOrders,
   createManualOrder,
+  updateManualOrder,
   deleteManualOrder,
 } from "../../../lib/manualOrders";
 import { decrementStock } from "../../../lib/stock";
@@ -28,6 +29,17 @@ export default async function handler(req, res) {
       }
     }
     return res.status(201).json({ order });
+  }
+
+  if (req.method === "PUT") {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: "id is required" });
+    const { date, recipient, items, tracking, carrier, via, shippingCost, notes } = req.body;
+    if (!date || !recipient?.name || !items?.length) {
+      return res.status(400).json({ error: "date, recipient.name, and items are required" });
+    }
+    const order = await updateManualOrder(id, { date, recipient, items, tracking, carrier, via, shippingCost, notes });
+    return res.status(200).json({ order });
   }
 
   if (req.method === "DELETE") {

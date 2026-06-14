@@ -642,8 +642,33 @@ function TopPagesTable({ pages }) {
 
 // ─── Manual Orders Section ────────────────────────────────────────────────────
 
+function orderToForm(order) {
+  return {
+    date: order.date || "",
+    recipient: {
+      name: order.recipient?.name || "",
+      address: order.recipient?.address || "",
+      eori: order.recipient?.eori || "",
+      vatId: order.recipient?.vatId || "",
+    },
+    items: (order.items || []).map((it) => ({
+      name: it.name || "",
+      qty: it.qty || 1,
+      unitPrice: it.unitPrice || 0,
+      discount: it.discount || 0,
+      productId: it.productId || "",
+    })),
+    tracking: order.tracking || "",
+    carrier: order.carrier || "",
+    via: order.via || "",
+    shippingCost: order.shippingCost ?? 0,
+    notes: order.notes || "",
+  };
+}
+
 function ManualOrdersSection({ orders, onChange, inventory }) {
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [pasteText, setPasteText] = useState("");
   const [form, setForm] = useState(blankForm());
   const [saving, setSaving] = useState(false);
@@ -680,6 +705,20 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
     setForm(parsed);
   }
 
+  function handleEdit(order) {
+    setEditingId(order.id);
+    setForm(orderToForm(order));
+    setPasteText("");
+    setShowForm(true);
+  }
+
+  function handleCancelForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(blankForm());
+    setPasteText("");
+  }
+
   async function handleSave() {
     if (!form.recipient.name || !form.items.length) {
       alert("Recipient name and at least one item are required.");
@@ -688,18 +727,28 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
     setSaving(true);
     try {
       const payload = { ...form, shippingCost: parseFloat(form.shippingCost) || 0 };
-      const res = await fetch("/api/admin/manual-orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Save failed");
-      const { order } = await res.json();
-      onChange([order, ...orders]);
-      setShowForm(false);
-      setForm(blankForm());
-      setPasteText("");
-      window.open(`/admin/invoice/${order.id}`, "_blank");
+      if (editingId) {
+        const res = await fetch(`/api/admin/manual-orders?id=${encodeURIComponent(editingId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("Save failed");
+        const { order } = await res.json();
+        onChange(orders.map((o) => (o.id === editingId ? order : o)));
+        handleCancelForm();
+      } else {
+        const res = await fetch("/api/admin/manual-orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error("Save failed");
+        const { order } = await res.json();
+        onChange([order, ...orders]);
+        handleCancelForm();
+        window.open(`/admin/invoice/${order.id}`, "_blank");
+      }
     } catch {
       alert("Error saving order.");
     }
@@ -729,7 +778,7 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16 }}>
         <h2 style={s.sectionHeading}>Manual Orders</h2>
         <button
-          onClick={() => { setShowForm((v) => !v); if (showForm) { setForm(blankForm()); setPasteText(""); } }}
+          onClick={() => { if (showForm) { handleCancelForm(); } else { setShowForm(true); } }}
           style={{ ...s.filterBtn, ...(showForm ? { background: PALETTE.pine, color: PALETTE.chiffon, border: `1px solid ${PALETTE.pine}` } : {}) }}
         >
           {showForm ? "Cancel" : "+ New Manual Order"}
@@ -738,6 +787,11 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
 
       {showForm && (
         <div style={{ background: "#fff", border: "1px solid #e0e0e0", padding: "24px 24px 28px", marginBottom: 24 }}>
+          {editingId && (
+            <div style={{ marginBottom: 16, fontSize: 12, color: "#888", fontFamily: MONO }}>
+              Editing {editingId}
+            </div>
+          )}
           {/* Paste to fill */}
           <div style={{ marginBottom: 20 }}>
             <label style={lbl}>Paste to fill</label>
@@ -860,7 +914,7 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
                 onClick={handleSave} disabled={saving}
                 style={{ background: PALETTE.tangerine, color: PALETTE.chiffon, border: "none", padding: "9px 24px", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: DISPLAY, cursor: saving ? "wait" : "pointer" }}
               >
-                {saving ? "Saving…" : "Save & Open Invoice"}
+                {saving ? "Saving…" : editingId ? "Save Changes" : "Save & Open Invoice"}
               </button>
             </div>
           </div>
@@ -894,6 +948,11 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
                     style={{ color: PALETTE.tangerine, textDecoration: "none", fontSize: 12, fontWeight: 600 }}>
                     Invoice
                   </a>
+                  <span style={{ color: "#ddd", margin: "0 6px" }}>·</span>
+                  <button onClick={() => handleEdit(order)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: PALETTE.pine, fontSize: 12, padding: 0, fontWeight: 600 }}>
+                    Edit
+                  </button>
                   <span style={{ color: "#ddd", margin: "0 6px" }}>·</span>
                   <button onClick={() => handleDelete(order.id)}
                     style={{ background: "none", border: "none", cursor: "pointer", color: "#bbb", fontSize: 12, padding: 0 }}>
