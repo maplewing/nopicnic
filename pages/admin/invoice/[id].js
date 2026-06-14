@@ -1,3 +1,4 @@
+import Head from "next/head";
 import { getManualOrder } from "../../../lib/manualOrders";
 import { checkAdminAuth } from "../../../lib/adminAuth";
 
@@ -36,36 +37,40 @@ export default function InvoicePage({ order }) {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: "Courier New", Courier, monospace; font-size: 13px; line-height: 1.6; color: #000; background: #fff; }
-        .page { max-width: 640px; margin: 60px auto; padding: 0 40px; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
-        .invoice-title { text-decoration: underline; font-weight: bold; font-size: 13px; }
-        .logo { width: 243px; opacity: 0.85; }
-        .block { margin-bottom: 24px; }
-        .section-label { font-weight: bold; }
-        .underline { text-decoration: underline; }
-        .print-btn {
-          display: inline-block;
-          margin-top: 40px;
-          padding: 8px 20px;
-          background: #162114;
-          color: #FFEDD2;
-          border: none;
-          cursor: pointer;
-          font-family: "Courier New", Courier, monospace;
-          font-size: 12px;
-          letter-spacing: 1px;
-        }
-        .signature { margin-top: 32px; }
-        .sig-logo { width: 60px; display: block; margin-bottom: 4px; }
-        @media print {
-          .print-btn { display: none; }
-          body { margin: 0; }
-          .page { margin: 40px; }
-        }
-      ` }} />
+      <Head>
+        <title>{`npp_invoice_${id.toLowerCase()}`}</title>
+        <style>{`
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: "Courier New", Courier, monospace; font-size: 13px; line-height: 1.6; color: #000; background: #fff; }
+          .page { max-width: 640px; margin: 60px auto; padding: 0 40px; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+          .invoice-title { text-decoration: underline; font-weight: bold; font-size: 13px; }
+          .logo { width: 243px; opacity: 0.85; }
+          .block { margin-bottom: 24px; }
+          .section-label { font-weight: bold; }
+          .underline { text-decoration: underline; }
+          .print-btn {
+            display: inline-block;
+            margin-top: 40px;
+            padding: 8px 20px;
+            background: #162114;
+            color: #FFEDD2;
+            border: none;
+            cursor: pointer;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 12px;
+            letter-spacing: 1px;
+          }
+          .signature { margin-top: 32px; }
+          .sig-logo { width: 60px; display: block; margin-bottom: 4px; }
+          @media print {
+            html, body { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+            .print-btn { display: none; }
+            body { margin: 0; }
+            .page { margin: 40px; }
+          }
+        `}</style>
+      </Head>
 
       <div className="page">
         <div className="header">
