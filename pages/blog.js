@@ -29,6 +29,12 @@ export default function Blog() {
       </Head>
       <div className="about-page">
         <h1>Blog</h1>
+        <p style={{ fontSize: 13, color: "var(--gray-mid)", marginTop: 8 }}>
+          Posts open at{" "}
+          <a href="https://www.ahundredmonkeys.com" target="_blank" rel="noopener">
+            ahundredmonkeys.com
+          </a>
+        </p>
         <div style={{ marginTop: 32 }}>
           {posts === null && (
             <p style={{ color: "var(--gray-mid)" }}>Loading…</p>
@@ -45,6 +51,15 @@ export default function Blog() {
                 marginBottom: 32,
               }}
             >
+              {post.image && (
+                <a href={post.link} target="_blank" rel="noopener" style={{ display: "block", marginBottom: 16 }}>
+                  <img
+                    src={post.image}
+                    alt=""
+                    style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
+                  />
+                </a>
+              )}
               <div style={{ fontSize: 12, color: "var(--gray-mid)", marginBottom: 6 }}>
                 {fmtDate(post.date)}
               </div>

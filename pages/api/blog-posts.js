@@ -3,7 +3,7 @@ export default async function handler(req, res) {
 
   try {
     const wpRes = await fetch(
-      "https://www.ahundredmonkeys.com/wp-json/wp/v2/posts?per_page=50&orderby=date&order=desc",
+      "https://www.ahundredmonkeys.com/wp-json/wp/v2/posts?per_page=50&orderby=date&order=desc&_embed=wp:featuredmedia",
       {
         headers: {
           Accept: "application/json, */*",
@@ -30,6 +30,11 @@ export default async function handler(req, res) {
       excerpt: decode((p.excerpt?.rendered || "").replace(/<[^>]+>/g, "").replace(/\[&hellip;\]/g, "…")).trim(),
       date: p.date,
       link: p.link,
+      image: (() => {
+        const src = p._embedded?.["wp:featuredmedia"]?.[0]?.source_url;
+        if (!src) return null;
+        return src.startsWith("http") ? src : `https://www.ahundredmonkeys.com${src}`;
+      })(),
     }));
 
     res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400");
