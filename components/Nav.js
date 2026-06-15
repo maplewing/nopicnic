@@ -22,7 +22,7 @@ export default function Nav() {
             <li><Link href="/stockists" style={{ fontWeight: pathname === "/stockists" ? 700 : undefined }}>Stockists</Link></li>
             <li><Link href="/about" style={{ fontWeight: pathname === "/about" ? 700 : undefined }}>Eli</Link></li>
             <li><Link href="/studio-sessions" style={{ fontWeight: pathname === "/studio-sessions" ? 700 : undefined }}>Studio Sessions</Link></li>
-            <li><a href="https://www.ahundredmonkeys.com/?s=Eli+Altman&post_type=post" target="_blank" rel="noopener">Blog</a></li>
+            <li><Link href="/blog" style={{ fontWeight: pathname === "/blog" ? 700 : undefined }}>Blog</Link></li>
           </ul>
           <button className="nav-cart nav-cart-desktop" onClick={() => setIsOpen(true)}>
             Cart {count > 0 && `(${count})`}
@@ -50,7 +50,7 @@ export default function Nav() {
             <li><Link href="/stockists" onClick={close} style={{ fontWeight: pathname === "/stockists" ? 700 : undefined }}>Stockists</Link></li>
             <li><Link href="/about" onClick={close} style={{ fontWeight: pathname === "/about" ? 700 : undefined }}>Eli</Link></li>
             <li><Link href="/studio-sessions" onClick={close} style={{ fontWeight: pathname === "/studio-sessions" ? 700 : undefined }}>Studio Sessions</Link></li>
-            <li><a href="https://www.ahundredmonkeys.com/?s=Eli+Altman&post_type=post" target="_blank" rel="noopener" onClick={close}>Blog</a></li>
+            <li><Link href="/blog" onClick={close} style={{ fontWeight: pathname === "/blog" ? 700 : undefined }}>Blog</Link></li>
           </ul>
         </div>
       )}
