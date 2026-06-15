@@ -10,19 +10,14 @@ function fmtDate(iso) {
   });
 }
 
-function stripHtml(str) {
-  return (str || "").replace(/<[^>]+>/g, "").replace(/\[&hellip;\]/g, "…").trim();
-}
 
 export default function Blog() {
   const [posts, setPosts] = useState(null);
 
   useEffect(() => {
-    fetch(
-      "https://www.ahundredmonkeys.com/wp-json/wp/v2/posts?author=5&per_page=20&orderby=date&order=desc&_fields=id,title,excerpt,date,link"
-    )
+    fetch("/api/blog-posts")
       .then((r) => r.json())
-      .then((data) => setPosts(data))
+      .then((data) => setPosts(Array.isArray(data) ? data : []))
       .catch(() => setPosts([]));
   }, []);
 
@@ -66,11 +61,11 @@ export default function Blog() {
                   lineHeight: 1.3,
                 }}
               >
-                {post.title?.rendered || ""}
+                {post.title}
               </a>
-              {post.excerpt?.rendered && (
+              {post.excerpt && (
                 <p style={{ fontSize: 16, lineHeight: 1.7, color: "#333", margin: 0 }}>
-                  {stripHtml(post.excerpt.rendered)}
+                  {post.excerpt}
                 </p>
               )}
             </div>
