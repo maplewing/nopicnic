@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/drip/arrival",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/drip/review-request",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}

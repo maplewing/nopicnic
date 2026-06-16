@@ -58,8 +58,26 @@ export default function App({ Component, pageProps }) {
     trackPageView(router.asPath);
     // Track subsequent navigations
     router.events.on("routeChangeComplete", trackPageView);
+
+    // Also mark as engaged after 30s on site (catches single-page deep reads)
+    const KEY = "npp-sess";
+    const engageTimer = setTimeout(() => {
+      try {
+        if (sessionStorage.getItem(KEY) === "1") {
+          sessionStorage.setItem(KEY, "2+");
+          fetch("/api/track", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionEngaged: true }),
+            keepalive: true,
+          }).catch(() => {});
+        }
+      } catch (_) {}
+    }, 10000);
+
     return () => {
       router.events.off("routeChangeComplete", trackPageView);
+      clearTimeout(engageTimer);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

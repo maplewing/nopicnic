@@ -32,7 +32,7 @@ export default function Blog() {
         <p style={{ fontSize: 13, color: "var(--gray-mid)", marginTop: 8 }}>
           Posts open at{" "}
           <a href="https://www.ahundredmonkeys.com" target="_blank" rel="noopener">
-            ahundredmonkeys.com
+            A Hundred Monkeys
           </a>
         </p>
         <div style={{ marginTop: 32 }}>

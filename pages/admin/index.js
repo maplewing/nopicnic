@@ -304,9 +304,37 @@ function StatCard({ label, value, sub }) {
 
 // ─── Orders Table ─────────────────────────────────────────────────────────────
 
-function OrdersTable({ orders }) {
+function OrdersTable({ orders, shipments = [] }) {
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState("90");
+  const [shipTrack, setShipTrack] = useState({});   // { [sessionId]: trackingNumber string }
+  const [shipSending, setShipSending] = useState(new Set());
+  const [shipDone, setShipDone] = useState(new Set());
+
+  async function handleMarkShipped(sessionId) {
+    const tracking = (shipTrack[sessionId] || "").trim();
+    const carrier = inferCarrier(tracking);
+    setShipSending((s) => new Set([...s, sessionId]));
+    try {
+      const res = await fetch("/api/admin/shipments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          trackingNumber: tracking || undefined,
+          carrier: carrier || undefined,
+        }),
+      });
+      if (res.ok) {
+        setShipDone((s) => new Set([...s, sessionId]));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert("Shipping email failed: " + (err.error || "unknown error"));
+      }
+    } finally {
+      setShipSending((s) => { const n = new Set(s); n.delete(sessionId); return n; });
+    }
+  }
 
   const cutoff = Date.now() - parseInt(filter) * 86400000;
   const filtered = orders.filter((o) => new Date(o.date).getTime() >= cutoff);
@@ -375,7 +403,10 @@ function OrdersTable({ orders }) {
                 {expanded === order.stripeSessionId && (
                   <tr key={order.stripeSessionId + "-detail"}>
                     <td colSpan={8} style={s.expandedCell}>
-                      <div style={s.expandedContent}>
+                      <div style={{
+                        ...s.expandedContent,
+                        gridTemplateColumns: order.shipping.address ? "1fr 1fr 1fr 1fr" : "1fr 1fr 1fr",
+                      }}>
                         <div>
                           <div style={s.expandLabel}>Ship to</div>
                           {order.shipping.address ? (
@@ -413,6 +444,60 @@ function OrdersTable({ orders }) {
                             View in Stripe ↗
                           </a>
                         </div>
+                        {order.shipping.address && (() => {
+                          const sid = order.stripeSessionId;
+                          const rec = shipments.find((s) => s.sessionId === sid);
+                          const isShipped = shipDone.has(sid) || !!rec;
+                          const isSending = shipSending.has(sid);
+                          const tracking = shipTrack[sid] || "";
+                          const detectedCarrier = tracking ? inferCarrier(tracking) : "";
+                          return (
+                            <div>
+                              <div style={s.expandLabel}>Shipment</div>
+                              {isShipped ? (
+                                <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+                                  <span style={{ color: "#1a6e3c", fontWeight: 600 }}>Ship email sent ✓</span>
+                                  {rec?.trackingNumber && (
+                                    <div style={{ color: "#555", marginTop: 2 }}>
+                                      {rec.carrier && <span>{rec.carrier} </span>}
+                                      {rec.trackingNumber}
+                                    </div>
+                                  )}
+                                  {rec?.shippedAt && (
+                                    <div style={{ color: "#999", fontSize: 11, marginTop: 2 }}>
+                                      {fmtDate(rec.shippedAt)}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div>
+                                  <input
+                                    value={tracking}
+                                    onChange={(e) => setShipTrack((t) => ({ ...t, [sid]: e.target.value }))}
+                                    placeholder="Tracking # (optional)"
+                                    style={{
+                                      border: "1px solid #ddd", padding: "5px 8px", fontSize: 12,
+                                      fontFamily: MONO, width: "100%", outline: "none",
+                                      background: "#fff", color: "#111", marginBottom: 6, boxSizing: "border-box",
+                                    }}
+                                  />
+                                  {detectedCarrier && (
+                                    <div style={{ fontSize: 11, color: "#888", marginBottom: 6 }}>
+                                      {detectedCarrier} detected
+                                    </div>
+                                  )}
+                                  <button
+                                    onClick={() => handleMarkShipped(sid)}
+                                    disabled={isSending}
+                                    style={{ ...s.filterBtn, opacity: isSending ? 0.5 : 1 }}
+                                  >
+                                    {isSending ? "Sending…" : "Send ship email →"}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </td>
                   </tr>
@@ -983,27 +1068,30 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [manualOrders, setManualOrders] = useState([]);
+  const [shipments, setShipments] = useState([]);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [statsRes, ordersRes, analyticsRes, inventoryRes, manualRes, stockRes] = await Promise.all([
+      const [statsRes, ordersRes, analyticsRes, inventoryRes, manualRes, stockRes, shipmentsRes] = await Promise.all([
         fetch("/api/admin/stats"),
         fetch("/api/admin/orders?days=365"),
         fetch("/api/admin/analytics?days=30"),
         fetch("/api/admin/inventory"),
         fetch("/api/admin/manual-orders"),
         fetch("/api/admin/stock"),
+        fetch("/api/admin/shipments"),
       ]);
       if (!statsRes.ok || !ordersRes.ok) throw new Error("Failed to load data");
-      const [statsData, ordersData, analyticsData, inventoryData, manualData, stockData] = await Promise.all([
+      const [statsData, ordersData, analyticsData, inventoryData, manualData, stockData, shipmentsData] = await Promise.all([
         statsRes.json(),
         ordersRes.json(),
         analyticsRes.ok ? analyticsRes.json() : { daily: [], topPages: [], totalViews: 0 },
         inventoryRes.ok ? inventoryRes.json() : { products: [] },
         manualRes.ok ? manualRes.json() : { orders: [] },
         stockRes.ok ? stockRes.json() : { stock: {} },
+        shipmentsRes.ok ? shipmentsRes.json() : { shipments: [] },
       ]);
       setStats(statsData);
       setOrders(ordersData.orders);
@@ -1011,6 +1099,7 @@ export default function AdminDashboard() {
       setInventory(inventoryData.products);
       setManualOrders(manualData.orders);
       setStock(stockData.stock);
+      setShipments(shipmentsData.shipments || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -1223,7 +1312,7 @@ export default function AdminDashboard() {
                     </span>
                   )}
                 </div>
-                <OrdersTable orders={orders} />
+                <OrdersTable orders={orders} shipments={shipments} />
               </div>
               <ManualOrdersSection orders={manualOrders} onChange={setManualOrders} inventory={inventory} />
             </>
