@@ -1,7 +1,7 @@
 import "../styles/globals.css";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
-import { Montserrat, Courier_Prime } from "next/font/google";
+import { Inter, Courier_Prime } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { CartProvider } from "../components/CartContext";
@@ -9,9 +9,9 @@ import Nav from "../components/Nav";
 import CartDrawer from "../components/CartDrawer";
 import Footer from "../components/Footer";
 
-const montserrat = Montserrat({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["700"],
   display: "swap",
   variable: "--font-display",
 });
@@ -84,7 +84,7 @@ export default function App({ Component, pageProps }) {
   // Admin pages opt out of the site shell
   if (Component.noLayout) {
     return (
-      <div className={`${montserrat.variable} ${courierPrime.variable}`}>
+      <div className={`${inter.variable} ${courierPrime.variable}`}>
         <Component {...pageProps} />
       </div>
     );
@@ -92,7 +92,7 @@ export default function App({ Component, pageProps }) {
 
   return (
     <CartProvider>
-      <div className={`${montserrat.variable} ${courierPrime.variable}`}>
+      <div className={`${inter.variable} ${courierPrime.variable}`}>
         <div className="shipping-banner">
           Use code MOREBETTER for free domestic shipping on orders of $50 or more
         </div>
