@@ -134,7 +134,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                     style={{
                       width: 60,
                       height: 76,
-                      background: "#f5f5f5",
+                      background: "var(--bg)",
                       overflow: "hidden",
                       cursor: "pointer",
                       border: i === activeImg ? "1px solid #000" : "1px solid transparent",
