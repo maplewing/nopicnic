@@ -43,7 +43,14 @@ export default async function handler(req, res) {
     if (!email) return res.status(400).json({ error: "No email on session" });
 
     const firstName = session.customer_details?.name?.split(" ")[0] || "there";
-    const items = (session.line_items?.data || []).map((i) => i.description);
+    const items = (session.line_items?.data || []).map((lineItem) => {
+      const name = lineItem.description;
+      const match = products.find((p) => name.toLowerCase().includes(p.name.toLowerCase()));
+      return {
+        name,
+        image: match?.images?.[0] ? `https://nopicnicpress.com${match.images[0]}` : null,
+      };
+    });
 
     let recentPosts = [];
     try {

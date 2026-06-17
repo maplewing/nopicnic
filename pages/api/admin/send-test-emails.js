@@ -13,9 +13,10 @@ import { products } from "../../../data/products";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const dcit = products.find((p) => p.name === "Don't Call It That");
 const MOCK = {
   firstName: "Eli",
-  items: ["Don't Call It That"],
+  items: [{ name: "Don't Call It That", image: dcit?.images?.[0] ? `https://nopicnicpress.com${dcit.images[0]}` : null }],
   trackingNumber: "9400111899223397988345",
   trackingUrl: "https://tools.usps.com/go/TrackConfirmAction?tLabels=9400111899223397988345",
   carrier: "USPS",
