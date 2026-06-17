@@ -12,6 +12,7 @@ import { Resend } from "resend";
 import { checkAdminAuth } from "../../../lib/adminAuth";
 import { addShipment, getShipments } from "../../../lib/shipments";
 import { shippingConfirmationEmail } from "../../../lib/dripEmails";
+import { products } from "../../../data/products";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -44,6 +45,31 @@ export default async function handler(req, res) {
     const firstName = session.customer_details?.name?.split(" ")[0] || "there";
     const items = (session.line_items?.data || []).map((i) => i.description);
 
+    let recentPosts = [];
+    try {
+      const wpRes = await fetch(
+        "https://www.ahundredmonkeys.com/wp-json/wp/v2/posts?per_page=2&orderby=date&order=desc&_embed=wp:featuredmedia&author=5"
+      );
+      if (wpRes.ok) {
+        const posts = await wpRes.json();
+        recentPosts = posts.map((p) => ({
+          title: p.title?.rendered?.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n)).replace(/&amp;/g, "&").replace(/&quot;/g, '"') || "",
+          link: p.link,
+          image: p._embedded?.["wp:featuredmedia"]?.[0]?.source_url || null,
+        }));
+      }
+    } catch (_) {}
+
+    const suggestedProducts = products
+      .filter((p) => p.inStock && !p.isService && !items.some((i) => i.toLowerCase().includes(p.name.toLowerCase())))
+      .slice(0, 2)
+      .map((p) => ({
+        name: p.name,
+        subtitle: p.subtitle || null,
+        slug: p.slug,
+        image: p.images?.[0] ? `https://nopicnicpress.com${p.images[0]}` : null,
+      }));
+
     const { error } = await resend.emails.send({
       from: "No Picnic Press <orders@nopicnicpress.com>",
       to: email,
@@ -53,7 +79,9 @@ export default async function handler(req, res) {
         items,
         trackingNumber || null,
         trackingUrl || null,
-        carrier || null
+        carrier || null,
+        recentPosts,
+        suggestedProducts
       ),
     });
 

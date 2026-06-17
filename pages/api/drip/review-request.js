@@ -93,7 +93,7 @@ export default async function handler(req, res) {
     const { error } = await resend.emails.send({
       from: "No Picnic Press <orders@nopicnicpress.com>",
       to: toEmail,
-      subject: "A quick favor?",
+      subject: "So, what do you think?",
       html: reviewRequestEmail(firstName, items),
     });
 

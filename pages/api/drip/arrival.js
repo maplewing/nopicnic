@@ -8,9 +8,12 @@
 //   curl -H "Authorization: Bearer $CRON_SECRET" \
 //        https://nopicnicpress.com/api/drip/arrival
 
+import Stripe from "stripe";
 import { Resend } from "resend";
 import { getShipments, saveShipments } from "../../../lib/shipments";
 import { shipmentArrivalEmail } from "../../../lib/dripEmails";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -66,6 +69,26 @@ export default async function handler(req, res) {
 
     if (status !== "DELIVERED") continue;
 
+    let promoCode = null;
+    let promoExpiry = null;
+    if (process.env.STRIPE_ARRIVAL_COUPON_ID) {
+      try {
+        const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+        const promo = await stripe.promotionCodes.create({
+          coupon: process.env.STRIPE_ARRIVAL_COUPON_ID,
+          expires_at: expiresAt,
+        });
+        promoCode = promo.code;
+        promoExpiry = new Date(expiresAt * 1000).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      } catch (err) {
+        console.error("Promo code creation failed:", err.message);
+      }
+    }
+
     const { error } = await resend.emails.send({
       from: "No Picnic Press <orders@nopicnicpress.com>",
       to: shipment.email,
@@ -73,7 +96,9 @@ export default async function handler(req, res) {
       html: shipmentArrivalEmail(
         shipment.firstName,
         shipment.items,
-        shipment.trackingUrl || null
+        shipment.trackingUrl || null,
+        promoCode,
+        promoExpiry
       ),
     });
 
