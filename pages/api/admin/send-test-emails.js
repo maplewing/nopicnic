@@ -50,7 +50,7 @@ export default async function handler(req, res) {
   } catch (_) {}
 
   const suggestedProducts = products
-    .filter((p) => p.inStock && !p.isService && !MOCK.items.some((i) => i.toLowerCase().includes(p.name.toLowerCase())))
+    .filter((p) => p.inStock && !p.isService && !MOCK.items.some((i) => (typeof i === "string" ? i : i.name).toLowerCase().includes(p.name.toLowerCase())))
     .slice(0, 2)
     .map((p) => ({
       name: p.name,
