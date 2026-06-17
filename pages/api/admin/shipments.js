@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     const { error } = await resend.emails.send({
       from: "No Picnic Press <orders@nopicnicpress.com>",
       to: email,
-      subject: "Your order is on its way",
+      subject: "Your No Picnic Press order is on its way",
       html: shippingConfirmationEmail(
         firstName,
         items,
