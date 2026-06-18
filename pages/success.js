@@ -8,24 +8,39 @@ export default function Success() {
 
   useEffect(() => {
     const { session_id } = router.query;
-    if (!session_id || typeof window.fbq !== "function") return;
+    if (!session_id) return;
 
-    fetch(`/api/session-summary?session_id=${session_id}`)
-      .then((r) => r.json())
-      .then(({ total, currency, contentIds }) => {
-        window.fbq(
-          "track",
-          "Purchase",
-          {
-            value: total,
-            currency: currency || "USD",
-            content_ids: contentIds,
-            content_type: "product",
-          },
-          { eventID: session_id }
-        );
-      })
-      .catch(() => {});
+    function fire() {
+      fetch(`/api/session-summary?session_id=${session_id}`)
+        .then((r) => r.json())
+        .then(({ total, currency, contentIds }) => {
+          window.fbq(
+            "track",
+            "Purchase",
+            {
+              value: total,
+              currency: currency || "USD",
+              content_ids: contentIds,
+              content_type: "product",
+            },
+            { eventID: session_id }
+          );
+        })
+        .catch(() => {});
+    }
+
+    if (typeof window.fbq === "function") {
+      fire();
+    } else {
+      // Pixel script may still be loading — poll until ready
+      const interval = setInterval(() => {
+        if (typeof window.fbq === "function") {
+          clearInterval(interval);
+          fire();
+        }
+      }, 200);
+      setTimeout(() => clearInterval(interval), 5000);
+    }
   }, [router.query.session_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
