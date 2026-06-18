@@ -1,7 +1,33 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 
 export default function Success() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const { session_id } = router.query;
+    if (!session_id || typeof window.fbq !== "function") return;
+
+    fetch(`/api/session-summary?session_id=${session_id}`)
+      .then((r) => r.json())
+      .then(({ total, currency, contentIds }) => {
+        window.fbq(
+          "track",
+          "Purchase",
+          {
+            value: total,
+            currency: currency || "USD",
+            content_ids: contentIds,
+            content_type: "product",
+          },
+          { eventID: session_id }
+        );
+      })
+      .catch(() => {});
+  }, [router.query.session_id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
       <Head>

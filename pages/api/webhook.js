@@ -21,6 +21,7 @@ import { createDownloadToken } from "../../lib/downloadToken";
 import { products } from "../../data/products";
 import { assignOrderNumber } from "../../lib/orderNumbers";
 import { decrementStock } from "../../lib/stock";
+import { sendCapiPurchase } from "../../lib/metaCapi";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -187,6 +188,28 @@ ${shipLine}
         }
       } catch (loopsErr) {
         console.error("Loops error for session", session.id, loopsErr);
+      }
+
+      // Server-side Purchase event for Meta Conversions API (deduplicates with browser pixel via event_id)
+      try {
+        const contentIds = (session.line_items?.data || [])
+          .map((item) => {
+            const match = products.find((p) => p.stripePriceId === item.price?.id);
+            return match?.id || item.price?.id;
+          })
+          .filter(Boolean);
+
+        await sendCapiPurchase({
+          email: toEmail,
+          name: session.customer_details?.name || "",
+          value: (session.amount_total || 0) / 100,
+          currency: (session.currency || "usd").toUpperCase(),
+          contentIds,
+          eventId: session.id,
+          eventSourceUrl: `${process.env.NEXT_PUBLIC_URL}/success`,
+        });
+      } catch (capiErr) {
+        console.error("Meta CAPI error for session", session.id, capiErr.message);
       }
     } catch (err) {
       console.error("Error processing checkout.session.completed:", err);

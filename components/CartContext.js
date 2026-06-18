@@ -24,6 +24,16 @@ export function CartProvider({ children }) {
       body: JSON.stringify({ event: "add_to_cart", product: product.id }),
     }).catch(() => {});
 
+    if (typeof window.fbq === "function") {
+      window.fbq("track", "AddToCart", {
+        content_ids: [product.id],
+        content_type: "product",
+        content_name: product.name,
+        value: product.price,
+        currency: "USD",
+      });
+    }
+
     setItems((prev) => {
       const existing = prev.find((i) => i.id === product.id);
       if (existing) {

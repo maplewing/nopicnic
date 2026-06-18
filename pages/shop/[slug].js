@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { products, reviews } from "../../data/products";
 import { useCart } from "../../components/CartContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export async function getStaticPaths() {
   return {
@@ -25,6 +25,18 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
   const [showReviews, setShowReviews] = useState(false);
 
   const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (typeof window.fbq === "function") {
+      window.fbq("track", "ViewContent", {
+        content_ids: [product.id],
+        content_type: "product",
+        content_name: product.name,
+        value: product.price,
+        currency: "USD",
+      });
+    }
+  }, [product.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleAdd() {
     addItem(product);
