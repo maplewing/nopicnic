@@ -1,68 +1,91 @@
 import { list, put } from "@vercel/blob";
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
+// Module-level accumulator — persists across warm Lambda invocations.
+// Reduces Blob advanced requests from 2/request to ~2/BATCH_SIZE requests.
+const BATCH_SIZE = 25;
+const MAX_AGE_MS = 2 * 60 * 1000; // flush at least every 2 minutes
 
-  const { page, event, product, sessionStart, sessionEngaged } = req.body || {};
+let acc = {
+  date: null,
+  counts: { totalViews: 0, pages: {}, events: {} },
+  n: 0,
+  lastFlush: Date.now(),
+};
 
-  // Must have at least something to track
-  if (!page && !event && !sessionStart && !sessionEngaged) return res.status(400).end();
+async function flush(date) {
+  const blobPath = `admin/analytics/${date}.json`;
 
-  // Skip admin and API routes for page tracking
-  if (page && (page.startsWith("/admin") || page.startsWith("/api"))) {
-    res.status(200).end();
-    return;
-  }
-
-  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
-  const blobPath = `admin/analytics/${today}.json`;
+  // Snapshot and reset immediately so new events don't double-count
+  const snapshot = acc.counts;
+  acc.counts = { totalViews: 0, pages: {}, events: {} };
+  acc.n = 0;
+  acc.lastFlush = Date.now();
 
   try {
     const { blobs } = await list({ prefix: blobPath, limit: 1 });
-    let data = { totalViews: 0, pages: {}, events: {} };
+    let stored = { totalViews: 0, pages: {}, events: {} };
 
-    const blob = blobs.find((b) => b.pathname === blobPath);
-    if (blob) {
-      const fetchRes = await fetch(blob.url, {
+    const existing = blobs.find((b) => b.pathname === blobPath);
+    if (existing) {
+      const r = await fetch(existing.url, {
         headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
         cache: "no-store",
       });
-      if (fetchRes.ok) {
-        const existing = await fetchRes.json();
-        data = { events: {}, ...existing };
-      }
+      if (r.ok) stored = { events: {}, ...await r.json() };
     }
 
-    if (page) {
-      data.totalViews = (data.totalViews || 0) + 1;
-      data.pages = data.pages || {};
-      data.pages[page] = (data.pages[page] || 0) + 1;
-    }
+    stored.totalViews = (stored.totalViews || 0) + (snapshot.totalViews || 0);
+    for (const [k, v] of Object.entries(snapshot.pages || {}))
+      stored.pages[k] = (stored.pages[k] || 0) + v;
+    for (const [k, v] of Object.entries(snapshot.events || {}))
+      stored.events[k] = (stored.events[k] || 0) + v;
 
-    if (event) {
-      data.events = data.events || {};
-      data.events[event] = (data.events[event] || 0) + 1;
-      if (product) {
-        data.events[`${event}:${product}`] = (data.events[`${event}:${product}`] || 0) + 1;
-      }
-    }
-
-    if (sessionStart) {
-      data.events["session_start"] = (data.events["session_start"] || 0) + 1;
-    }
-
-    if (sessionEngaged) {
-      data.events["session_engaged"] = (data.events["session_engaged"] || 0) + 1;
-    }
-
-    await put(blobPath, JSON.stringify(data), {
+    await put(blobPath, JSON.stringify(stored), {
       access: "private",
       contentType: "application/json",
       addRandomSuffix: false,
       allowOverwrite: true,
     });
   } catch (err) {
-    console.error("Track error:", err.message);
+    console.error("Track flush error:", err.message);
+  }
+}
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") return res.status(405).end();
+
+  const { page, event, product, sessionStart, sessionEngaged } = req.body || {};
+
+  if (!page && !event && !sessionStart && !sessionEngaged) return res.status(400).end();
+  if (page && (page.startsWith("/admin") || page.startsWith("/api"))) return res.status(200).end();
+
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
+
+  // Day rollover — flush previous day's buffer then reset
+  if (acc.date !== today) {
+    if (acc.date && acc.n > 0) flush(acc.date).catch(console.error);
+    acc.date = today;
+    acc.counts = { totalViews: 0, pages: {}, events: {} };
+    acc.n = 0;
+    acc.lastFlush = Date.now();
+  }
+
+  // Accumulate in memory
+  if (page) {
+    acc.counts.totalViews++;
+    acc.counts.pages[page] = (acc.counts.pages[page] || 0) + 1;
+  }
+  if (event) {
+    acc.counts.events[event] = (acc.counts.events[event] || 0) + 1;
+    if (product) acc.counts.events[`${event}:${product}`] = (acc.counts.events[`${event}:${product}`] || 0) + 1;
+  }
+  if (sessionStart) acc.counts.events["session_start"] = (acc.counts.events["session_start"] || 0) + 1;
+  if (sessionEngaged) acc.counts.events["session_engaged"] = (acc.counts.events["session_engaged"] || 0) + 1;
+  acc.n++;
+
+  // Fire-and-forget flush when batch is full or time threshold exceeded
+  if (acc.n >= BATCH_SIZE || Date.now() - acc.lastFlush > MAX_AGE_MS) {
+    flush(today).catch(console.error);
   }
 
   res.status(200).end();
