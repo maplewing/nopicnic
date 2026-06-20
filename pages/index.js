@@ -8,6 +8,39 @@ export default function Shop() {
       <Head>
         <title>No Picnic Press</title>
         <meta name="description" content={siteConfig.tagline} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "name": "No Picnic Press",
+                  "url": "https://nopicnicpress.com",
+                  "description": "No Picnic Press is the publishing imprint of naming strategist Eli Altman. Home of Don't Call It That, Run Studio Run, and Go Name Yourself.",
+                },
+                {
+                  "@type": "Organization",
+                  "name": "No Picnic Press",
+                  "url": "https://nopicnicpress.com",
+                  "email": "hi@nopicnicpress.com",
+                  "founder": {
+                    "@type": "Person",
+                    "name": "Eli Altman",
+                    "url": "https://nopicnicpress.com/about",
+                  },
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Berkeley",
+                    "addressRegion": "CA",
+                    "addressCountry": "US",
+                  },
+                },
+              ],
+            }),
+          }}
+        />
       </Head>
 
       <div className="container">

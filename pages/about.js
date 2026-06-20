@@ -6,6 +6,73 @@ export default function About() {
       <Head>
         <title>Eli Altman — No Picnic Press</title>
         <meta name="description" content="Eli Altman is the author of Don't Call It That and Run Studio Run, and Managing Director of naming studio A Hundred Monkeys. No Picnic Press is his Berkeley, California-based publishing imprint." />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Person",
+                  "@id": "https://nopicnicpress.com/about#eli",
+                  "name": "Eli Altman",
+                  "jobTitle": "Managing Director",
+                  "worksFor": {
+                    "@type": "Organization",
+                    "name": "A Hundred Monkeys",
+                    "url": "https://www.ahundredmonkeys.com",
+                  },
+                  "description": "Eli Altman is a naming strategist and the author of Don't Call It That, Run Studio Run, and Go Name Yourself. He is Managing Director of A Hundred Monkeys, a naming studio based in Berkeley, California. His work on brand and product naming has been covered by the New York Times, Wall Street Journal, Bloomberg Businessweek, The Guardian, NPR, and Harvard Law Review.",
+                  "url": "https://nopicnicpress.com/about",
+                  "image": "https://nopicnicpress.com/images/eli-altman.jpg",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": "Berkeley",
+                    "addressRegion": "CA",
+                    "addressCountry": "US",
+                  },
+                  "knowsAbout": [
+                    "brand naming",
+                    "product naming",
+                    "naming strategy",
+                    "brand strategy",
+                    "trademark",
+                    "creative studio management",
+                    "running a creative business",
+                    "design studio operations",
+                    "creative agency management",
+                    "freelance studio management",
+                  ],
+                  "sameAs": ["https://www.ahundredmonkeys.com"],
+                },
+                {
+                  "@type": "Book",
+                  "name": "Don't Call It That",
+                  "author": { "@id": "https://nopicnicpress.com/about#eli" },
+                  "url": "https://nopicnicpress.com/shop/dont-call-it-that",
+                  "description": "A step-by-step workbook covering the entire process of naming a product or company.",
+                  "publisher": { "@type": "Organization", "name": "No Picnic Press" },
+                  "bookEdition": "Third Edition",
+                },
+                {
+                  "@type": "Book",
+                  "name": "Run Studio Run",
+                  "author": { "@id": "https://nopicnicpress.com/about#eli" },
+                  "url": "https://nopicnicpress.com/shop/run-studio-run",
+                  "description": "A practical guide to managing, operating, and growing a small creative studio as a business. Covers pricing, client management, delegation, studio culture, goal setting, and finding work — written specifically for designers, illustrators, and other creative professionals running their own studios.",
+                  "publisher": { "@type": "Organization", "name": "No Picnic Press" },
+                  "bookEdition": "Second Edition",
+                  "about": [
+                    { "@type": "Thing", "name": "creative studio management" },
+                    { "@type": "Thing", "name": "running a creative business" },
+                    { "@type": "Thing", "name": "design studio operations" },
+                    { "@type": "Thing", "name": "freelance studio management" },
+                  ],
+                },
+              ],
+            }),
+          }}
+        />
       </Head>
       <div className="about-page">
         <img
