@@ -89,9 +89,9 @@ export default function About() {
           Eli is the Managing Director at the naming studio{" "}
           <a href="https://ahundredmonkeys.com" target="_blank" rel="noopener">A Hundred Monkeys</a>.
           He took his first professional naming project at 16 years old and joined A Hundred Monkeys
-          full time in 2009. Under his tenure he built the systems that paved the way for growth
-          while running projects for a diverse group of clients including Coca-Cola, Nike, Lego,
-          Samsung, Miro, Alphabet, and The Slanted Door Group.
+          full time in 2009. Under his tenure he consistently grew the business while running
+          projects for a diverse group of clients including Coca-Cola, Nike, Lego, Samsung, Miro,
+          and The Slanted Door Group.
         </p>
         <p>
           Eli has been featured in NPR, The New York Times, Monocle, Harvard Law Review, and The
