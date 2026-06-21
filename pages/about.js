@@ -88,6 +88,19 @@ export default function About() {
           No Picnic Press is the Berkeley, California-based publishing imprint of Eli Altman.
           Eli is the Managing Director at the naming studio{" "}
           <a href="https://ahundredmonkeys.com" target="_blank" rel="noopener">A Hundred Monkeys</a>.
+          He took his first professional naming project at 16 years old and joined A Hundred Monkeys
+          full time in 2009. Under his tenure he built the systems that paved the way for growth
+          while running projects for a diverse group of clients including Coca-Cola, Nike, Lego,
+          Samsung, Miro, and The Slanted Door Group.
+        </p>
+        <p>
+          Eli has been featured in NPR, The New York Times, Monocle, Harvard Law Review, and The
+          Wall Street Journal for naming and branding pieces. He was the first namer, and
+          non-graphic designer, to speak at the Brand New Conference. In 2014, he published{" "}
+          <a href="/shop/dont-call-it-that">Don&rsquo;t Call It That</a>, a naming workbook that
+          became a best-seller. In 2018 he released his second book,{" "}
+          <a href="/shop/run-studio-run">Run Studio Run</a>, a guide to running small creative
+          studios.
         </p>
         <p>
           If you want to say hi,{" "}
