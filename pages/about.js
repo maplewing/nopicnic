@@ -91,7 +91,7 @@ export default function About() {
           He took his first professional naming project at 16 years old and joined A Hundred Monkeys
           full time in 2009. Under his tenure he built the systems that paved the way for growth
           while running projects for a diverse group of clients including Coca-Cola, Nike, Lego,
-          Samsung, Miro, and The Slanted Door Group.
+          Samsung, Miro, Alphabet, and The Slanted Door Group.
         </p>
         <p>
           Eli has been featured in NPR, The New York Times, Monocle, Harvard Law Review, and The
