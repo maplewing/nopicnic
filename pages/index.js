@@ -24,6 +24,7 @@ export default function Shop() {
                   "@type": "Organization",
                   "name": "No Picnic Press",
                   "url": "https://nopicnicpress.com",
+                  "description": "No Picnic Press is the Berkeley, California-based publishing imprint of Eli Altman. Publisher of books on naming, branding, and running small creative studios.",
                   "email": "hi@nopicnicpress.com",
                   "founder": {
                     "@type": "Person",

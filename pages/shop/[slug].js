@@ -90,13 +90,15 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                 seller: { "@type": "Organization", name: "No Picnic Press" },
                 hasMerchantReturnPolicy: {
                   "@type": "MerchantReturnPolicy",
+                  name: "No Picnic Press Return Policy",
+                  description: product.isDigital
+                    ? "Digital items may be returned within 2 days of purchase at no cost."
+                    : "Physical items may be returned within 14 days. Customer is responsible for return shipping.",
                   applicableCountry: "US",
                   returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
                   merchantReturnDays: product.isDigital ? 2 : 14,
                   returnMethod: "https://schema.org/ReturnByMail",
-                  returnFees: product.isDigital
-                    ? "https://schema.org/FreeReturn"
-                    : "https://schema.org/ReturnShippingFees",
+                  ...(product.isDigital && { returnFees: "https://schema.org/FreeReturn" }),
                 },
                 ...((product.isDigital || product.isService) && {
                   shippingDetails: {
