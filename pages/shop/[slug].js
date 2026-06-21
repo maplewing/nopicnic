@@ -105,6 +105,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                   },
                 }),
               },
+              ...(product.schemaTopics?.length > 0 && {
+                about: product.schemaTopics.map((t) => ({ "@type": "Thing", name: t })),
+              }),
               ...(productReviews.length > 0 && {
                 aggregateRating: {
                   "@type": "AggregateRating",
