@@ -98,15 +98,22 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Failed to send email" });
     }
 
-    const record = await addShipment({
-      sessionId,
-      trackingNumber: trackingNumber || null,
-      carrier: carrier || null,
-      trackingUrl: trackingUrl || null,
-      email,
-      firstName,
-      items,
-    });
+    // Email sent — record the shipment. If blob write fails, log it but
+    // don't return an error (email already went out; retrying would resend).
+    let record = null;
+    try {
+      record = await addShipment({
+        sessionId,
+        trackingNumber: trackingNumber || null,
+        carrier: carrier || null,
+        trackingUrl: trackingUrl || null,
+        email,
+        firstName,
+        items,
+      });
+    } catch (blobErr) {
+      console.error("Shipment record save failed (email was sent):", blobErr.message);
+    }
 
     return res.status(200).json({ ok: true, shipment: record });
     } catch (err) {
