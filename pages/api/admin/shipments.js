@@ -26,6 +26,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "POST") {
+    try {
     const { sessionId, trackingNumber, carrier, trackingUrl } = req.body || {};
     if (!sessionId) return res.status(400).json({ error: "sessionId required" });
 
@@ -108,6 +109,10 @@ export default async function handler(req, res) {
     });
 
     return res.status(200).json({ ok: true, shipment: record });
+    } catch (err) {
+      console.error("Shipment handler error:", err.message);
+      return res.status(500).json({ error: err.message || "Internal error" });
+    }
   }
 
   return res.status(405).end();
