@@ -5,7 +5,8 @@
 //   3. Saves the shipment to Vercel Blob for arrival cron tracking
 //
 // Body for POST:
-//   { sessionId, trackingNumber?, carrier?, trackingUrl? }
+//   { sessionId, trackingNumber?, carrier?, trackingUrl?, recordOnly? }
+//   recordOnly=true  — write the shipment record without sending email
 
 import Stripe from "stripe";
 import { Resend } from "resend";
@@ -27,8 +28,9 @@ export default async function handler(req, res) {
 
   if (req.method === "POST") {
     try {
-    const { sessionId, trackingNumber, carrier, trackingUrl } = req.body || {};
+    const { sessionId, trackingNumber, carrier, trackingUrl, recordOnly } = req.body || {};
     if (!sessionId) return res.status(400).json({ error: "sessionId required" });
+    console.log("Ship request:", { sessionId, trackingNumber, carrier, recordOnly });
 
     let session;
     try {
@@ -52,6 +54,20 @@ export default async function handler(req, res) {
         image: match?.images?.[0] ? `https://nopicnicpress.com${match.images[0]}` : null,
       };
     });
+
+    if (recordOnly) {
+      // Just save the record — don't send another email.
+      const record = await addShipment({
+        sessionId,
+        trackingNumber: trackingNumber || null,
+        carrier: carrier || null,
+        trackingUrl: trackingUrl || null,
+        email,
+        firstName,
+        items,
+      });
+      return res.status(200).json({ ok: true, shipment: record });
+    }
 
     let recentPosts = [];
     try {
