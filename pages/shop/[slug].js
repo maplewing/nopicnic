@@ -196,6 +196,12 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                   {" "}
                   <img src={`/images/${product.descriptionAttribution.toLowerCase()}-logo.png`} alt={product.descriptionAttribution} style={{ height: 16, display: "inline-block", verticalAlign: "middle", opacity: 0.75 }} />
                 </>
+              ) : product.descriptionAttributionText ? (
+                <>
+                  <em>&ldquo;{product.description}&rdquo;</em>
+                  {" "}
+                  <span style={{ fontSize: 13, color: "#888" }}>— {product.descriptionAttributionText}</span>
+                </>
               ) : product.description}
               {product.learnMore && (
                 <> Learn more at <a href={product.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{product.learnMore.text}</a></>

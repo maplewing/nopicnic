@@ -356,7 +356,7 @@ export const products = [
     images: ["/images/rsr-cover-2.png", "/images/rsr-spread.jpg", "/images/rsr_second-edition_spread-1.jpg", "/images/rsr_second-edition_spread-4.jpg", "/images/rsr_poster.jpg"],
     pressImage: "/images/rsr-press_transparent.jpg",
     description: `For anyone looking to start their own creative services business of any kind, this is the holy grail.`,
-    descriptionAttribution: "Jennifer",
+    descriptionAttributionText: "Jennifer R.",
     details: [
       "Hardcover, 2nd edition",
       "Ships with an oversized 33 × 47\" poster (A0)",
