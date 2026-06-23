@@ -105,7 +105,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                   returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
                   merchantReturnDays: product.isDigital ? 2 : 14,
                   returnMethod: "https://schema.org/ReturnByMail",
-                  ...(product.isDigital && { returnFees: "https://schema.org/FreeReturn" }),
+                  returnFees: product.isDigital
+                    ? "https://schema.org/FreeReturn"
+                    : "https://schema.org/ReturnShippingFees",
                 },
                 ...((product.isDigital || product.isService) && {
                   shippingDetails: {
