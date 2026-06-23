@@ -1,5 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { products, reviews } from "../../data/products";
 import { useCart } from "../../components/CartContext";
 import { useState, useEffect } from "react";
@@ -21,6 +22,7 @@ export async function getStaticProps({ params }) {
 
 export default function ProductPage({ product, productReviews, otherProducts }) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
   const [showReviews, setShowReviews] = useState(false);
 
@@ -42,6 +44,11 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
     addItem(product);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  }
+
+  function handleBuyNow() {
+    addItem(product);
+    router.push("/checkout");
   }
 
   const score = productReviews.length
@@ -170,6 +177,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               <p style={{ fontSize: 16, color: "#333", marginBottom: 16, lineHeight: 1.4 }}>{product.subtitle}</p>
             )}
             <p className="product-price">${product.price.toFixed(2)}</p>
+            {!product.isDigital && !product.isService && (
+              <p style={{ fontSize: 13, color: "#888", marginTop: -8, marginBottom: 16 }}>+ $5.25 shipping · Free over $50</p>
+            )}
 
             {productReviews.length > 0 && !product.hideReviews && (
               <button className="rating-bar" onClick={() => setShowReviews(true)} aria-label="Read all reviews">
@@ -193,9 +203,12 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             </p>
 
             {product.inStock ? (
-              <button className="btn-primary" onClick={handleAdd} disabled={added}>
-                {added ? "Added!" : "Add to cart"}
-              </button>
+              <>
+                <button className="btn-primary" onClick={handleBuyNow}>Buy now</button>
+                <button className="btn-secondary" onClick={handleAdd} disabled={added} style={{ marginTop: 8 }}>
+                  {added ? "Added!" : "Add to cart"}
+                </button>
+              </>
             ) : (
               <button className="btn-primary" disabled>Sold out</button>
             )}
