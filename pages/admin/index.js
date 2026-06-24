@@ -347,6 +347,32 @@ function OrdersTable({ orders, shipments = [] }) {
     }
   }
 
+  async function handleRecordOnly(sessionId) {
+    const tracking = (shipTrack[sessionId] || "").trim();
+    const carrier = inferCarrier(tracking);
+    setShipSending((s) => new Set([...s, sessionId]));
+    try {
+      const res = await fetch("/api/admin/shipments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          trackingNumber: tracking || undefined,
+          carrier: carrier || undefined,
+          recordOnly: true,
+        }),
+      });
+      if (res.ok) {
+        setShipDone((s) => new Set([...s, sessionId]));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert("Record failed: " + (err.error || "unknown error"));
+      }
+    } finally {
+      setShipSending((s) => { const n = new Set(s); n.delete(sessionId); return n; });
+    }
+  }
+
   const cutoff = Date.now() - parseInt(filter) * 86400000;
   const filtered = orders.filter((o) => new Date(o.date).getTime() >= cutoff);
 
@@ -557,6 +583,13 @@ function OrdersTable({ orders, shipments = [] }) {
                                   >
                                     {isSending ? "Sending…" : "Send ship email →"}
                                   </button>
+                                  <button
+                                    onClick={() => handleRecordOnly(sid)}
+                                    disabled={isSending}
+                                    style={{ ...s.filterBtn, marginTop: 4, opacity: isSending ? 0.5 : 1, color: "#888", borderColor: "#ddd" }}
+                                  >
+                                    Record (no email) →
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -713,6 +746,13 @@ function OrdersTable({ orders, shipments = [] }) {
                                     style={{ ...s.filterBtn, opacity: isSending ? 0.5 : 1 }}
                                   >
                                     {isSending ? "Sending…" : "Send ship email →"}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRecordOnly(sid)}
+                                    disabled={isSending}
+                                    style={{ ...s.filterBtn, marginTop: 4, opacity: isSending ? 0.5 : 1, color: "#888", borderColor: "#ddd" }}
+                                  >
+                                    Record (no email) →
                                   </button>
                                 </div>
                               )}
