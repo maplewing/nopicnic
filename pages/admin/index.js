@@ -31,6 +31,17 @@ function inferCarrier(t = "") {
   return "";
 }
 
+function getTrackingUrl(carrier, trackingNumber) {
+  const t = (trackingNumber || "").replace(/\s/g, "");
+  if (!t) return null;
+  const c = (carrier || "").toUpperCase();
+  if (c === "USPS") return `https://tools.usps.com/go/TrackConfirmAction?tLabels=${t}`;
+  if (c === "UPS") return `https://www.ups.com/track?tracknum=${t}`;
+  if (c === "FEDEX" || c === "FEDEX") return `https://www.fedex.com/fedextrack/?tracknumbers=${t}`;
+  if (c === "DHL") return `https://www.dhl.com/us-en/home/tracking.html?tracking-id=${t}`;
+  return null;
+}
+
 function parseOrderText(raw) {
   const lines = raw.split(/\n/).map((l) => l.trim()).filter(Boolean);
   const out = {
@@ -487,14 +498,37 @@ function OrdersTable({ orders, shipments = [] }) {
                               {isShipped ? (
                                 <div style={{ fontSize: 12, lineHeight: 1.6 }}>
                                   <span style={{ color: "#1a6e3c", fontWeight: 600 }}>Ship email sent ✓</span>
-                                  {rec?.trackingNumber && (
-                                    <div style={{ color: "#555", marginTop: 2 }}>
-                                      {rec.carrier && <span>{rec.carrier} </span>}
-                                      {rec.trackingNumber}
-                                    </div>
-                                  )}
+                                  {rec?.trackingNumber && (() => {
+                                    const trackUrl = rec.trackingUrl || getTrackingUrl(rec.carrier, rec.trackingNumber);
+                                    return (
+                                      <div style={{ marginTop: 4 }}>
+                                        <div style={{ color: "#555", marginBottom: 4, fontFamily: "monospace", fontSize: 11 }}>
+                                          {rec.carrier && <span style={{ color: "#888", fontFamily: "inherit" }}>{rec.carrier} </span>}
+                                          {rec.trackingNumber}
+                                        </div>
+                                        {trackUrl && (
+                                          <a
+                                            href={trackUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            style={{
+                                              display: "inline-block",
+                                              fontSize: 11,
+                                              color: "#5469d4",
+                                              border: "1px solid #c5cae9",
+                                              padding: "2px 10px",
+                                              textDecoration: "none",
+                                              letterSpacing: "0.03em",
+                                            }}
+                                          >
+                                            Track →
+                                          </a>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                   {rec?.shippedAt && (
-                                    <div style={{ color: "#999", fontSize: 11, marginTop: 2 }}>
+                                    <div style={{ color: "#999", fontSize: 11, marginTop: 4 }}>
                                       {fmtDate(rec.shippedAt)}
                                     </div>
                                   )}
@@ -621,14 +655,37 @@ function OrdersTable({ orders, shipments = [] }) {
                               {isShipped ? (
                                 <div style={{ fontSize: 12, lineHeight: 1.6 }}>
                                   <span style={{ color: "#1a6e3c", fontWeight: 600 }}>Ship email sent ✓</span>
-                                  {rec?.trackingNumber && (
-                                    <div style={{ color: "#555", marginTop: 2 }}>
-                                      {rec.carrier && <span>{rec.carrier} </span>}
-                                      {rec.trackingNumber}
-                                    </div>
-                                  )}
+                                  {rec?.trackingNumber && (() => {
+                                    const trackUrl = rec.trackingUrl || getTrackingUrl(rec.carrier, rec.trackingNumber);
+                                    return (
+                                      <div style={{ marginTop: 4 }}>
+                                        <div style={{ color: "#555", marginBottom: 4, fontFamily: "monospace", fontSize: 11 }}>
+                                          {rec.carrier && <span style={{ color: "#888", fontFamily: "inherit" }}>{rec.carrier} </span>}
+                                          {rec.trackingNumber}
+                                        </div>
+                                        {trackUrl && (
+                                          <a
+                                            href={trackUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            style={{
+                                              display: "inline-block",
+                                              fontSize: 11,
+                                              color: "#5469d4",
+                                              border: "1px solid #c5cae9",
+                                              padding: "2px 10px",
+                                              textDecoration: "none",
+                                              letterSpacing: "0.03em",
+                                            }}
+                                          >
+                                            Track →
+                                          </a>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
                                   {rec?.shippedAt && (
-                                    <div style={{ color: "#999", fontSize: 11, marginTop: 2 }}>
+                                    <div style={{ color: "#999", fontSize: 11, marginTop: 4 }}>
                                       {fmtDate(rec.shippedAt)}
                                     </div>
                                   )}
