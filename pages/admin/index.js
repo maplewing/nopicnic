@@ -339,8 +339,37 @@ function OrdersTable({ orders, shipments = [] }) {
   const cutoff = Date.now() - parseInt(filter) * 86400000;
   const filtered = orders.filter((o) => new Date(o.date).getTime() >= cutoff);
 
+  // Split into unshipped physical orders (needs action) vs everything else
+  const pendingOrders = filtered.filter((o) => {
+    if (!o.shipping?.address) return false; // digital — no shipping needed
+    const rec = shipments.find((s) => s.sessionId === o.stripeSessionId);
+    return !shipDone.has(o.stripeSessionId) && !rec;
+  });
+  const doneOrders = filtered.filter((o) => !pendingOrders.includes(o));
+
   if (orders.length === 0) {
     return <p style={{ color: "#999", fontSize: 13 }}>No orders found in this period.</p>;
+  }
+
+  const COLS = 8;
+
+  function SectionHeaderRow({ label, count }) {
+    return (
+      <tr>
+        <td colSpan={COLS} style={{
+          padding: "10px 12px 6px",
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: "#888",
+          borderTop: "1px solid #e8e8e8",
+          background: "#fafafa",
+        }}>
+          {label} <span style={{ fontWeight: 400 }}>({count})</span>
+        </td>
+      </tr>
+    );
   }
 
   return (
@@ -371,7 +400,142 @@ function OrdersTable({ orders, shipments = [] }) {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((order) => (
+            {pendingOrders.length > 0 && <SectionHeaderRow label="Needs shipping" count={pendingOrders.length} />}
+            {pendingOrders.map((order) => (
+              <>
+                <tr
+                  key={order.stripeSessionId}
+                  style={{ ...s.tr, cursor: "pointer" }}
+                  onClick={() =>
+                    setExpanded(expanded === order.stripeSessionId ? null : order.stripeSessionId)
+                  }
+                >
+                  <td style={s.td}>
+                    <span style={{ fontFamily: "monospace", fontWeight: 600 }}>
+                      {order.orderNumber ? `#${order.orderNumber}` : "—"}
+                    </span>
+                  </td>
+                  <td style={s.td}>{fmtDate(order.date)}</td>
+                  <td style={s.td}>
+                    <div style={{ fontWeight: 500 }}>{order.customer.name || "—"}</div>
+                    <div style={{ fontSize: 11, color: "#888" }}>{order.customer.email}</div>
+                  </td>
+                  <td style={s.td}>
+                    <span style={{ fontSize: 12, color: "#444" }}>
+                      {order.items.map((it) => `${it.name}${it.quantity > 1 ? ` ×${it.quantity}` : ""}`).join(", ") || "—"}
+                    </span>
+                  </td>
+                  <td style={s.tdNum}>{fmt(order.subtotal)}</td>
+                  <td style={s.tdNum}>{order.tax > 0 ? fmt(order.tax) : "—"}</td>
+                  <td style={s.tdNum}>{order.shippingCost > 0 ? fmt(order.shippingCost) : "—"}</td>
+                  <td style={{ ...s.tdNum, fontWeight: 600 }}>{fmt(order.total)}</td>
+                </tr>
+                {expanded === order.stripeSessionId && (
+                  <tr key={order.stripeSessionId + "-detail"}>
+                    <td colSpan={8} style={s.expandedCell}>
+                      <div style={{
+                        ...s.expandedContent,
+                        gridTemplateColumns: order.shipping.address ? "1fr 1fr 1fr 1fr" : "1fr 1fr 1fr",
+                      }}>
+                        <div>
+                          <div style={s.expandLabel}>Ship to</div>
+                          {order.shipping.address ? (
+                            <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+                              {order.shipping.name && <div>{order.shipping.name}</div>}
+                              <div>{order.shipping.address.line1}</div>
+                              {order.shipping.address.line2 && <div>{order.shipping.address.line2}</div>}
+                              <div>
+                                {order.shipping.address.city}, {order.shipping.address.state}{" "}
+                                {order.shipping.address.postal_code}
+                              </div>
+                              <div>{order.shipping.address.country}</div>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 12, color: "#999" }}>No address (digital)</span>
+                          )}
+                        </div>
+                        <div>
+                          <div style={s.expandLabel}>Line items</div>
+                          {order.items.map((it, i) => (
+                            <div key={i} style={{ fontSize: 12, display: "flex", justifyContent: "space-between", gap: 32 }}>
+                              <span>{it.name}{it.quantity > 1 ? ` ×${it.quantity}` : ""}</span>
+                              <span style={{ fontFamily: "monospace" }}>{fmt(it.amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div>
+                          <div style={s.expandLabel}>Stripe</div>
+                          <a
+                            href={`https://dashboard.stripe.com/payments/${order.stripeSessionId}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ fontSize: 12, color: "#5469d4" }}
+                          >
+                            View in Stripe ↗
+                          </a>
+                        </div>
+                        {order.shipping.address && (() => {
+                          const sid = order.stripeSessionId;
+                          const rec = shipments.find((s) => s.sessionId === sid);
+                          const isShipped = shipDone.has(sid) || !!rec;
+                          const isSending = shipSending.has(sid);
+                          const tracking = shipTrack[sid] || "";
+                          const detectedCarrier = tracking ? inferCarrier(tracking) : "";
+                          return (
+                            <div>
+                              <div style={s.expandLabel}>Shipment</div>
+                              {isShipped ? (
+                                <div style={{ fontSize: 12, lineHeight: 1.6 }}>
+                                  <span style={{ color: "#1a6e3c", fontWeight: 600 }}>Ship email sent ✓</span>
+                                  {rec?.trackingNumber && (
+                                    <div style={{ color: "#555", marginTop: 2 }}>
+                                      {rec.carrier && <span>{rec.carrier} </span>}
+                                      {rec.trackingNumber}
+                                    </div>
+                                  )}
+                                  {rec?.shippedAt && (
+                                    <div style={{ color: "#999", fontSize: 11, marginTop: 2 }}>
+                                      {fmtDate(rec.shippedAt)}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div>
+                                  <input
+                                    value={tracking}
+                                    onChange={(e) => setShipTrack((t) => ({ ...t, [sid]: e.target.value }))}
+                                    placeholder="Tracking # (optional)"
+                                    style={{
+                                      border: "1px solid #ddd", padding: "5px 8px", fontSize: 12,
+                                      fontFamily: MONO, width: "100%", outline: "none",
+                                      background: "#fff", color: "#111", marginBottom: 6, boxSizing: "border-box",
+                                    }}
+                                  />
+                                  {detectedCarrier && (
+                                    <div style={{ fontSize: 11, color: "#888", marginBottom: 6 }}>
+                                      {detectedCarrier} detected
+                                    </div>
+                                  )}
+                                  <button
+                                    onClick={() => handleMarkShipped(sid)}
+                                    disabled={isSending}
+                                    style={{ ...s.filterBtn, opacity: isSending ? 0.5 : 1 }}
+                                  >
+                                    {isSending ? "Sending…" : "Send ship email →"}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </>
+            ))}
+            {doneOrders.length > 0 && <SectionHeaderRow label="Shipped & digital" count={doneOrders.length} />}
+            {doneOrders.map((order) => (
               <>
                 <tr
                   key={order.stripeSessionId}
