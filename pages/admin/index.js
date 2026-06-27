@@ -1335,14 +1335,15 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
+      const NO_CACHE = { cache: "no-store" };
       const [statsRes, ordersRes, analyticsRes, inventoryRes, manualRes, stockRes, shipmentsRes] = await Promise.all([
-        fetch("/api/admin/stats"),
-        fetch("/api/admin/orders?days=365"),
-        fetch("/api/admin/analytics?days=30"),
-        fetch("/api/admin/inventory"),
-        fetch("/api/admin/manual-orders"),
-        fetch("/api/admin/stock"),
-        fetch("/api/admin/shipments"),
+        fetch("/api/admin/stats", NO_CACHE),
+        fetch("/api/admin/orders?days=365", NO_CACHE),
+        fetch("/api/admin/analytics?days=30", NO_CACHE),
+        fetch("/api/admin/inventory", NO_CACHE),
+        fetch("/api/admin/manual-orders", NO_CACHE),
+        fetch("/api/admin/stock", NO_CACHE),
+        fetch("/api/admin/shipments", NO_CACHE),
       ]);
       if (!statsRes.ok || !ordersRes.ok) throw new Error("Failed to load data");
       const [statsData, ordersData, analyticsData, inventoryData, manualData, stockData, shipmentsData] = await Promise.all([
