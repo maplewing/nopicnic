@@ -1443,6 +1443,13 @@ export default function AdminDashboard() {
                 {label}
               </button>
             ))}
+            <button
+              onClick={fetchAll}
+              disabled={loading}
+              style={{ ...s.tabBtn, marginLeft: "auto", opacity: loading ? 0.4 : 1 }}
+            >
+              {loading ? "↻" : "↻ Refresh"}
+            </button>
           </nav>
 
           {loading && (
