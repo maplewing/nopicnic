@@ -4,19 +4,27 @@ import { put } from "@vercel/blob";
 
 const ORDER_NUMBERS_PATH = "admin/order-numbers.json";
 
+// POST body:
+//   { assignments: { [sessionId]: orderNumber, ... }, nextOrderNumber?: number }
+// OR legacy single-assignment:
+//   { sessionId, orderNumber, nextOrderNumber? }
 export default async function handler(req, res) {
   if (!checkAdminAuth(req)) return res.status(401).json({ error: "Unauthorized" });
   if (req.method !== "POST") return res.status(405).end();
 
-  const { sessionId, orderNumber, nextOrderNumber } = req.body || {};
-  if (sessionId === undefined && nextOrderNumber === undefined) {
-    return res.status(400).json({ error: "sessionId or nextOrderNumber required" });
-  }
+  const { sessionId, orderNumber, nextOrderNumber, assignments } = req.body || {};
 
   const data = await getOrderNumbers();
-  if (sessionId !== undefined && orderNumber !== undefined) {
+
+  // Bulk assignments (single read-write cycle — no race conditions)
+  if (assignments && typeof assignments === "object") {
+    for (const [sid, num] of Object.entries(assignments)) {
+      data.mapping[sid] = Number(num);
+    }
+  } else if (sessionId !== undefined && orderNumber !== undefined) {
     data.mapping[sessionId] = Number(orderNumber);
   }
+
   if (nextOrderNumber !== undefined) {
     data.nextOrderNumber = Number(nextOrderNumber);
   }
@@ -28,5 +36,5 @@ export default async function handler(req, res) {
     allowOverwrite: true,
   });
 
-  return res.status(200).json({ ok: true, nextOrderNumber: data.nextOrderNumber, mapping: sessionId ? { [sessionId]: data.mapping[sessionId] } : undefined });
+  return res.status(200).json({ ok: true, nextOrderNumber: data.nextOrderNumber });
 }
