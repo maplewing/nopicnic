@@ -8,14 +8,19 @@ export default async function handler(req, res) {
   if (!checkAdminAuth(req)) return res.status(401).json({ error: "Unauthorized" });
   if (req.method !== "POST") return res.status(405).end();
 
-  const { sessionId, orderNumber } = req.body || {};
-  if (!sessionId || !orderNumber) {
-    return res.status(400).json({ error: "sessionId and orderNumber required" });
+  const { sessionId, orderNumber, nextOrderNumber } = req.body || {};
+  if (sessionId === undefined && nextOrderNumber === undefined) {
+    return res.status(400).json({ error: "sessionId or nextOrderNumber required" });
   }
 
   const data = await getOrderNumbers();
-  data.mapping[sessionId] = Number(orderNumber);
-  // Don't bump nextOrderNumber — we're assigning a specific number manually.
+  if (sessionId !== undefined && orderNumber !== undefined) {
+    data.mapping[sessionId] = Number(orderNumber);
+  }
+  if (nextOrderNumber !== undefined) {
+    data.nextOrderNumber = Number(nextOrderNumber);
+  }
+
   await put(ORDER_NUMBERS_PATH, JSON.stringify(data), {
     access: "private",
     contentType: "application/json",
@@ -23,5 +28,5 @@ export default async function handler(req, res) {
     allowOverwrite: true,
   });
 
-  return res.status(200).json({ ok: true, sessionId, orderNumber: Number(orderNumber) });
+  return res.status(200).json({ ok: true, nextOrderNumber: data.nextOrderNumber, mapping: sessionId ? { [sessionId]: data.mapping[sessionId] } : undefined });
 }
