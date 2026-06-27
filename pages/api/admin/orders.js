@@ -62,5 +62,6 @@ export default async function handler(req, res) {
   // Sort newest first
   orders.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  res.setHeader("Cache-Control", "no-store");
   return res.status(200).json({ orders });
 }
