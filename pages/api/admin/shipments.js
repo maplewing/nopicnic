@@ -114,9 +114,10 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Failed to send email" });
     }
 
-    // Email sent — record the shipment. If blob write fails, log it but
-    // don't return an error (email already went out; retrying would resend).
+    // Email sent — record the shipment. If blob write fails, log it and
+    // signal the client so the admin knows to use Record Only.
     let record = null;
+    let blobSaved = true;
     try {
       record = await addShipment({
         sessionId,
@@ -129,9 +130,10 @@ export default async function handler(req, res) {
       });
     } catch (blobErr) {
       console.error("Shipment record save failed (email was sent):", blobErr.message);
+      blobSaved = false;
     }
 
-    return res.status(200).json({ ok: true, shipment: record });
+    return res.status(200).json({ ok: true, shipment: record, blobSaved });
     } catch (err) {
       console.error("Shipment handler error:", err.message);
       return res.status(500).json({ error: err.message || "Internal error" });

@@ -337,7 +337,11 @@ function OrdersTable({ orders, shipments = [] }) {
         }),
       });
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
         setShipDone((s) => new Set([...s, sessionId]));
+        if (data.blobSaved === false) {
+          alert("Email sent, but tracking wasn't saved — use Record (no email) to add it manually.");
+        }
       } else {
         const err = await res.json().catch(() => ({}));
         alert("Shipping email failed: " + (err.error || "unknown error"));
