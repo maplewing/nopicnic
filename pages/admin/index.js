@@ -490,6 +490,9 @@ function OrdersTable({ orders, shipments = [] }) {
                                 {order.shipping.address.postal_code}
                               </div>
                               <div>{order.shipping.address.country}</div>
+                              {order.shipping.method && (
+                                <div style={{ color: "#888", marginTop: 2 }}>{order.shipping.method}</div>
+                              )}
                             </div>
                           ) : (
                             <span style={{ fontSize: 12, color: "#999" }}>No address (digital)</span>
@@ -654,6 +657,9 @@ function OrdersTable({ orders, shipments = [] }) {
                                 {order.shipping.address.postal_code}
                               </div>
                               <div>{order.shipping.address.country}</div>
+                              {order.shipping.method && (
+                                <div style={{ color: "#888", marginTop: 2 }}>{order.shipping.method}</div>
+                              )}
                             </div>
                           ) : (
                             <span style={{ fontSize: 12, color: "#999" }}>No address (digital)</span>

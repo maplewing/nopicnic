@@ -21,7 +21,7 @@ export default async function handler(req, res) {
       created: { gte: since },
       status: "complete",
       limit: 100,
-      expand: ["data.line_items", "data.payment_intent.latest_charge"],
+      expand: ["data.line_items", "data.payment_intent.latest_charge", "data.shipping_cost.shipping_rate"],
       ...(startingAfter && { starting_after: startingAfter }),
     });
     sessions.push(...batch.data);
@@ -46,7 +46,9 @@ export default async function handler(req, res) {
       shipping: {
         name: session.shipping_details?.name || "",
         address: session.shipping_details?.address || null,
-        method: null, // shipping rate name not available without expand
+        method: typeof session.shipping_cost?.shipping_rate === "object"
+          ? session.shipping_cost.shipping_rate.display_name || null
+          : null,
       },
       items: (session.line_items?.data || []).map((item) => ({
         name: item.description || "",
