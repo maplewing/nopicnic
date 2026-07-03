@@ -109,12 +109,15 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                     ? "https://schema.org/FreeReturn"
                     : "https://schema.org/ReturnShippingFees",
                 },
-                ...((product.isDigital || product.isService) && {
-                  shippingDetails: {
-                    "@type": "OfferShippingDetails",
-                    doesNotShip: true,
-                  },
-                }),
+                shippingDetails: (product.isDigital || product.isService)
+                  ? { "@type": "OfferShippingDetails", doesNotShip: true }
+                  : {
+                      "@type": "OfferShippingDetails",
+                      shippingDestination: {
+                        "@type": "DefinedRegion",
+                        addressCountry: "US",
+                      },
+                    },
               },
               ...(product.schemaTopics?.length > 0 && {
                 about: product.schemaTopics.map((t) => ({ "@type": "Thing", name: t })),
