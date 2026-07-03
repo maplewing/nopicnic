@@ -59,6 +59,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
   return (
     <>
       <Head>
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`} />
         <title>{`${product.name} — No Picnic Press`}</title>
         <meta name="description" content={product.description} />
         <meta property="og:title" content={`${product.name} — No Picnic Press`} />
