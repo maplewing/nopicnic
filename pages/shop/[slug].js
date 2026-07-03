@@ -59,6 +59,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
   return (
     <>
       <Head>
+        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`} />
         <title>{`${product.name} — No Picnic Press`}</title>
         <meta name="description" content={product.description} />
         <meta property="og:title" content={`${product.name} — No Picnic Press`} />
@@ -109,12 +110,15 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                     ? "https://schema.org/FreeReturn"
                     : "https://schema.org/ReturnShippingFees",
                 },
-                ...((product.isDigital || product.isService) && {
-                  shippingDetails: {
-                    "@type": "OfferShippingDetails",
-                    doesNotShip: true,
-                  },
-                }),
+                shippingDetails: (product.isDigital || product.isService)
+                  ? { "@type": "OfferShippingDetails", doesNotShip: true }
+                  : {
+                      "@type": "OfferShippingDetails",
+                      shippingDestination: {
+                        "@type": "DefinedRegion",
+                        addressCountry: "US",
+                      },
+                    },
               },
               ...(product.schemaTopics?.length > 0 && {
                 about: product.schemaTopics.map((t) => ({ "@type": "Thing", name: t })),
