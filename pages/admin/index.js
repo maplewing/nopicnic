@@ -479,7 +479,35 @@ function OrdersTable({ orders, shipments = [] }) {
                         gridTemplateColumns: order.shipping.address ? "1fr 1fr 1fr 1fr" : "1fr 1fr 1fr",
                       }}>
                         <div>
-                          <div style={s.expandLabel}>Ship to</div>
+                          <div style={{ ...s.expandLabel, display: "flex", alignItems: "center", gap: 4 }}>
+                            Ship to
+                            {order.shipping.address && (
+                              <button
+                                title="Copy address"
+                                onClick={() => {
+                                  const a = order.shipping.address;
+                                  const parts = [
+                                    order.shipping.name,
+                                    a.line1,
+                                    a.line2,
+                                    `${a.city}, ${a.state} ${a.postal_code}`,
+                                    a.country,
+                                  ].filter(Boolean);
+                                  navigator.clipboard.writeText(parts.join("\n"));
+                                  setCopiedAddressId(order.stripeSessionId);
+                                  setTimeout(() => setCopiedAddressId(null), 1500);
+                                }}
+                                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, color: copiedAddressId === order.stripeSessionId ? "#2a2" : "#aaa" }}
+                              >
+                                {copiedAddressId === order.stripeSessionId ? "✓" : (
+                                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6z"/>
+                                    <path d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/>
+                                  </svg>
+                                )}
+                              </button>
+                            )}
+                          </div>
                           {order.shipping.address ? (
                             <div style={{ fontSize: 12, lineHeight: 1.6 }}>
                               {order.shipping.name && <div>{order.shipping.name}</div>}
@@ -646,7 +674,35 @@ function OrdersTable({ orders, shipments = [] }) {
                         gridTemplateColumns: order.shipping.address ? "1fr 1fr 1fr 1fr" : "1fr 1fr 1fr",
                       }}>
                         <div>
-                          <div style={s.expandLabel}>Ship to</div>
+                          <div style={{ ...s.expandLabel, display: "flex", alignItems: "center", gap: 4 }}>
+                            Ship to
+                            {order.shipping.address && (
+                              <button
+                                title="Copy address"
+                                onClick={() => {
+                                  const a = order.shipping.address;
+                                  const parts = [
+                                    order.shipping.name,
+                                    a.line1,
+                                    a.line2,
+                                    `${a.city}, ${a.state} ${a.postal_code}`,
+                                    a.country,
+                                  ].filter(Boolean);
+                                  navigator.clipboard.writeText(parts.join("\n"));
+                                  setCopiedAddressId(order.stripeSessionId);
+                                  setTimeout(() => setCopiedAddressId(null), 1500);
+                                }}
+                                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, color: copiedAddressId === order.stripeSessionId ? "#2a2" : "#aaa" }}
+                              >
+                                {copiedAddressId === order.stripeSessionId ? "✓" : (
+                                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6z"/>
+                                    <path d="M2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2z"/>
+                                  </svg>
+                                )}
+                              </button>
+                            )}
+                          </div>
                           {order.shipping.address ? (
                             <div style={{ fontSize: 12, lineHeight: 1.6 }}>
                               {order.shipping.name && <div>{order.shipping.name}</div>}
@@ -1331,6 +1387,7 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
 export default function AdminDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState("overview");
+  const [copiedAddressId, setCopiedAddressId] = useState(null);
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState(null);
   const [analytics, setAnalytics] = useState(null);
