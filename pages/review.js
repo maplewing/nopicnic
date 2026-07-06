@@ -63,17 +63,17 @@ export default function ReviewPage() {
       </Head>
       <div className="container" style={{ maxWidth: 560, paddingTop: 64 }}>
         <h1>Leave a Review</h1>
-        <form onSubmit={handleSubmit} style={{ marginTop: 32 }}>
-          <div className="form-field">
+        <form onSubmit={handleSubmit} style={{ marginTop: 40 }}>
+          <div className="studio-form-row">
             <label>Book</label>
-            <select value={form.product} onChange={set("product")}>
+            <select value={form.product} onChange={set("product")} style={{ border: "1px solid var(--gray-border)", padding: "10px 12px", fontSize: 14, fontFamily: "var(--font-body)", width: "100%", outline: "none", background: "var(--white)" }}>
               {reviewableProducts.map((p) => (
                 <option key={p} value={p}>{p}</option>
               ))}
             </select>
           </div>
 
-          <div className="form-field">
+          <div className="studio-form-row">
             <label>Your name</label>
             <input
               type="text"
@@ -84,9 +84,9 @@ export default function ReviewPage() {
             />
           </div>
 
-          <div className="form-field">
+          <div className="studio-form-row">
             <label>Rating</label>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 2 }}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
                   key={n}
@@ -95,10 +95,11 @@ export default function ReviewPage() {
                   style={{
                     background: "none",
                     border: "none",
-                    fontSize: 24,
+                    fontSize: 28,
                     cursor: "pointer",
                     color: n <= form.rating ? "var(--black)" : "var(--gray-border)",
                     padding: "0 2px",
+                    lineHeight: 1,
                   }}
                   aria-label={`${n} star${n !== 1 ? "s" : ""}`}
                 >
@@ -108,13 +109,13 @@ export default function ReviewPage() {
             </div>
           </div>
 
-          <div className="form-field">
+          <div className="studio-form-row">
             <label>Review</label>
             <textarea
               value={form.text}
               onChange={set("text")}
               required
-              rows={5}
+              style={{ minHeight: 160 }}
               placeholder="What did you think?"
             />
           </div>
@@ -123,7 +124,7 @@ export default function ReviewPage() {
             type="submit"
             className="btn-primary"
             disabled={status === "loading"}
-            style={{ marginTop: 8 }}
+            style={{ marginTop: 16 }}
           >
             {status === "loading" ? "Submitting..." : "Submit review"}
           </button>
