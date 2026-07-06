@@ -118,6 +118,26 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                         "@type": "DefinedRegion",
                         addressCountry: "US",
                       },
+                      shippingRate: {
+                        "@type": "MonetaryAmount",
+                        value: 5.20,
+                        currency: "USD",
+                      },
+                      deliveryTime: {
+                        "@type": "ShippingDeliveryTime",
+                        handlingTime: {
+                          "@type": "QuantitativeValue",
+                          minValue: 1,
+                          maxValue: 3,
+                          unitCode: "DAY",
+                        },
+                        transitTime: {
+                          "@type": "QuantitativeValue",
+                          minValue: 3,
+                          maxValue: 7,
+                          unitCode: "DAY",
+                        },
+                      },
                     },
               },
               ...(product.schemaTopics?.length > 0 && {
