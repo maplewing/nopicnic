@@ -10,6 +10,13 @@ const ORDER_NUMBERS_PATH = "admin/order-numbers.json";
 //   { sessionId, orderNumber, nextOrderNumber? }
 export default async function handler(req, res) {
   if (!checkAdminAuth(req)) return res.status(401).json({ error: "Unauthorized" });
+
+  if (req.method === "GET") {
+    const data = await getOrderNumbers();
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json({ nextOrderNumber: data.nextOrderNumber, mapping: data.mapping });
+  }
+
   if (req.method !== "POST") return res.status(405).end();
 
   const { sessionId, orderNumber, nextOrderNumber, assignments } = req.body || {};
