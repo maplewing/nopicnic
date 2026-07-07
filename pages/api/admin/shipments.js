@@ -56,7 +56,7 @@ export default async function handler(req, res) {
     });
 
     if (recordOnly) {
-      const record = await addShipment({ sessionId, trackingNumber, carrier, trackingUrl });
+      const record = await addShipment({ sessionId, paymentIntentId: session.payment_intent, trackingNumber, carrier, trackingUrl });
       return res.status(200).json({ ok: true, shipment: record });
     }
 
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
     // Email sent — save tracking to Stripe session metadata.
     let record = null;
     try {
-      record = await addShipment({ sessionId, trackingNumber, carrier, trackingUrl });
+      record = await addShipment({ sessionId, paymentIntentId: session.payment_intent, trackingNumber, carrier, trackingUrl });
     } catch (stripeErr) {
       console.error("Shipment metadata save failed (email was sent):", stripeErr.message);
     }
