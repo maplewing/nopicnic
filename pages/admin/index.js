@@ -321,6 +321,7 @@ function OrdersTable({ orders, shipments = [] }) {
   const [shipTrack, setShipTrack] = useState({});   // { [sessionId]: trackingNumber string }
   const [shipSending, setShipSending] = useState(new Set());
   const [shipDone, setShipDone] = useState(new Set());
+  const [copiedAddressId, setCopiedAddressId] = useState(null);
 
   async function handleMarkShipped(sessionId) {
     const tracking = (shipTrack[sessionId] || "").trim();
@@ -1384,7 +1385,6 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
 export default function AdminDashboard() {
   const router = useRouter();
   const [tab, setTab] = useState("overview");
-  const [copiedAddressId, setCopiedAddressId] = useState(null);
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState(null);
   const [analytics, setAnalytics] = useState(null);
