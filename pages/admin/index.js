@@ -317,7 +317,8 @@ function StatCard({ label, value, sub }) {
 
 function OrdersTable({ orders, shipments = [] }) {
   const [expanded, setExpanded] = useState(null);
-  const [filter, setFilter] = useState("90");
+  const [filter, setFilter] = useState("this_month");
+  const [sort, setSort] = useState("date_desc");
   const [shipTrack, setShipTrack] = useState({});   // { [sessionId]: trackingNumber string }
   const [shipSending, setShipSending] = useState(new Set());
   const [shipDone, setShipDone] = useState(new Set());
@@ -375,8 +376,30 @@ function OrdersTable({ orders, shipments = [] }) {
     }
   }
 
-  const cutoff = Date.now() - parseInt(filter) * 86400000;
-  const filtered = orders.filter((o) => new Date(o.date).getTime() >= cutoff);
+  const now = new Date();
+  let rangeStart, rangeEnd;
+  if (filter === "this_month") {
+    rangeStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    rangeEnd = Date.now();
+  } else if (filter === "last_month") {
+    rangeStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+    rangeEnd = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  } else {
+    rangeStart = new Date(now.getFullYear(), 0, 1).getTime();
+    rangeEnd = Date.now();
+  }
+  const totalQty = (o) => (o.items || []).reduce((s, i) => s + (i.quantity || 1), 0);
+  const filtered = orders
+    .filter((o) => { const t = new Date(o.date).getTime(); return t >= rangeStart && t < rangeEnd; })
+    .sort((a, b) => {
+      if (sort === "date_desc") return new Date(b.date) - new Date(a.date);
+      if (sort === "date_asc")  return new Date(a.date) - new Date(b.date);
+      if (sort === "order_desc") return (b.orderNumber || 0) - (a.orderNumber || 0);
+      if (sort === "order_asc")  return (a.orderNumber || 0) - (b.orderNumber || 0);
+      if (sort === "items_desc") return totalQty(b) - totalQty(a);
+      if (sort === "items_asc")  return totalQty(a) - totalQty(b);
+      return 0;
+    });
 
   // Split into unshipped physical orders (needs action) vs everything else
   const pendingOrders = filtered.filter((o) => {
@@ -413,9 +436,8 @@ function OrdersTable({ orders, shipments = [] }) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
-        <span style={s.sectionLabel}>Show:</span>
-        {[["30", "30 days"], ["90", "90 days"], ["365", "1 year"]].map(([v, label]) => (
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
+        {[["this_month", "This month"], ["last_month", "Last month"], ["this_year", "This year"]].map(([v, label]) => (
           <button
             key={v}
             onClick={() => setFilter(v)}
@@ -424,6 +446,18 @@ function OrdersTable({ orders, shipments = [] }) {
             {label}
           </button>
         ))}
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          style={{ marginLeft: 8, fontSize: 12, border: "1px solid #ddd", padding: "3px 6px", background: "#fff", cursor: "pointer" }}
+        >
+          <option value="date_desc">Date ↓</option>
+          <option value="date_asc">Date ↑</option>
+          <option value="order_desc">Order # ↓</option>
+          <option value="order_asc">Order # ↑</option>
+          <option value="items_desc">Items ↓</option>
+          <option value="items_asc">Items ↑</option>
+        </select>
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#888" }}>
           {filtered.length} order{filtered.length !== 1 ? "s" : ""}
         </span>
