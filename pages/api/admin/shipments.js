@@ -56,16 +56,7 @@ export default async function handler(req, res) {
     });
 
     if (recordOnly) {
-      // Just save the record — don't send another email.
-      const record = await addShipment({
-        sessionId,
-        trackingNumber: trackingNumber || null,
-        carrier: carrier || null,
-        trackingUrl: trackingUrl || null,
-        email,
-        firstName,
-        items,
-      });
+      const record = await addShipment({ sessionId, trackingNumber, carrier, trackingUrl });
       return res.status(200).json({ ok: true, shipment: record });
     }
 
@@ -114,26 +105,15 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Failed to send email" });
     }
 
-    // Email sent — record the shipment. If blob write fails, log it and
-    // signal the client so the admin knows to use Record Only.
+    // Email sent — save tracking to Stripe session metadata.
     let record = null;
-    let blobSaved = true;
     try {
-      record = await addShipment({
-        sessionId,
-        trackingNumber: trackingNumber || null,
-        carrier: carrier || null,
-        trackingUrl: trackingUrl || null,
-        email,
-        firstName,
-        items,
-      });
-    } catch (blobErr) {
-      console.error("Shipment record save failed (email was sent):", blobErr.message);
-      blobSaved = false;
+      record = await addShipment({ sessionId, trackingNumber, carrier, trackingUrl });
+    } catch (stripeErr) {
+      console.error("Shipment metadata save failed (email was sent):", stripeErr.message);
     }
 
-    return res.status(200).json({ ok: true, shipment: record, blobSaved });
+    return res.status(200).json({ ok: true, shipment: record });
     } catch (err) {
       console.error("Shipment handler error:", err.message);
       return res.status(500).json({ error: err.message || "Internal error" });

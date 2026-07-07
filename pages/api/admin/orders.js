@@ -59,6 +59,12 @@ export default async function handler(req, res) {
       tax: (session.total_details?.amount_tax || 0) / 100,
       shippingCost: (session.shipping_cost?.amount_total || 0) / 100,
       total: (session.amount_total || 0) / 100,
+      tracking: session.metadata?.shipped_at ? {
+        shippedAt: session.metadata.shipped_at,
+        trackingNumber: session.metadata.tracking_number || null,
+        carrier: session.metadata.carrier || null,
+        trackingUrl: session.metadata.tracking_url || null,
+      } : null,
     }));
 
   // Sort newest first

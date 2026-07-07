@@ -339,9 +339,6 @@ function OrdersTable({ orders, shipments = [] }) {
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
         setShipDone((s) => new Set([...s, sessionId]));
-        if (data.blobSaved === false) {
-          alert("Email sent, but tracking wasn't saved — use Record (no email) to add it manually.");
-        }
       } else {
         const err = await res.json().catch(() => ({}));
         alert("Shipping email failed: " + (err.error || "unknown error"));
@@ -383,7 +380,7 @@ function OrdersTable({ orders, shipments = [] }) {
   // Split into unshipped physical orders (needs action) vs everything else
   const pendingOrders = filtered.filter((o) => {
     if (!o.shipping?.address) return false; // digital — no shipping needed
-    const rec = shipments.find((s) => s.sessionId === o.stripeSessionId);
+    const rec = o.tracking || shipments.find((s) => s.sessionId === o.stripeSessionId);
     return !shipDone.has(o.stripeSessionId) && !rec;
   });
   const doneOrders = filtered.filter((o) => !pendingOrders.includes(o));
@@ -548,7 +545,7 @@ function OrdersTable({ orders, shipments = [] }) {
                         </div>
                         {order.shipping.address && (() => {
                           const sid = order.stripeSessionId;
-                          const rec = shipments.find((s) => s.sessionId === sid);
+                          const rec = order.tracking || shipments.find((s) => s.sessionId === sid);
                           const isShipped = shipDone.has(sid) || !!rec;
                           const isSending = shipSending.has(sid);
                           const tracking = shipTrack[sid] || "";
@@ -743,7 +740,7 @@ function OrdersTable({ orders, shipments = [] }) {
                         </div>
                         {order.shipping.address && (() => {
                           const sid = order.stripeSessionId;
-                          const rec = shipments.find((s) => s.sessionId === sid);
+                          const rec = order.tracking || shipments.find((s) => s.sessionId === sid);
                           const isShipped = shipDone.has(sid) || !!rec;
                           const isSending = shipSending.has(sid);
                           const tracking = shipTrack[sid] || "";
