@@ -318,7 +318,7 @@ function StatCard({ label, value, sub }) {
 function OrdersTable({ orders, shipments = [] }) {
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState("this_month");
-  const [sort, setSort] = useState("date_desc");
+  const [sort, setSort] = useState({ col: "date", dir: "desc" });
   const [shipTrack, setShipTrack] = useState({});   // { [sessionId]: trackingNumber string }
   const [shipSending, setShipSending] = useState(new Set());
   const [shipDone, setShipDone] = useState(new Set());
@@ -389,17 +389,17 @@ function OrdersTable({ orders, shipments = [] }) {
     rangeEnd = Date.now();
   }
   const totalQty = (o) => (o.items || []).reduce((s, i) => s + (i.quantity || 1), 0);
+  const mul = sort.dir === "asc" ? 1 : -1;
   const filtered = orders
     .filter((o) => { const t = new Date(o.date).getTime(); return t >= rangeStart && t < rangeEnd; })
     .sort((a, b) => {
-      if (sort === "date_desc") return new Date(b.date) - new Date(a.date);
-      if (sort === "date_asc")  return new Date(a.date) - new Date(b.date);
-      if (sort === "order_desc") return (b.orderNumber || 0) - (a.orderNumber || 0);
-      if (sort === "order_asc")  return (a.orderNumber || 0) - (b.orderNumber || 0);
-      if (sort === "items_desc") return totalQty(b) - totalQty(a);
-      if (sort === "items_asc")  return totalQty(a) - totalQty(b);
-      return 0;
+      if (sort.col === "order") return mul * ((a.orderNumber || 0) - (b.orderNumber || 0));
+      if (sort.col === "items") return mul * (totalQty(a) - totalQty(b));
+      return mul * (new Date(a.date) - new Date(b.date));
     });
+  function handleSort(col) {
+    setSort((prev) => prev.col === col ? { col, dir: prev.dir === "desc" ? "asc" : "desc" } : { col, dir: "desc" });
+  }
 
   // Split into unshipped physical orders (needs action) vs everything else
   const pendingOrders = filtered.filter((o) => {
@@ -446,18 +446,6 @@ function OrdersTable({ orders, shipments = [] }) {
             {label}
           </button>
         ))}
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          style={{ marginLeft: 8, fontSize: 12, border: "1px solid #ddd", padding: "3px 6px", background: "#fff", cursor: "pointer" }}
-        >
-          <option value="date_desc">Date ↓</option>
-          <option value="date_asc">Date ↑</option>
-          <option value="order_desc">Order # ↓</option>
-          <option value="order_asc">Order # ↑</option>
-          <option value="items_desc">Items ↓</option>
-          <option value="items_asc">Items ↑</option>
-        </select>
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#888" }}>
           {filtered.length} order{filtered.length !== 1 ? "s" : ""}
         </span>
@@ -467,9 +455,17 @@ function OrdersTable({ orders, shipments = [] }) {
         <table style={s.table}>
           <thead>
             <tr>
-              {["Order #", "Date", "Customer", "Items", "Subtotal", "Tax", "Ship", "Total"].map((h) => (
-                <th key={h} style={s.th}>{h}</th>
-              ))}
+              {["Order #", "Date", "Customer", "Items", "Subtotal", "Tax", "Ship", "Total"].map((h) => {
+                const col = h === "Order #" ? "order" : h === "Date" ? "date" : h === "Items" ? "items" : null;
+                const active = col && sort.col === col;
+                return (
+                  <th key={h} style={{ ...s.th, ...(col ? { cursor: "pointer", userSelect: "none" } : {}) }}
+                    onClick={col ? () => handleSort(col) : undefined}
+                  >
+                    {h}{active ? (sort.dir === "desc" ? " ↓" : " ↑") : ""}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
