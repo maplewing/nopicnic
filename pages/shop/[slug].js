@@ -204,7 +204,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             )}
             <p className="product-price">${product.price.toFixed(2)}</p>
             {!product.isDigital && !product.isService && (
-              <p style={{ fontSize: 13, color: "#888", marginTop: -8, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, marginTop: -8, marginBottom: 16, color: product.price >= 50 ? "rgb(26, 110, 60)" : "#888" }}>
                 {product.price >= 50 ? "Free shipping" : "+ $5.25 shipping · Free over $50"}
               </p>
             )}
