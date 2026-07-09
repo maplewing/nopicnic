@@ -303,12 +303,25 @@ function BarChart({ data, valueKey, color = "#111", height = 100 }) {
 
 // ─── Stat Card ───────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub }) {
+function StatCard({ label, value, sub, prev, prevLabel }) {
+  let delta = null;
+  if (prev !== undefined && prev !== null) {
+    const d = parseFloat(value.replace(/[^0-9.-]/g, "")) - parseFloat(prev);
+    const sign = d >= 0 ? "+" : "";
+    const color = d >= 0 ? "#1a6e3c" : "#b91c1c";
+    const isCurrency = String(value).startsWith("$");
+    delta = (
+      <div style={{ fontSize: 11, color, marginTop: 2 }}>
+        {sign}{isCurrency ? fmt(d) : d.toFixed(0)} vs {prevLabel || "prior"}
+      </div>
+    );
+  }
   return (
     <div style={s.card}>
       <div style={s.cardLabel}>{label}</div>
       <div style={s.cardValue}>{value}</div>
       {sub && <div style={s.cardSub}>{sub}</div>}
+      {delta}
     </div>
   );
 }
@@ -1566,61 +1579,47 @@ export default function AdminDashboard() {
           {!loading && stats && tab === "overview" && (
             <div>
               {/* KPI row */}
-              <div style={s.kpiGrid}>
-                <StatCard
-                  label="Revenue today"
-                  value={fmt(stats.periods.today.revenue)}
-                  sub={`${stats.periods.today.orders} order${stats.periods.today.orders !== 1 ? "s" : ""}`}
-                />
-                <StatCard
-                  label="Revenue this week"
-                  value={fmt(stats.periods.week.revenue)}
-                  sub={`${stats.periods.week.orders} orders`}
-                />
-                <StatCard
-                  label="Revenue this month"
-                  value={fmt(stats.periods.month.revenue)}
-                  sub={`${stats.periods.month.orders} orders`}
-                />
-                <StatCard
-                  label="Avg order value"
-                  value={fmt(stats.totals.avgOrderValue)}
-                  sub="30 days"
-                />
-                <StatCard
-                  label="Checkout conv. rate"
-                  value={`${stats.funnel.conversionRate}%`}
-                  sub={`${stats.funnel.checkoutsCompleted} / ${stats.funnel.checkoutsStarted} sessions`}
-                />
-                <StatCard
-                  label="Add to cart (30 days)"
-                  value={analytics?.totalAddToCart ?? "—"}
-                  sub="tracked events"
-                />
-              </div>
-
-              {/* Conversion funnel */}
               {(() => {
-                const visitors = analytics?.totalSessions || 0;
-                const bounced = analytics?.bouncedSessions || 0;
-                const addToCart = analytics?.totalAddToCart || 0;
-                const started = stats.funnel.checkoutsStarted;
-                const completed = stats.funnel.checkoutsCompleted;
-                const stages = [
-                  visitors > 0 && { label: "Visitors", count: visitors },
-                  visitors > 0 && { label: "Non-bounced", count: visitors - bounced },
-                  addToCart > 0 && { label: "Add to cart", count: addToCart },
-                  started > 0 && { label: "Checkout started", count: started },
-                  { label: "Completed", count: completed },
-                ].filter(Boolean);
+                const p = stats.periods;
+                const pendingShipments = orders
+                  ? orders.filter((o) => o.shipping?.address && !o.tracking && !shipments.find((s) => s.sessionId === o.stripeSessionId)).length
+                  : null;
                 return (
-                  <div style={s.funnelCard}>
-                    <div style={s.chartTitle}>Conversion funnel — 30 days</div>
-                    <FunnelChart stages={stages} />
-                    {parseFloat(stats.funnel.conversionRate) < 40 && started > 3 && (
-                      <p style={s.funnelTip}>
-                        Tip: A checkout conv. rate under 40% often indicates shipping cost surprise or checkout friction.
-                      </p>
+                  <div style={s.kpiGrid}>
+                    <StatCard
+                      label="Revenue today"
+                      value={fmt(p.today.revenue)}
+                      sub={`${p.today.orders} order${p.today.orders !== 1 ? "s" : ""}`}
+                      prev={p.yesterday.revenue}
+                      prevLabel="yesterday"
+                    />
+                    <StatCard
+                      label="Revenue this week"
+                      value={fmt(p.week.revenue)}
+                      sub={`${p.week.orders} orders`}
+                      prev={p.lastWeek.revenue}
+                      prevLabel="last week"
+                    />
+                    <StatCard
+                      label="Revenue this month"
+                      value={fmt(p.month.revenue)}
+                      sub={`${p.month.orders} orders`}
+                      prev={p.lastMonth.revenue}
+                      prevLabel="last month"
+                    />
+                    <StatCard
+                      label="Avg order value"
+                      value={fmt(stats.totals.avgOrderValue)}
+                      sub="30 days"
+                      prev={p.lastMonth.avgOrderValue}
+                      prevLabel="last month"
+                    />
+                    {pendingShipments !== null && (
+                      <StatCard
+                        label="Pending shipments"
+                        value={pendingShipments}
+                        sub={pendingShipments === 1 ? "order needs shipping" : "orders need shipping"}
+                      />
                     )}
                   </div>
                 );

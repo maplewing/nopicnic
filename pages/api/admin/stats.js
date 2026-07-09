@@ -26,33 +26,28 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).end();
 
   const now = Math.floor(Date.now() / 1000);
-  const since30 = now - 30 * 86400;
-  // STATS_SINCE lets you set a go-live timestamp (Unix seconds) to exclude test sessions
-  const statsSince = process.env.STATS_SINCE ? Math.max(since30, parseInt(process.env.STATS_SINCE)) : since30;
+  const since60 = now - 60 * 86400;
+  const statsSince = process.env.STATS_SINCE ? Math.max(since60, parseInt(process.env.STATS_SINCE)) : since60;
 
-  // All sessions in last 30 days (for funnel)
+  // Fetch 60 days so we can compare current vs prior periods
   const allSessions = await fetchAllSessions({
     created: { gte: statsSince },
     expand: ["data.payment_intent.latest_charge"],
   });
 
-  // Exclude fully refunded sessions everywhere
   const nonRefunded = allSessions.filter((s) => !(s.payment_intent?.latest_charge?.amount_refunded > 0));
-
-  // Only completed + paid sessions (non-refunded)
   const completed = nonRefunded.filter(
     (s) => s.status === "complete" && s.payment_status === "paid"
   );
 
-  // Build daily revenue map (last 30 days)
+  // Build daily revenue map (last 30 days only for chart)
+  const since30 = now - 30 * 86400;
   const dailyMap = {};
   for (let i = 29; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
-    dailyMap[key] = { revenue: 0, orders: 0 };
+    dailyMap[d.toISOString().slice(0, 10)] = { revenue: 0, orders: 0 };
   }
-
   for (const s of completed) {
     const key = new Date(s.created * 1000).toISOString().slice(0, 10);
     if (dailyMap[key]) {
@@ -60,46 +55,42 @@ export default async function handler(req, res) {
       dailyMap[key].orders += 1;
     }
   }
-
   const daily = Object.entries(dailyMap)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, v]) => ({ date, ...v }));
 
-  // Period summaries
-  const sum = (arr, field = "amount_total") =>
-    arr.reduce((acc, s) => acc + (s[field] || 0) / 100, 0);
+  const sum = (arr) => arr.reduce((acc, s) => acc + (s.amount_total || 0) / 100, 0);
 
-  const todayTs = now - 86400;
-  const weekTs = now - 7 * 86400;
-  const monthTs = since30;
+  // Current periods
+  const todayC      = completed.filter((s) => s.created >= now - 86400);
+  const weekC       = completed.filter((s) => s.created >= now - 7 * 86400);
+  const monthC      = completed.filter((s) => s.created >= since30);
 
-  const todayC = completed.filter((s) => s.created >= todayTs);
-  const weekC = completed.filter((s) => s.created >= weekTs);
-  const monthC = completed.filter((s) => s.created >= monthTs);
+  // Prior periods (for comparison)
+  const yesterdayC  = completed.filter((s) => s.created >= now - 2 * 86400 && s.created < now - 86400);
+  const lastWeekC   = completed.filter((s) => s.created >= now - 14 * 86400 && s.created < now - 7 * 86400);
+  const lastMonthC  = completed.filter((s) => s.created >= now - 60 * 86400 && s.created < since30);
 
-  const totalRevenue = sum(completed);
-  const totalOrders = completed.length;
+  const totalRevenue = sum(monthC);
+  const totalOrders = monthC.length;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-  const totalTax = completed.reduce(
-    (acc, s) => acc + (s.total_details?.amount_tax || 0) / 100,
-    0
-  );
+
+  const prevRevenue = sum(lastMonthC);
+  const prevOrders = lastMonthC.length;
+  const prevAvg = prevOrders > 0 ? prevRevenue / prevOrders : 0;
+
+  const totalTax = completed.reduce((acc, s) => acc + (s.total_details?.amount_tax || 0) / 100, 0);
 
   return res.status(200).json({
     daily,
     totals: { revenue: totalRevenue, orders: totalOrders, avgOrderValue, tax: totalTax },
     periods: {
-      today: { revenue: sum(todayC), orders: todayC.length },
-      week: { revenue: sum(weekC), orders: weekC.length },
-      month: { revenue: sum(monthC), orders: monthC.length },
-    },
-    funnel: {
-      checkoutsStarted: nonRefunded.length,
-      checkoutsCompleted: completed.length,
-      conversionRate:
-        nonRefunded.length > 0
-          ? ((completed.length / nonRefunded.length) * 100).toFixed(1)
-          : "0.0",
+      today:     { revenue: sum(todayC),     orders: todayC.length },
+      week:      { revenue: sum(weekC),      orders: weekC.length },
+      month:     { revenue: sum(monthC),     orders: monthC.length },
+      yesterday: { revenue: sum(yesterdayC), orders: yesterdayC.length },
+      lastWeek:  { revenue: sum(lastWeekC),  orders: lastWeekC.length },
+      lastMonth: { revenue: sum(lastMonthC), orders: lastMonthC.length, avgOrderValue: prevAvg },
     },
   });
 }
