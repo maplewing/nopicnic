@@ -2,7 +2,7 @@ import Head from "next/head";
 import { useState } from "react";
 
 export default function StudioSessions() {
-  const [form, setForm] = useState({ name: "", studio: "", description: "", email: "" });
+  const [form, setForm] = useState({ name: "", studio: "", description: "", email: "", website: "" });
   const [status, setStatus] = useState("idle");
 
   function handleChange(e) {
@@ -98,6 +98,17 @@ export default function StudioSessions() {
                 required
               />
             </div>
+            {/* Honeypot — hidden from humans, bots will fill it in */}
+            <input
+              name="website"
+              type="text"
+              value={form.website}
+              onChange={handleChange}
+              tabIndex={-1}
+              autoComplete="off"
+              style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0 }}
+              aria-hidden="true"
+            />
             <button type="submit" className="btn-primary" disabled={status === "loading"}>
               {status === "loading" ? "Sending…" : "Send"}
             </button>

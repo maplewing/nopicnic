@@ -3,11 +3,14 @@ import { Resend } from "resend";
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { name, studio, description, email } = req.body;
+  const { name, studio, description, email, website } = req.body;
 
   if (!name || !email || !description) {
     return res.status(400).json({ error: "Required fields missing" });
   }
+
+  // Honeypot: bots fill hidden fields, humans don't
+  if (website) return res.status(200).json({ ok: true });
 
   const resend = new Resend(process.env.RESEND_API_KEY);
 
