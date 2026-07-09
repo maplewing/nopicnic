@@ -460,9 +460,15 @@ export const products = [
     isBundle: true,
     inStock: true,
     productWeightOz: 28.6,
-    images: ["/images/bundle.jpg"],
-    description: "Everything you need to name something right now. Don't Call It That plus Go Name Yourself, bundled together.",
-    details: [],
+    images: ["/images/bundle.jpg", "/images/dcit-cover.jpg", "/images/dcit-spread.jpg", "/images/dcit-mockup-2.jpg", "/images/gny-cover.jpg", "/images/gny-2.jpg", "/images/gny-3.jpg"],
+    description: "The two build on one another — Don't Call It That provides a structured naming process while Go Name Yourself focuses on the creative act of name generation.",
+    reviewsFor: "Don't Call It That",
+    pressImage: "/images/dcit-press_transparent.jpg",
+    pressImageCaption: "Press coverage for Don't Call It That",
+    details: [
+      "Don't Call It That: softcover workbook, 216 pages, with die-cut slipcase",
+      "Go Name Yourself: 90 naming cards in four suits",
+    ],
   },
   {
     id: "dont-call-it-that-digital",

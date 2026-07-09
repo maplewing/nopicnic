@@ -204,7 +204,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             )}
             <p className="product-price">${product.price.toFixed(2)}</p>
             {!product.isDigital && !product.isService && (
-              <p style={{ fontSize: 13, color: "#888", marginTop: -8, marginBottom: 16 }}>+ $5.25 shipping · Free over $50</p>
+              <p style={{ fontSize: 13, color: "#888", marginTop: -8, marginBottom: 16 }}>
+                {product.price >= 50 ? "Free shipping" : "+ $5.25 shipping · Free over $50"}
+              </p>
             )}
 
             {productReviews.length > 0 && !product.hideReviews && (
@@ -312,6 +314,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           <div className="product-full-section">
             <p className="product-full-section-label">As seen in</p>
             <img src={product.pressImage} alt="Press mentions" loading="lazy" style={{ maxWidth: "100%", display: "block", backgroundColor: "#fff" }} />
+            {product.pressImageCaption && (
+              <p style={{ fontSize: 12, color: "#aaa", marginTop: 8 }}>{product.pressImageCaption}</p>
+            )}
           </div>
         )}
 
