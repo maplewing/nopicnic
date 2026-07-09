@@ -239,7 +239,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             {product.inStock ? (
               <>
                 <button className="btn-primary" onClick={handleBuyNow}>Buy now</button>
-                <button className="btn-secondary" onClick={handleAdd} disabled={added} style={{ marginTop: 8 }}>
+                <button className="btn-secondary" onClick={handleAdd} disabled={added} style={{ marginTop: 8, marginBottom: 24 }}>
                   {added ? "Added!" : "Add to cart"}
                 </button>
               </>

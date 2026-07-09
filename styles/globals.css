@@ -290,9 +290,12 @@ button {
 
 .product-details {
   font-size: 12px;
-  line-height: 2;
+  line-height: 1.5;
   color: var(--gray-mid);
   margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* Add to cart / buy button */
