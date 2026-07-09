@@ -1584,6 +1584,14 @@ export default function AdminDashboard() {
                 const pendingShipments = orders
                   ? orders.filter((o) => o.shipping?.address && !o.tracking && !shipments.find((s) => s.sessionId === o.stripeSessionId)).length
                   : null;
+                const now = new Date();
+                const calMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+                const daysElapsed = now.getDate();
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                const calRevenue = (orders || [])
+                  .filter((o) => new Date(o.date).getTime() >= calMonthStart)
+                  .reduce((sum, o) => sum + (o.total || 0), 0);
+                const projected = daysElapsed > 0 ? (calRevenue / daysElapsed) * daysInMonth : 0;
                 return (
                   <div style={s.kpiGrid}>
                     <StatCard
@@ -1603,7 +1611,7 @@ export default function AdminDashboard() {
                     <StatCard
                       label="Revenue this month"
                       value={fmt(p.month.revenue)}
-                      sub={`${p.month.orders} orders`}
+                      sub={`${p.month.orders} orders · on pace for ${fmt(projected)}`}
                       prev={p.lastMonth.revenue}
                       prevLabel="last month"
                     />
