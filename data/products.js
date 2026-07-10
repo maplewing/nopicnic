@@ -461,13 +461,32 @@ export const products = [
     inStock: true,
     productWeightOz: 28.6,
     images: ["/images/bundle.jpg", "/images/dcit-cover.jpg", "/images/dcit-spread.jpg", "/images/dcit-mockup-2.jpg", "/images/gny-cover.jpg", "/images/gny-2.jpg", "/images/gny-3.jpg"],
-    description: "Don't Call It That provides a structured naming process while Go Name Yourself focuses on the creative act of name generation.",
+    description: "Naming is harder than it looks. Don't Call It That gives you the process. Go Name Yourself gives you exercises to generate names right away. Together they cover everything between here and a name you're proud of.",
+    bodyText: "You've probably already tried AI. It gave you options that all sounded like everything else out there — because AI learns from existing names, and the best names don't look like existing names. The problem isn't generating options. It's knowing which ones are good and why. That's a skill, and it's learnable.",
     reviewsFor: "Don't Call It That",
     pressImage: "/images/dcit-press_transparent.jpg",
     pressImageCaption: "Press coverage for Don't Call It That",
     details: [
       "Don't Call It That: softcover workbook, 216 pages, with die-cut slipcase",
       "Go Name Yourself: 90 naming cards in four suits",
+    ],
+    productSections: [
+      {
+        heading: "Don't Call It That",
+        text: "Don't Call It That is not a book about naming. It is a step-by-step workbook that walks you through all the ins and outs of the naming process. Go from zero to a great name in the time it takes you to work through this concise, beautiful book.",
+      },
+      {
+        heading: "Go Name Yourself",
+        text: "Instead of staring at a blank page waiting for brilliance, each card gives you a thought exercise. 90 cards in four suits: Preparation, Ideation, Lessons, and Vetting.",
+      },
+    ],
+    namedBy: [
+      { name: "Miro", logo: "/images/miro-logo.png" },
+      { name: "Abridge", logo: "/images/abridge-logo.png" },
+      { name: "Okta", logo: "/images/okta-logo.png" },
+      { name: "Overture", logo: "/images/overture-logo.png" },
+      { name: "Tenor", logo: "/images/tenor-logo.png" },
+      { name: "Eero", logo: "/images/eero-logo.png" },
     ],
   },
   {

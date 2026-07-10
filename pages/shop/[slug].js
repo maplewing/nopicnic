@@ -301,6 +301,28 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           </div>
         )}
 
+        {product.productSections?.length > 0 && (
+          <div className="product-full-section">
+            {product.productSections.map((section, i) => (
+              <div key={i} style={{ marginBottom: 24 }}>
+                <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{section.heading}</p>
+                <p style={{ fontSize: 16, lineHeight: 1.7, color: "#555" }}>{section.text}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {product.namedBy?.length > 0 && (
+          <div className="product-full-section">
+            <p className="product-full-section-label">From the namers behind</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 32, alignItems: "center", marginTop: 16 }}>
+              {product.namedBy.map((item, i) => (
+                <img key={i} src={item.logo} alt={item.name} style={{ height: 20, opacity: 0.6, objectFit: "contain" }} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {product.topics?.length > 0 && (
           <div className="product-full-section">
             <p className="product-full-section-label">Let&rsquo;s figure out</p>
