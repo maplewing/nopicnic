@@ -5,7 +5,8 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { email, firstName } = req.body;
+  const { email, firstName, website } = req.body;
+  if (website) return res.status(200).json({ ok: true });
 
   try {
     const response = await fetch("https://app.loops.so/api/v1/contacts/create", {

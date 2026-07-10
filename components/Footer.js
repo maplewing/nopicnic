@@ -4,6 +4,7 @@ import { siteConfig } from "../data/products";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
   const [status, setStatus] = useState(null);
 
   async function handleSignup(e) {
@@ -13,7 +14,7 @@ export default function Footer() {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, website }),
       });
       if (res.ok) {
         setStatus("success");
@@ -48,6 +49,16 @@ export default function Footer() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+              />
+              <input
+                name="website"
+                type="text"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0 }}
+                aria-hidden="true"
               />
               <button type="submit" disabled={status === "loading"}>
                 {status === "loading" ? "..." : "Sign up"}
