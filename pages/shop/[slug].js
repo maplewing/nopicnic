@@ -297,7 +297,20 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
 
         {product.bodyText && (
           <div className="product-full-section">
-            <p style={{ fontSize: 20, lineHeight: 1.7, color: "#555" }}>{product.bodyText}</p>
+            <p style={{ fontSize: 20, lineHeight: 1.7, color: "#555" }}>
+              {product.bodyTextLead && <strong>{product.bodyTextLead} </strong>}
+              {product.bodyText}
+            </p>
+          </div>
+        )}
+
+        {product.pressImage && (
+          <div className="product-full-section">
+            <p className="product-full-section-label">As seen in</p>
+            <img src={product.pressImage} alt="Press mentions" loading="lazy" style={{ maxWidth: "100%", display: "block", backgroundColor: "#fff" }} />
+            {product.pressImageCaption && (
+              <p style={{ fontSize: 12, color: "#aaa", marginTop: 8 }}>{product.pressImageCaption}</p>
+            )}
           </div>
         )}
 
@@ -312,7 +325,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           </div>
         )}
 
-        {product.namedBy?.length > 0 && (
+        {product.namedBy?.length > 0 && product.namedBy.some(item => item.logo) && (
           <div className="product-full-section">
             <p className="product-full-section-label">From the namers behind</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 32, alignItems: "center", marginTop: 16 }}>
@@ -329,16 +342,6 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             <p style={{ fontSize: 20, lineHeight: 2, color: "#555" }}>
               {product.topics.join(" · ")}
             </p>
-          </div>
-        )}
-
-        {product.pressImage && (
-          <div className="product-full-section">
-            <p className="product-full-section-label">As seen in</p>
-            <img src={product.pressImage} alt="Press mentions" loading="lazy" style={{ maxWidth: "100%", display: "block", backgroundColor: "#fff" }} />
-            {product.pressImageCaption && (
-              <p style={{ fontSize: 12, color: "#aaa", marginTop: 8 }}>{product.pressImageCaption}</p>
-            )}
           </div>
         )}
 
