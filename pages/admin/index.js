@@ -336,6 +336,12 @@ function OrdersTable({ orders, shipments = [] }) {
   const [shipSending, setShipSending] = useState(new Set());
   const [shipDone, setShipDone] = useState(new Set());
   const [copiedAddressId, setCopiedAddressId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [donePage, setDonePage] = useState(0);
+
+  const PAGE_SIZE = 25;
+
+  useEffect(() => { setDonePage(0); }, [filter, search, sort.col, sort.dir]);
 
   async function handleMarkShipped(sessionId) {
     const tracking = (shipTrack[sessionId] || "").trim();
@@ -401,10 +407,27 @@ function OrdersTable({ orders, shipments = [] }) {
     rangeStart = new Date(now.getFullYear(), 0, 1).getTime();
     rangeEnd = Date.now();
   }
+  const searchTerm = search.toLowerCase().trim();
   const totalQty = (o) => (o.items || []).reduce((s, i) => s + (i.quantity || 1), 0);
   const mul = sort.dir === "asc" ? 1 : -1;
   const filtered = orders
     .filter((o) => { const t = new Date(o.date).getTime(); return t >= rangeStart && t < rangeEnd; })
+    .filter((o) => {
+      if (!searchTerm) return true;
+      return (
+        (o.orderNumber && String(o.orderNumber).includes(searchTerm)) ||
+        (o.customer?.name || "").toLowerCase().includes(searchTerm) ||
+        (o.customer?.email || "").toLowerCase().includes(searchTerm) ||
+        (o.items || []).some((i) => (i.name || "").toLowerCase().includes(searchTerm)) ||
+        (o.shipping?.name || "").toLowerCase().includes(searchTerm) ||
+        (o.shipping?.address?.line1 || "").toLowerCase().includes(searchTerm) ||
+        (o.shipping?.address?.line2 || "").toLowerCase().includes(searchTerm) ||
+        (o.shipping?.address?.city || "").toLowerCase().includes(searchTerm) ||
+        (o.shipping?.address?.state || "").toLowerCase().includes(searchTerm) ||
+        (o.shipping?.address?.postal_code || "").toLowerCase().includes(searchTerm) ||
+        (o.shipping?.address?.country || "").toLowerCase().includes(searchTerm)
+      );
+    })
     .sort((a, b) => {
       if (sort.col === "order") return mul * ((a.orderNumber || 0) - (b.orderNumber || 0));
       if (sort.col === "items") return mul * (totalQty(a) - totalQty(b));
@@ -421,6 +444,8 @@ function OrdersTable({ orders, shipments = [] }) {
     return !shipDone.has(o.stripeSessionId) && !rec;
   });
   const doneOrders = filtered.filter((o) => !pendingOrders.includes(o));
+  const totalDonePages = Math.ceil(doneOrders.length / PAGE_SIZE);
+  const paginatedDone = doneOrders.slice(donePage * PAGE_SIZE, (donePage + 1) * PAGE_SIZE);
 
   if (orders.length === 0) {
     return <p style={{ color: "#999", fontSize: 13 }}>No orders found in this period.</p>;
@@ -453,13 +478,30 @@ function OrdersTable({ orders, shipments = [] }) {
         {[["this_month", "This month"], ["last_month", "Last month"], ["this_year", "This year"]].map(([v, label]) => (
           <button
             key={v}
-            onClick={() => setFilter(v)}
+            onClick={() => { setFilter(v); setDonePage(0); }}
             style={{ ...s.filterBtn, ...(filter === v ? s.filterBtnActive : {}) }}
           >
             {label}
           </button>
         ))}
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "#888" }}>
+        <input
+          type="search"
+          placeholder="Search name, email, address, order #…"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setDonePage(0); }}
+          style={{
+            marginLeft: "auto",
+            border: "1px solid #ddd",
+            padding: "4px 10px",
+            fontSize: 12,
+            fontFamily: MONO,
+            outline: "none",
+            width: 220,
+            background: "#fff",
+            color: "#111",
+          }}
+        />
+        <span style={{ fontSize: 12, color: "#888", whiteSpace: "nowrap" }}>
           {filtered.length} order{filtered.length !== 1 ? "s" : ""}
         </span>
       </div>
@@ -678,7 +720,7 @@ function OrdersTable({ orders, shipments = [] }) {
               </>
             ))}
             {doneOrders.length > 0 && <SectionHeaderRow label="Shipped & digital" count={doneOrders.length} />}
-            {doneOrders.map((order) => (
+            {paginatedDone.map((order) => (
               <>
                 <tr
                   key={order.stripeSessionId}
@@ -875,6 +917,28 @@ function OrdersTable({ orders, shipments = [] }) {
           </tbody>
         </table>
       </div>
+
+      {totalDonePages > 1 && (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "flex-end", marginTop: 12 }}>
+          <button
+            onClick={() => setDonePage((p) => Math.max(0, p - 1))}
+            disabled={donePage === 0}
+            style={{ ...s.filterBtn, opacity: donePage === 0 ? 0.4 : 1 }}
+          >
+            ← Prev
+          </button>
+          <span style={{ fontSize: 12, color: "#888" }}>
+            Page {donePage + 1} of {totalDonePages}
+          </span>
+          <button
+            onClick={() => setDonePage((p) => Math.min(totalDonePages - 1, p + 1))}
+            disabled={donePage === totalDonePages - 1}
+            style={{ ...s.filterBtn, opacity: donePage === totalDonePages - 1 ? 0.4 : 1 }}
+          >
+            Next →
+          </button>
+        </div>
+      )}
     </div>
   );
 }
