@@ -155,9 +155,16 @@ ${shipLine}
 </pre>`,
       });
 
-      // Add to Loops — only subscribe and trigger drip if customer opted in (GDPR)
+      // Record the customer in Loops, unsubscribed.
+      //
+      // Loops owns the newsletter list and nothing else. Post-purchase email —
+      // shipping, arrival, review request — is sent from our own Vercel crons via
+      // Resend, so do NOT fire a "purchase" event here: it would trigger the Loop
+      // in the Loops dashboard and every customer would get two review asks and
+      // two discount nudges. Buying something is not opting in to marketing, so
+      // subscribed stays false; the footer signup form is the only thing that
+      // sets it true.
       const firstName = session.customer_details?.name?.split(" ")[0] || "";
-      const optedIn = false; // marketing consent checkbox removed from checkout
       try {
         await fetch("https://app.loops.so/api/v1/contacts/create", {
           method: "POST",
@@ -168,25 +175,10 @@ ${shipLine}
           body: JSON.stringify({
             email: toEmail,
             firstName,
-            subscribed: optedIn,
+            subscribed: false,
             userGroup: "customer",
           }),
         });
-
-        // Only fire purchase drip event if they opted in to marketing
-        if (optedIn) {
-          await fetch("https://app.loops.so/api/v1/events/send", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.LOOPS_API_KEY}`,
-            },
-            body: JSON.stringify({
-              email: toEmail,
-              eventName: "purchase",
-            }),
-          });
-        }
       } catch (loopsErr) {
         console.error("Loops error for session", session.id, loopsErr);
       }

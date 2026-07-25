@@ -1,14 +1,17 @@
 # No Picnic Press
 
-Next.js storefront with Stripe Checkout (Apple Pay + PayPal), Kit email signups, and Pirateship for fulfillment.
+Next.js storefront with Stripe Checkout (Apple Pay + PayPal), Loops for the
+newsletter, Resend for order email, and Shippo/EasyPost for rates and labels.
 
 ## Stack
 - **Next.js 14** — framework + API routes
 - **Stripe Checkout** — payments (card, Apple Pay, PayPal, discount codes)
-- **Kit (ConvertKit)** — email list + drip sequences
-- **Vercel** — hosting (free)
-- **Pirateship** — shipping labels (manual, free)
-- **Zapier** — Stripe → Kit post-purchase trigger (free tier)
+- **Resend** — all order and post-purchase email
+- **Loops** — newsletter list only (see "Who sends what" below)
+- **Shippo** — domestic rates, labels, delivery tracking
+- **EasyPost** — international (UPS) rates
+- **Upstash Redis** — sequential order numbers
+- **Vercel** — hosting, cron jobs, blob storage
 
 ## Setup
 
@@ -24,8 +27,16 @@ Copy `.env.local.example` to `.env.local` and fill in:
 - `STRIPE_SECRET_KEY` — from Stripe dashboard → Developers → API keys
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — same place
 - `NEXT_PUBLIC_URL` — your domain (https://nopicnicpress.com)
-- `KIT_API_KEY` — from Kit account settings
-- `KIT_FORM_ID` — the ID of your signup form in Kit
+- `STRIPE_WEBHOOK_SECRET` — signing secret for the checkout webhook
+- `RESEND_API_KEY` — sends every order and drip email
+- `LOOPS_API_KEY` — newsletter contacts
+- `SHIPPO_API_KEY` — domestic rates and delivery tracking
+- `EASYPOST_API_KEY` — international rates
+- `CRON_SECRET` — required, or the daily cron jobs 401 and silently do nothing
+- `DOWNLOAD_TOKEN_SECRET` — signs digital download and unsubscribe links
+- `BLOB_READ_WRITE_TOKEN` — stock levels and legacy records
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — order numbers
+- `NEXT_PUBLIC_META_PIXEL_ID` / `META_CAPI_ACCESS_TOKEN` — optional; see privacy note below
 
 ### 3. Stripe products
 In your Stripe dashboard, create a Product for each item in `data/products.js`.
@@ -54,12 +65,38 @@ Open http://localhost:3000
 4. Deploy — Vercel gives you a `.vercel.app` URL to test
 5. Add your custom domain in Vercel → point nopicnicpress.com DNS there
 
-### 7. Zapier: Stripe → Kit (post-purchase drip)
-Create a Zap:
-- **Trigger**: Stripe → Payment Intent Succeeded
-- **Action**: Kit → Add Subscriber to Form (with tag: "customer")
-The Kit sequence (Day 3 review ask, Day 14 referral code, Day 30 repeat nudge)
-is set up in Kit directly on that form/tag.
+## Who sends what
+
+There is no Zapier, and Loops runs no automations. Everything a customer
+receives after ordering is sent by this app through Resend:
+
+| Email | Sent by | When |
+|---|---|---|
+| Order confirmation + download links | `api/webhook` | Stripe `checkout.session.completed` |
+| Shipping confirmation | `api/admin/shipments` | You add tracking in the admin |
+| Arrival + promo code | `api/drip/arrival` (cron) | Shippo reports the parcel delivered |
+| Review request | `api/drip/review-request` (cron) | 9–11 days after purchase |
+| Announcement | `api/drip/announce` | Manually, to newsletter subscribers only |
+
+**Loops holds the newsletter list and nothing else.** Buying something records
+the customer in Loops as `subscribed: false`; only the footer signup form sets
+it true. `api/webhook` deliberately does not send a `purchase` event — if you
+add one and wire a Loop to it, customers get two review asks and two discount
+nudges, because the crons above already cover that ground.
+
+The two crons need `CRON_SECRET` set in Vercel. Without it every invocation
+401s and nothing is sent, with no error anywhere obvious.
+
+Arrival email requires the **Tracking API** enabled on the Shippo account.
+Without it every lookup 401s, nothing is ever seen as delivered, and the cron
+reports `trackingUnavailable` in its JSON response.
+
+## Privacy
+
+The Meta pixel and Conversions API are withheld from visitors in the EEA, the
+UK, and Switzerland — see `lib/region.js`. There is no consent banner because
+those visitors simply aren't tracked. If you ever add a banner, that geo-gate
+is what to relax. Policy copy lives in `pages/policies.js`.
 
 ## Updating content
 
