@@ -64,13 +64,26 @@ export default function Policies() {
           <li><strong>Shippo and EasyPost</strong> — shipping rates and labels</li>
           <li><strong>Resend</strong> — order confirmation and shipping emails</li>
           <li><strong>Loops</strong> — newsletter and customer email</li>
-          <li><strong>Meta</strong> — advertising measurement, described below</li>
+          <li>
+            <strong>Meta</strong> — advertising measurement, and not for visitors in the EEA,
+            the UK, or Switzerland; see below
+          </li>
         </ul>
 
         <h3>Advertising and tracking</h3>
         <p>
-          We run the Meta pixel on this site and also send Meta a server-side copy of purchase
-          events. That second copy includes your email address and name in hashed form, which
+          <strong>
+            If you are in the EEA, the UK, or Switzerland, we do not run any advertising
+            tracking on you at all.
+          </strong>{" "}
+          The Meta pixel is never loaded, and we do not send Meta a server-side copy of your
+          order. We could ask you for consent instead and show you a cookie banner, but we would
+          rather not build one, so we simply do not track you. There is nothing for you to
+          click and nothing for you to opt out of.
+        </p>
+        <p>
+          Everywhere else, we run the Meta pixel and also send Meta a server-side copy of
+          purchase events. That copy includes your email address and name in hashed form, which
           Meta uses to tell whether an ad it showed led to a sale. If you would rather not be
           included, you can opt out through{" "}
           <a href="https://www.facebook.com/adpreferences/ad_settings" target="_blank" rel="noopener noreferrer">
@@ -79,9 +92,11 @@ export default function Policies() {
           , use a browser that blocks trackers, or email us and we will exclude you.
         </p>
         <p>
-          The Meta pixel sets cookies in your browser to do this. Stripe sets its own cookies to
-          process your payment and prevent fraud, and those are required for the shop to work at
-          all. We use no other advertising or tracking cookies.
+          Where the pixel does run, it sets cookies in your browser. Stripe sets its own cookies
+          to process your payment and prevent fraud, and those are required for the shop to work
+          at all. We set one small cookie of our own recording only whether your country is one
+          where we withhold tracking; it holds no identifier and nothing personal. We use no
+          other advertising or tracking cookies.
         </p>
 
         <h3>How long we keep it</h3>

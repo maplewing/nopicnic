@@ -1,6 +1,7 @@
 import "../styles/globals.css";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { trackingAllowed } from "../lib/region";
 import { Inter, Courier_Prime } from "next/font/google";
 import Script from "next/script";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -26,6 +27,13 @@ const courierPrime = Courier_Prime({
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
+
+  // Starts false so the pixel is never in the first render: EEA/UK/Swiss
+  // visitors must not load it at all, and we only know the region on the client.
+  const [mayTrack, setMayTrack] = useState(false);
+  useEffect(() => {
+    setMayTrack(trackingAllowed());
+  }, []);
 
   useEffect(() => {
     // Page views come from Vercel Analytics below; this only mirrors them to the
@@ -62,7 +70,7 @@ export default function App({ Component, pageProps }) {
         <Footer />
         <SpeedInsights />
         <Analytics />
-        {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
+        {mayTrack && process.env.NEXT_PUBLIC_META_PIXEL_ID && (
           <Script
             id="fb-pixel"
             strategy="afterInteractive"
