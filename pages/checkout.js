@@ -119,6 +119,28 @@ const COUNTRIES = [
   { code: "VN", name: "Vietnam" },
 ];
 
+function RemoveBlockedItem({ onRemove }) {
+  return (
+    <button
+      type="button"
+      onClick={onRemove}
+      style={{
+        marginTop: 8,
+        padding: 0,
+        background: "none",
+        border: "none",
+        borderBottom: "1px solid #c00",
+        color: "#c00",
+        fontSize: 13,
+        fontFamily: "inherit",
+        cursor: "pointer",
+      }}
+    >
+      Remove it from your cart
+    </button>
+  );
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, updateQty, removeItem, hydrated } = useCart();
@@ -136,6 +158,8 @@ export default function CheckoutPage() {
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoError, setPromoError] = useState(null);
+  // Set when the server rejects a specific cart line, so we can offer to drop it.
+  const [blockedItemId, setBlockedItemId] = useState(null);
 
   // Track which session key we last successfully created so we don't duplicate
   const activeSessionKeyRef = useRef(null);
@@ -159,20 +183,27 @@ export default function CheckoutPage() {
       setSelectedRate(null);
       setPromoApplied(false);
       setPromoError(null);
+      setBlockedItemId(null);
       try {
         const res = await fetch("/api/shipping-rates", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             address: { country: address.country, zip: address.zip },
-            items: items.map((i) => ({ id: i.id, qty: i.qty })),
+            items: items.map((i) => ({ id: i.id, qty: i.qty, name: i.name })),
           }),
         });
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        if (!data.rates?.length) throw new Error("no rates");
-        setRates(data.rates);
-        setSelectedRate(data.rates[0]);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          // A rejected cart line names itself; anything else is an address problem.
+          setRateError(data.error || "Couldn't fetch rates. Please check your address and try again.");
+          setBlockedItemId(data.itemId || null);
+        } else if (!data.rates?.length) {
+          setRateError("No shipping options available for that address.");
+        } else {
+          setRates(data.rates);
+          setSelectedRate(data.rates[0]);
+        }
       } catch {
         setRateError("Couldn't fetch rates. Please check your address and try again.");
       }
@@ -214,7 +245,7 @@ export default function CheckoutPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        items: items.map((i) => ({ id: i.id, qty: i.qty })),
+        items: items.map((i) => ({ id: i.id, qty: i.qty, name: i.name })),
         selectedRate,
         address,
         promoCode: promoApplied ? FREE_SHIPPING_CODE : null,
@@ -225,9 +256,11 @@ export default function CheckoutPage() {
         if (cancelled) return;
         if (!data.clientSecret) {
           setCheckoutError(data.error || "Something went wrong. Please try again.");
+          setBlockedItemId(data.itemId || null);
           activeSessionKeyRef.current = null;
         } else {
           setClientSecret(data.clientSecret);
+          setBlockedItemId(null);
         }
       })
       .catch(() => {
@@ -319,7 +352,10 @@ export default function CheckoutPage() {
                   <p style={{ fontSize: 13, color: "var(--gray-mid)", marginTop: 16 }}>Fetching rates…</p>
                 )}
                 {rateError && (
-                  <p style={{ marginTop: 12, fontSize: 13, color: "#c00" }}>{rateError}</p>
+                  <div style={{ marginTop: 12 }}>
+                    <p style={{ fontSize: 13, color: "#c00" }}>{rateError}</p>
+                    {blockedItemId && <RemoveBlockedItem onRemove={() => removeItem(blockedItemId)} />}
+                  </div>
                 )}
 
                 {displayRates && (
@@ -429,7 +465,10 @@ export default function CheckoutPage() {
           {/* ── Right column: Stripe embedded checkout ── */}
           <div>
             {checkoutError && (
-              <p style={{ marginBottom: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
+              <div style={{ marginBottom: 12 }}>
+                <p style={{ fontSize: 13, color: "#c00" }}>{checkoutError}</p>
+                {blockedItemId && <RemoveBlockedItem onRemove={() => removeItem(blockedItemId)} />}
+              </div>
             )}
             {!canProceed && !checkoutError && (
               <p style={{ fontSize: 13, color: "var(--gray-mid)", lineHeight: 1.7 }}>

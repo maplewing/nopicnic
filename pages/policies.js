@@ -79,9 +79,9 @@ export default function Policies() {
           , use a browser that blocks trackers, or email us and we will exclude you.
         </p>
         <p>
-          We do not use advertising cookies beyond this, and we do not run a cookie consent
-          banner because we do not set any cookies that require one. Stripe sets cookies
-          necessary to process your payment and prevent fraud.
+          The Meta pixel sets cookies in your browser to do this. Stripe sets its own cookies to
+          process your payment and prevent fraud, and those are required for the shop to work at
+          all. We use no other advertising or tracking cookies.
         </p>
 
         <h3>How long we keep it</h3>

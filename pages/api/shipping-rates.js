@@ -11,7 +11,9 @@ export default async function handler(req, res) {
   if (!address?.country) return res.status(400).json({ error: "Missing address" });
 
   const cart = validateCart(items);
-  if (cart.error) return res.status(400).json({ error: cart.error });
+  if (cart.error) {
+    return res.status(400).json({ error: cart.error, itemId: cart.errorItemId ?? null });
+  }
 
   try {
     const rates = await getRates({

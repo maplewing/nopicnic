@@ -17,7 +17,9 @@ export default async function handler(req, res) {
   // Prices, price ids and stock come from data/products.js, never from the
   // browser — a stale cart in localStorage can hold weeks-old prices.
   const cart = validateCart(items);
-  if (cart.error) return res.status(400).json({ error: cart.error });
+  if (cart.error) {
+    return res.status(400).json({ error: cart.error, itemId: cart.errorItemId ?? null });
+  }
 
   const { lines, subtotal, hasPhysical } = cart;
 
