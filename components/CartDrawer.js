@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import Image from "next/image";
 import { useCart } from "./CartContext";
 
 export default function CartDrawer() {
@@ -29,7 +30,13 @@ export default function CartDrawer() {
             <div key={item.id} className="cart-item">
               <div className="cart-item-image">
                 {item.images?.[0] && (
-                  <img src={item.images[0]} alt={item.name} />
+                  <Image
+                    src={item.images[0]}
+                    alt={item.name}
+                    fill
+                    sizes="80px"
+                    style={{ objectFit: "cover" }}
+                  />
                 )}
               </div>
               <div className="cart-item-details">

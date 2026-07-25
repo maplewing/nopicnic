@@ -1,29 +1,17 @@
 import Head from "next/head";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useCart } from "../components/CartContext";
-import { STANDARD_MAILER_OZ, LARGE_MAILER_OZ } from "../data/products";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-const DCIT_IDS = new Set([
-  "dont-call-it-that",
-  "dont-call-it-that-1st-edition",
-  "dont-call-it-that-2nd-edition",
-]);
+const FREE_SHIPPING_CODE = "MOREBETTER";
+const FREE_SHIPPING_MINIMUM = 50;
 
-function getPackagingOz(items) {
-  const ids = new Set(items.map((i) => i.id));
-  const hasDCIT = [...DCIT_IDS].some((id) => ids.has(id));
-  const hasGNY = ids.has("go-name-yourself");
-  const hasBundle = ids.has("name-right-now-bundle");
-  const hasExtraStrength = ids.has("extra-strength");
-  if ((hasDCIT && hasGNY) || hasBundle || hasExtraStrength) return LARGE_MAILER_OZ;
-  return STANDARD_MAILER_OZ;
-}
-
+// Mirrors FREE_RATE in lib/shippingRates.js, which re-validates the code server-side.
 const FREE_RATE = {
   token: "promo-free",
   serviceToken: "free_shipping",
@@ -135,12 +123,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, total, updateQty, removeItem, hydrated } = useCart();
 
-  const physicalItems = items.filter((i) => !i.isDigital);
-  const hasPhysical = physicalItems.length > 0;
-  const totalWeightOz = hasPhysical
-    ? physicalItems.reduce((sum, i) => sum + (i.productWeightOz || 14) * i.qty, 0) +
-      getPackagingOz(physicalItems)
-    : 0;
+  const hasPhysical = items.some((i) => !i.isDigital && !i.isService);
 
   const [address, setAddress] = useState({ zip: "", country: "US" });
   const [rates, setRates] = useState(null);
@@ -182,19 +165,14 @@ export default function CheckoutPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             address: { country: address.country, zip: address.zip },
-            weightOz: totalWeightOz,
+            items: items.map((i) => ({ id: i.id, qty: i.qty })),
           }),
         });
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (!data.rates?.length) throw new Error("no rates");
-        const totalQty = physicalItems.reduce((sum, i) => sum + i.qty, 0);
-        const filteredRates = totalQty > 4
-          ? data.rates.filter((r) => r.serviceToken !== "usps_media_mail")
-          : data.rates;
-        if (!filteredRates.length) throw new Error("no rates");
-        setRates(filteredRates);
-        setSelectedRate(filteredRates[0]);
+        setRates(data.rates);
+        setSelectedRate(data.rates[0]);
       } catch {
         setRateError("Couldn't fetch rates. Please check your address and try again.");
       }
@@ -211,6 +189,7 @@ export default function CheckoutPage() {
     ? JSON.stringify({
         items: items.map((i) => `${i.id}:${i.qty}`),
         rate: selectedRate?.token ?? null,
+        country: address.country,
       })
     : null;
 
@@ -234,7 +213,12 @@ export default function CheckoutPage() {
     fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, selectedRate, address }),
+      body: JSON.stringify({
+        items: items.map((i) => ({ id: i.id, qty: i.qty })),
+        selectedRate,
+        address,
+        promoCode: promoApplied ? FREE_SHIPPING_CODE : null,
+      }),
     })
       .then((r) => r.json())
       .then((data) => {
@@ -268,9 +252,18 @@ export default function CheckoutPage() {
   function handleApplyPromo(e) {
     e.preventDefault();
     const code = promoCode.trim().toUpperCase();
-    if (code !== "MOREBETTER") { setPromoError("Invalid promo code."); return; }
+    if (!code) return;
+    // Only the free-shipping code is handled here. Everything else is a Stripe
+    // coupon, and telling people it's invalid is how we lose the sale.
+    if (code !== FREE_SHIPPING_CODE) {
+      setPromoError("That's a discount code — enter it under “Add code” in the payment form.");
+      return;
+    }
     if (address.country !== "US") { setPromoError("Free shipping is for US orders only."); return; }
-    if (total < 50) { setPromoError("MOREBETTER applies to orders of $50 or more."); return; }
+    if (total < FREE_SHIPPING_MINIMUM) {
+      setPromoError(`${FREE_SHIPPING_CODE} applies to orders of $${FREE_SHIPPING_MINIMUM} or more.`);
+      return;
+    }
     setPromoApplied(true);
     setPromoError(null);
     setSelectedRate(FREE_RATE);
@@ -361,12 +354,13 @@ export default function CheckoutPage() {
                           type="text"
                           value={promoCode}
                           onChange={(e) => { setPromoCode(e.target.value); setPromoError(null); }}
-                          placeholder="Promo code"
+                          placeholder="Free shipping code"
+                          aria-label="Free shipping code"
                         />
                         <button type="submit">Apply</button>
                       </form>
                     )}
-                    {promoApplied && <p className="promo-success">MOREBETTER applied — shipping is free.</p>}
+                    {promoApplied && <p className="promo-success">{FREE_SHIPPING_CODE} applied — shipping is free.</p>}
                     {promoError && <p className="promo-error">{promoError}</p>}
                   </div>
                 )}
@@ -386,11 +380,9 @@ export default function CheckoutPage() {
               {items.map((item) => (
                 <div key={item.id} className="checkout-summary-row" style={{ alignItems: "flex-start", gap: 12 }}>
                   {item.images?.[0] && (
-                    <img
-                      src={item.images[0]}
-                      alt={item.name}
-                      style={{ width: 52, height: 52, objectFit: "cover", flexShrink: 0, borderRadius: 2 }}
-                    />
+                    <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0, borderRadius: 2, overflow: "hidden" }}>
+                      <Image src={item.images[0]} alt={item.name} fill sizes="52px" style={{ objectFit: "cover" }} />
+                    </div>
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span>{item.name}</span>
@@ -438,6 +430,13 @@ export default function CheckoutPage() {
           <div>
             {checkoutError && (
               <p style={{ marginBottom: 12, fontSize: 13, color: "#c00" }}>{checkoutError}</p>
+            )}
+            {!canProceed && !checkoutError && (
+              <p style={{ fontSize: 13, color: "var(--gray-mid)", lineHeight: 1.7 }}>
+                {fetchingRates
+                  ? "Finding shipping options…"
+                  : "Enter your country and postal code to see shipping options and pay."}
+              </p>
             )}
             {canProceed && (
               <>

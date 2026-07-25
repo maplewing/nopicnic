@@ -2,7 +2,17 @@ import { products } from "../data/products";
 
 const SITE_URL = process.env.NEXT_PUBLIC_URL || "https://nopicnicpress.com";
 
-const staticPages = ["", "/about", "/stockists", "/shipping-returns"];
+// No lastmod: every page would carry the deploy date whether or not it changed,
+// and Google ignores lastmod it can't trust.
+const staticPages = [
+  "",
+  "/about",
+  "/stockists",
+  "/shipping-returns",
+  "/studio-sessions",
+  "/blog",
+  "/policies",
+];
 
 function generateSiteMap() {
   const productUrls = products

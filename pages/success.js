@@ -2,9 +2,19 @@ import Head from "next/head";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
+import { useCart } from "../components/CartContext";
 
 export default function Success() {
   const router = useRouter();
+  const { clearCart, hydrated } = useCart();
+
+  // The provider restores the saved cart in its own mount effect, which runs
+  // after this one. Waiting for `hydrated` keeps that restore from undoing the clear.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!router.query.session_id) return;
+    clearCart();
+  }, [hydrated, router.query.session_id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const { session_id } = router.query;

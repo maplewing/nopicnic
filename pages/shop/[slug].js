@@ -1,9 +1,14 @@
 import Head from "next/head";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import { products, reviews } from "../../data/products";
+import { imageSize } from "../../lib/imageSize";
 import { useCart } from "../../components/CartContext";
 import { useState, useEffect } from "react";
+
+const MAIN_IMAGE_SIZES = "(max-width: 900px) 100vw, 560px";
+const CARD_SIZES = "(max-width: 600px) 50vw, (max-width: 1000px) 33vw, 260px";
 
 export async function getStaticPaths() {
   return {
@@ -172,26 +177,38 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           <div className="product-images">
             <div className="product-image-main">
               {product.images?.[activeImg] && (
-                <img src={product.images[activeImg]} alt={product.name} />
+                <Image
+                  src={product.images[activeImg]}
+                  alt={product.name}
+                  {...(imageSize(product.images[activeImg]) || { width: 1200, height: 900 })}
+                  sizes={MAIN_IMAGE_SIZES}
+                  style={{ width: "100%", height: "auto" }}
+                  priority
+                />
               )}
             </div>
             {product.images?.length > 1 && (
               <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
                 {product.images.map((img, i) => (
-                  <div
+                  <button
                     key={i}
+                    type="button"
                     onClick={() => setActiveImg(i)}
+                    aria-label={`View image ${i + 1} of ${product.images.length}`}
+                    aria-current={i === activeImg}
                     style={{
+                      position: "relative",
                       width: 60,
                       height: 76,
+                      padding: 0,
                       background: "#f5f5f5",
                       overflow: "hidden",
                       cursor: "pointer",
                       border: i === activeImg ? "1px solid #000" : "1px solid transparent",
                     }}
                   >
-                    <img src={img} alt="" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  </div>
+                    <Image src={img} alt="" fill sizes="60px" style={{ objectFit: "cover" }} />
+                  </button>
                 ))}
               </div>
             )}
@@ -307,7 +324,13 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
         {product.pressImage && (
           <div className="product-full-section">
             <p className="product-full-section-label">As seen in</p>
-            <img src={product.pressImage} alt="Press mentions" loading="lazy" style={{ maxWidth: "100%", display: "block", backgroundColor: "#fff" }} />
+            <Image
+              src={product.pressImage}
+              alt="Press mentions"
+              {...(imageSize(product.pressImage) || { width: 1200, height: 300 })}
+              sizes="(max-width: 900px) 100vw, 900px"
+              style={{ maxWidth: "100%", height: "auto", display: "block", backgroundColor: "#fff" }}
+            />
             {product.pressImageCaption && (
               <p style={{ fontSize: 12, color: "#aaa", marginTop: 8 }}>{product.pressImageCaption}</p>
             )}
@@ -407,7 +430,13 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           <div className="product-full-section">
             <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555", marginBottom: 16 }}>{product.kickstarter.text}</p>
             {product.kickstarter.image && (
-              <img src={product.kickstarter.image} alt="Run Studio Run on Kickstarter" loading="lazy" style={{ maxWidth: "100%", display: "block", marginBottom: 16 }} />
+              <Image
+                src={product.kickstarter.image}
+                alt="Run Studio Run on Kickstarter"
+                {...(imageSize(product.kickstarter.image) || { width: 1200, height: 800 })}
+                sizes="(max-width: 900px) 100vw, 900px"
+                style={{ maxWidth: "100%", height: "auto", display: "block", marginBottom: 16 }}
+              />
             )}
             {product.kickstarter.postText && (
               <p style={{ fontSize: 14, lineHeight: 1.7, color: "#555" }}>
@@ -445,7 +474,15 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               {otherProducts.map((p) => (
                 <Link key={p.id} href={`/shop/${p.slug}`} className="product-card">
                   <div className="product-card-image">
-                    {p.images?.[0] && <img src={p.images[0]} alt={p.name} loading="lazy" />}
+                    {p.images?.[0] && (
+                      <Image
+                        src={p.images[0]}
+                        alt={p.name}
+                        fill
+                        sizes={CARD_SIZES}
+                        style={{ objectFit: "cover" }}
+                      />
+                    )}
                   </div>
                   <p className="product-card-name">{p.name}</p>
                   <p className="product-card-price">${p.price.toFixed(2)}</p>

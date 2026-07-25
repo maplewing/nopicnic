@@ -18,12 +18,6 @@ export function CartProvider({ children }) {
   }, [items]);
 
   function addItem(product) {
-    fetch("/api/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "add_to_cart", product: product.id }),
-    }).catch(() => {});
-
     if (typeof window.fbq === "function") {
       window.fbq("track", "AddToCart", {
         content_ids: [product.id],
@@ -54,12 +48,16 @@ export function CartProvider({ children }) {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, qty } : i)));
   }
 
+  function clearCart() {
+    setItems([]);
+  }
+
   const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const count = items.reduce((sum, i) => sum + i.qty, 0);
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, total, count, isOpen, setIsOpen, hydrated }}
+      value={{ items, addItem, removeItem, updateQty, clearCart, total, count, isOpen, setIsOpen, hydrated }}
     >
       {children}
     </CartContext.Provider>

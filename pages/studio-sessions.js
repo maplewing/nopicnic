@@ -34,7 +34,7 @@ export default function StudioSessions() {
         <h1>Studio Sessions</h1>
 
         <img
-          src="/images/studio-session.png"
+          src="/images/studio-session.webp"
           alt="Studio session"
           style={{ width: "100%", display: "block", marginBottom: 32 }}
         />

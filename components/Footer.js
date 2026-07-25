@@ -35,6 +35,7 @@ export default function Footer() {
           <a href={siteConfig.instagram} target="_blank" rel="noopener">Instagram</a>
           <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
           <Link href="/stockists">Stockists</Link>
+          <Link href="/policies">Privacy + Terms</Link>
         </div>
 
         <div className="footer-signup">

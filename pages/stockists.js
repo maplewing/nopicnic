@@ -23,7 +23,7 @@ export default function Stockists() {
         <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 32 }}>
           If you live in or near these countries, it will likely be faster and more cost-effective to buy directly from a stockist near you.
         </p>
-        <img src="/images/casa-bosques.jpg" alt="Casa Bosques, Mexico City" style={{ width: "100%", marginBottom: 40, display: "block" }} />
+        <img src="/images/casa-bosques.webp" alt="Casa Bosques, Mexico City" style={{ width: "100%", marginBottom: 40, display: "block" }} />
         {stockists.length === 0 ? (
           <p style={{ fontSize: 14, color: "#999" }}>Coming soon.</p>
         ) : (

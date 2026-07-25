@@ -177,6 +177,7 @@ button {
 }
 
 .product-card-image {
+  position: relative; /* anchors next/image fill */
   aspect-ratio: 4/3;
   background: var(--gray-light);
   margin-bottom: 16px;
@@ -671,6 +672,7 @@ button {
 }
 
 .cart-item-image {
+  position: relative; /* anchors next/image fill */
   width: 70px;
   height: 90px;
   background: var(--gray-light);
@@ -1061,6 +1063,48 @@ button {
 
 .about-page ul li:first-child {
   border-top: 1px solid var(--gray-border);
+}
+
+/* Legal pages: same shell as /about, set at a size you can read a policy in */
+.legal-page p,
+.legal-page ul {
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.legal-page ul {
+  margin-bottom: 20px;
+}
+
+.legal-page .legal-updated {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+  margin-bottom: 32px;
+}
+
+.legal-page .legal-section-head {
+  font-size: 24px;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid var(--gray-border);
+  scroll-margin-top: 96px; /* clears the fixed nav when linked by anchor */
+}
+
+.legal-page h3 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 36px;
+  margin-bottom: 12px;
+}
+
+.legal-page a {
+  text-decoration: underline;
 }
 
 /* Stockists */

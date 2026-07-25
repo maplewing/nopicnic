@@ -1,13 +1,29 @@
 import Link from "next/link";
 import Head from "next/head";
+import Image from "next/image";
 import { products, siteConfig } from "../data/products";
+
+// The grid is the heaviest thing on the site; these are the only widths a card
+// image is ever rendered at.
+const CARD_SIZES = "(max-width: 600px) 50vw, (max-width: 1000px) 33vw, 260px";
 
 export default function Shop() {
   return (
     <>
       <Head>
-        <title>No Picnic Press</title>
+        <title>No Picnic Press — Books on naming, branding, and running a studio</title>
         <meta name="description" content={siteConfig.tagline} />
+        <link rel="canonical" href="https://nopicnicpress.com" />
+        <meta property="og:title" content="No Picnic Press — Books on naming, branding, and running a studio" />
+        <meta property="og:description" content={siteConfig.tagline} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://nopicnicpress.com" />
+        <meta property="og:site_name" content="No Picnic Press" />
+        <meta property="og:image" content="https://nopicnicpress.com/images/og-default.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="No Picnic Press — Books on naming, branding, and running a studio" />
+        <meta name="twitter:description" content={siteConfig.tagline} />
+        <meta name="twitter:image" content="https://nopicnicpress.com/images/og-default.jpg" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -46,11 +62,18 @@ export default function Shop() {
 
       <div className="container">
         <div className="shop-grid">
-          {products.map((product) => (
+          {products.map((product, i) => (
             <Link key={product.id} href={`/shop/${product.slug}`} className="product-card">
               <div className="product-card-image">
                 {product.images?.[0] && (
-                  <img src={product.images[0]} alt={product.name} loading="lazy" />
+                  <Image
+                    src={product.images[0]}
+                    alt={product.name}
+                    fill
+                    sizes={CARD_SIZES}
+                    style={{ objectFit: "cover" }}
+                    priority={i < 4}
+                  />
                 )}
               </div>
               <p className="product-card-name">{product.name}</p>
