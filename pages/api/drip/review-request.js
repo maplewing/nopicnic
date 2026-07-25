@@ -94,7 +94,7 @@ export default async function handler(req, res) {
       from: "No Picnic Press <orders@nopicnicpress.com>",
       to: toEmail,
       subject: "So, what do you think?",
-      html: reviewRequestEmail(firstName, items),
+      html: reviewRequestEmail(firstName, items, toEmail),
     });
 
     if (error) {

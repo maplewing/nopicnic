@@ -1065,6 +1065,101 @@ button {
   border-top: 1px solid var(--gray-border);
 }
 
+/* Order confirmation */
+.success-page {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 80px 24px;
+}
+
+.success-eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.success-heading {
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.success-order-number {
+  font-size: 14px;
+  color: var(--gray-mid);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.success-intro {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #555;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.success-receipt {
+  border-top: 1px solid var(--gray-border);
+  padding-top: 20px;
+  margin-bottom: 32px;
+}
+
+.success-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+  padding: 6px 0;
+}
+
+.success-row-sub {
+  border-top: 1px solid var(--gray-border);
+  margin-top: 12px;
+  padding-top: 14px;
+}
+
+.success-row-muted {
+  color: var(--gray-mid);
+}
+
+.success-row-total {
+  border-top: 1px solid var(--gray-border);
+  margin-top: 8px;
+  padding-top: 14px;
+  font-weight: 700;
+}
+
+.success-address {
+  border-top: 1px solid var(--gray-border);
+  margin-top: 24px;
+  padding-top: 20px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.success-address-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-mid);
+  margin-bottom: 8px;
+}
+
+.success-back {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+}
+
 /* Legal pages: same shell as /about, set at a size you can read a policy in */
 .legal-page p,
 .legal-page ul {

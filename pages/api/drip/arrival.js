@@ -1,8 +1,13 @@
 // GET /api/drip/arrival
 // Vercel Cron — runs daily at 2pm UTC (see vercel.json)
-// For each active shipment (shippedAt set, arrivedAt null), polls Shippo's
+// For each shipped order that hasn't been marked arrived, polls Shippo's
 // tracking API. When status === "DELIVERED", sends the arrival email and
-// marks the shipment as arrived in Vercel Blob.
+// stamps arrived_at on the PaymentIntent so it is never sent twice.
+//
+// Requires the Tracking API to be enabled on the Shippo account. Without it
+// every lookup 401s, nothing is ever seen as delivered, and no mail goes out —
+// the response reports those failures under `trackingUnavailable` rather than
+// swallowing them.
 //
 // Manually trigger (dev/prod):
 //   curl -H "Authorization: Bearer $CRON_SECRET" \
@@ -10,7 +15,7 @@
 
 import Stripe from "stripe";
 import { Resend } from "resend";
-import { getShipments, saveShipments } from "../../../lib/shipments";
+import { getActiveShipments, markArrived } from "../../../lib/shipments";
 import { shipmentArrivalEmail } from "../../../lib/dripEmails";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -25,25 +30,45 @@ const CARRIER_CODES = {
   DHL: "dhl",
 };
 
+// Returns { status } on a successful lookup, or { unavailable: reason } when the
+// carrier or Shippo couldn't tell us. The two are very different: the first means
+// "not delivered yet", the second means this job cannot do its work at all.
 async function getTrackingStatus(carrier, trackingNumber) {
   const code = CARRIER_CODES[carrier] || carrier?.toLowerCase();
-  if (!code || !trackingNumber) return null;
+  if (!code || !trackingNumber) return { unavailable: "missing carrier or tracking number" };
 
   try {
     const res = await fetch(
       `https://api.goshippo.com/tracks/${code}/${encodeURIComponent(trackingNumber)}`,
-      {
-        headers: {
-          Authorization: `ShippoToken ${process.env.SHIPPO_API_KEY}`,
-        },
-      }
+      { headers: { Authorization: `ShippoToken ${process.env.SHIPPO_API_KEY}` } }
     );
-    if (!res.ok) return null;
+    if (!res.ok) return { unavailable: `Shippo HTTP ${res.status}` };
     const data = await res.json();
-    return data.tracking_status?.status || null;
+    return { status: data.tracking_status?.status || null };
   } catch (err) {
-    console.error(`Tracking lookup failed for ${trackingNumber}:`, err.message);
-    return null;
+    return { unavailable: err.message };
+  }
+}
+
+async function createArrivalPromo() {
+  if (!process.env.STRIPE_ARRIVAL_COUPON_ID) return { promoCode: null, promoExpiry: null };
+  try {
+    const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+    const promo = await stripe.promotionCodes.create({
+      coupon: process.env.STRIPE_ARRIVAL_COUPON_ID,
+      expires_at: expiresAt,
+    });
+    return {
+      promoCode: promo.code,
+      promoExpiry: new Date(expiresAt * 1000).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
+    };
+  } catch (err) {
+    console.error("Promo code creation failed:", err.message);
+    return { promoCode: null, promoExpiry: null };
   }
 }
 
@@ -54,40 +79,33 @@ export default async function handler(req, res) {
     return res.status(401).end();
   }
 
-  const allShipments = await getShipments();
+  let active;
+  try {
+    active = await getActiveShipments();
+  } catch (err) {
+    console.error("Could not load active shipments:", err.message);
+    return res.status(500).json({ error: "Failed to load shipments" });
+  }
 
-  // Only check shipments that have tracking info and haven't been marked arrived
-  const active = allShipments.filter(
-    (s) => s.trackingNumber && s.carrier && !s.arrivedAt
-  );
-
-  const results = { checked: active.length, delivered: 0, errors: 0 };
-  let changed = false;
+  const results = {
+    checked: active.length,
+    delivered: 0,
+    errors: 0,
+    trackingUnavailable: 0,
+  };
+  const unavailableReasons = new Set();
 
   for (const shipment of active) {
-    const status = await getTrackingStatus(shipment.carrier, shipment.trackingNumber);
+    const tracking = await getTrackingStatus(shipment.carrier, shipment.trackingNumber);
 
-    if (status !== "DELIVERED") continue;
-
-    let promoCode = null;
-    let promoExpiry = null;
-    if (process.env.STRIPE_ARRIVAL_COUPON_ID) {
-      try {
-        const expiresAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
-        const promo = await stripe.promotionCodes.create({
-          coupon: process.env.STRIPE_ARRIVAL_COUPON_ID,
-          expires_at: expiresAt,
-        });
-        promoCode = promo.code;
-        promoExpiry = new Date(expiresAt * 1000).toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        });
-      } catch (err) {
-        console.error("Promo code creation failed:", err.message);
-      }
+    if (tracking.unavailable) {
+      results.trackingUnavailable++;
+      unavailableReasons.add(tracking.unavailable);
+      continue;
     }
+    if (tracking.status !== "DELIVERED") continue;
+
+    const { promoCode, promoExpiry } = await createArrivalPromo();
 
     const { error } = await resend.emails.send({
       from: "No Picnic Press <orders@nopicnicpress.com>",
@@ -105,18 +123,26 @@ export default async function handler(req, res) {
     if (error) {
       console.error(`Arrival email failed for session ${shipment.sessionId}:`, error);
       results.errors++;
-    } else {
-      const idx = allShipments.findIndex((s) => s.sessionId === shipment.sessionId);
-      if (idx >= 0) {
-        allShipments[idx].arrivedAt = new Date().toISOString();
-        changed = true;
-        results.delivered++;
-      }
+      continue;
+    }
+
+    // Stamp immediately. Batching this to the end of the loop is what would let
+    // a mid-run failure re-send to everyone already emailed.
+    try {
+      await markArrived(shipment.paymentIntentId);
+      results.delivered++;
+    } catch (err) {
+      console.error(`Could not mark ${shipment.sessionId} arrived:`, err.message);
+      results.errors++;
     }
   }
 
-  if (changed) {
-    await saveShipments(allShipments);
+  if (results.trackingUnavailable > 0) {
+    results.trackingUnavailableReasons = [...unavailableReasons];
+    console.error(
+      `Arrival drip: ${results.trackingUnavailable} tracking lookups failed —`,
+      [...unavailableReasons].join("; ")
+    );
   }
 
   return res.status(200).json(results);

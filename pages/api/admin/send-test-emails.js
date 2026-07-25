@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     },
     {
       subject: "[PREVIEW] So, what do you think?",
-      html: reviewRequestEmail(MOCK.firstName, MOCK.items),
+      html: reviewRequestEmail(MOCK.firstName, MOCK.items, to),
     },
   ];
 

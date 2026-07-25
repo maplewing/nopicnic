@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     from: "No Picnic Press <hi@nopicnicpress.com>",
     to: contact.email,
     subject: "The new nopicnicpress.com is here",
-    html: announcementEmail(contact.firstName || "there"),
+    html: announcementEmail(contact.firstName || "there", contact.email),
   }));
 
   // Resend batch: max 100 emails per call

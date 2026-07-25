@@ -26,7 +26,7 @@ export async function getStaticProps({ params }) {
 }
 
 export default function ProductPage({ product, productReviews, otherProducts }) {
-  const { addItem } = useCart();
+  const { addItem, setIsOpen } = useCart();
   const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
   const [showReviews, setShowReviews] = useState(false);
@@ -47,6 +47,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
 
   function handleAdd() {
     addItem(product);
+    // Opening the drawer is the whole point: "Added!" on its own left people
+    // with no visible way forward.
+    setIsOpen(true);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   }

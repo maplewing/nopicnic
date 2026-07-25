@@ -411,8 +411,10 @@ export default function CheckoutPage() {
             )}
 
             {/* Order summary */}
+            {/* Stripe renders its own authoritative total on the right. This one
+                is the editable cart, so name it that way rather than competing. */}
             <div className="checkout-summary" style={{ marginTop: 40 }}>
-              <h2 className="checkout-section-title">Order summary</h2>
+              <h2 className="checkout-section-title">Your cart</h2>
               {items.map((item) => (
                 <div key={item.id} className="checkout-summary-row" style={{ alignItems: "flex-start", gap: 12 }}>
                   {item.images?.[0] && (
