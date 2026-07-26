@@ -292,6 +292,42 @@ export const LARGE_MAILER_OZ = 3.8;     // larger mailer for DCIT + GNY together
 export const MEDIA_MAIL_RATE_USD = 5.50;
 export const FREE_SHIPPING_MINIMUM_USD = 50;
 
+// Flat nationwide, so this rate is knowable without an address — which is what
+// lets checkout show a price and mount payment before asking where you live.
+export const MEDIA_MAIL_RATE = {
+  token: "flat-media-mail",
+  serviceToken: "usps_media_mail",
+  service: "Media Mail",
+  amount: MEDIA_MAIL_RATE_USD.toFixed(2),
+  currency: "USD",
+  estimatedDays: null,
+  durationTerms: "2–8 business days",
+  speedDays: 8, // worst case, for the dominance comparison only
+};
+
+// Media Mail is restricted to books and similar educational media. Items that
+// don't qualify (card decks, posters, prints) must not be offered that rate.
+const MEDIA_MAIL_INELIGIBLE = new Set([
+  "go-name-yourself",
+  "name-right-now-bundle",
+  "dcit-taxonomy-poster",
+  "run-studio-run-art-prints",
+]);
+
+// USPS caps Media Mail at 70 lb, but our own packing limit is the real
+// constraint: past four books the flat rate stops covering actual postage.
+export const MEDIA_MAIL_MAX_QTY = 4;
+
+// Takes plain {id, qty, isDigital, isService} objects so the cart in the browser
+// and the validated lines on the server can ask this the same way — the answer
+// decides whether checkout needs an address at all.
+export function mediaMailEligible(items) {
+  const physical = (items || []).filter((i) => !i.isDigital && !i.isService);
+  if (physical.length === 0) return false;
+  if (physical.reduce((sum, i) => sum + (i.qty || 0), 0) > MEDIA_MAIL_MAX_QTY) return false;
+  return physical.every((i) => !MEDIA_MAIL_INELIGIBLE.has(i.id));
+}
+
 // productWeightOz: product weight only, no packaging.
 // Packaging is added once per order in the checkout weight calculation.
 // Omit (or set 0) for digital/service-only items.
@@ -408,8 +444,8 @@ const productDefinitions = [
     id: "go-name-yourself",
     name: "Go Name Yourself",
     subtitle: "The deck of cards for name generation",
-    price: 36,
-    stripePriceId: "price_1TgAGNEiVbcGdXdNmvVYzwtb",
+    price: 40,
+    stripePriceId: "price_1TxTSCEiVbcGdXdNp580SLUk",
     slug: "go-name-yourself",
     category: "Naming",
     inStock: true,

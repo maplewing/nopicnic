@@ -1087,6 +1087,23 @@ button {
   color: var(--gray-mid);
 }
 
+.checkout-address-toggle {
+  margin-top: 16px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--gray-border);
+  font-family: var(--font-body, "Courier New", Courier, monospace);
+  font-size: 13px;
+  color: var(--gray-mid);
+  cursor: pointer;
+}
+
+.checkout-address-toggle:hover {
+  color: var(--black);
+  border-bottom-color: var(--black);
+}
+
 /* Product page — press / as seen in */
 .product-press {
   margin-top: 40px;

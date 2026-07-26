@@ -1,15 +1,20 @@
 import Head from "next/head";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useCart } from "../components/CartContext";
+import {
+  MEDIA_MAIL_RATE,
+  mediaMailEligible,
+  FREE_SHIPPING_MINIMUM_USD,
+} from "../data/products";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 const FREE_SHIPPING_CODE = "MOREBETTER";
-const FREE_SHIPPING_MINIMUM = 50;
+const FREE_SHIPPING_MINIMUM = FREE_SHIPPING_MINIMUM_USD;
 
 // Mirrors FREE_RATE in lib/shippingRates.js, which re-validates the code server-side.
 const FREE_RATE = {
@@ -147,6 +152,9 @@ export default function CheckoutPage() {
 
   const hasPhysical = items.some((i) => !i.isDigital && !i.isService);
 
+  // Weight drives the quote, so the cart is as much an input as the address is.
+  const cartKey = items.map((i) => `${i.id}:${i.qty}`).join(",");
+
   const [address, setAddress] = useState({ zip: "", country: "US" });
   const [rates, setRates] = useState(null);
   const [selectedRate, setSelectedRate] = useState(null);
@@ -167,11 +175,29 @@ export default function CheckoutPage() {
     address.country === "US" && total >= FREE_SHIPPING_MINIMUM;
   const amountToFreeShipping = FREE_SHIPPING_MINIMUM - total;
 
+  // Stripe collects the shipping address itself, so asking for a postal code
+  // here is a second time to type the same thing. We only need one when the
+  // price genuinely depends on the destination — free shipping and Media Mail
+  // are both flat nationwide, so most domestic orders can skip straight to pay.
+  // Memoised because it feeds an effect's dependency list: a fresh array every
+  // render would re-run the selection effect on every render.
+  const baselineRates = useMemo(() => {
+    if (!hasPhysical || address.country !== "US") return null;
+    if (qualifiesForFreeShipping) return [FREE_RATE];
+    return mediaMailEligible(items) ? [MEDIA_MAIL_RATE] : null;
+  }, [hasPhysical, address.country, qualifiesForFreeShipping, cartKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Live rates win once we have them; the baseline is what carries the page
+  // until then (and forever, if the customer never asks for anything faster).
+  const availableRates = rates ?? baselineRates;
+
+  // Card decks, bundles, big orders and anywhere outside the US need a real
+  // quote, so those carts still have to give us an address up front.
+  const [addressRequested, setAddressRequested] = useState(false);
+  const addressFormOpen = !baselineRates || addressRequested;
+
   // Track which session key we last successfully created so we don't duplicate
   const activeSessionKeyRef = useRef(null);
-
-  // Weight drives the quote, so the cart is as much an input as the address is.
-  const cartKey = items.map((i) => `${i.id}:${i.qty}`).join(",");
 
   // Lets the async callback below read the live selection without making itself
   // a dependency (which would refetch rates every time the radio changes).
@@ -198,9 +224,14 @@ export default function CheckoutPage() {
     if (address.zip.length < (isUS ? 5 : 2)) {
       quotedAddressRef.current = null;
       setRates(null);
-      setSelectedRate(null);
       setRateError(null);
       setFetchingRates(false);
+      // Don't blank the selection out from under a baseline rate — the effect
+      // below will fall back to it, and clearing first unmounts Stripe for a frame.
+      if (!baselineRates) {
+        setSelectedRate(null);
+      }
+      setRateTouched(false);
       return;
     }
 
@@ -279,9 +310,9 @@ export default function CheckoutPage() {
   // so keep re-picking as the cart crosses the minimum — but stop the moment the
   // customer chooses a speed themselves.
   useEffect(() => {
-    if (rateTouched || !rates) return;
-    setSelectedRate(qualifiesForFreeShipping ? FREE_RATE : rates[0]);
-  }, [qualifiesForFreeShipping, rates, rateTouched]);
+    if (rateTouched || !availableRates?.length) return;
+    setSelectedRate(qualifiesForFreeShipping ? FREE_RATE : availableRates[0]);
+  }, [qualifiesForFreeShipping, availableRates, rateTouched]);
 
   // Derive a key that represents the current "ready" checkout state.
   // null = not ready to create a session yet.
@@ -352,7 +383,10 @@ export default function CheckoutPage() {
     return null;
   }
 
-  const displayRates = qualifiesForFreeShipping && rates ? [FREE_RATE, ...rates] : rates;
+  // Live rates never include the free option, so it's prepended once earned.
+  const displayRates = qualifiesForFreeShipping && rates
+    ? [FREE_RATE, ...rates]
+    : availableRates;
 
   const shippingTotal = selectedRate ? parseFloat(selectedRate.amount) : null;
   const orderTotal = shippingTotal !== null ? total + shippingTotal : null;
@@ -363,40 +397,92 @@ export default function CheckoutPage() {
       <div className="container">
         <div className="checkout-page">
 
-          {/* ── Left column: shipping form + order summary ── */}
+          {/* ── Left column: order summary, then shipping ── */}
           <div>
+            {/* The cart comes first: confirm what you're buying before how it
+                travels. Stripe renders its own authoritative total on the right,
+                so this one is named as the editable cart rather than competing. */}
+            <div className="checkout-summary">
+              <h2 className="checkout-section-title">Your cart</h2>
+              {items.map((item) => (
+                <div key={item.id} className="checkout-summary-row" style={{ alignItems: "flex-start", gap: 12 }}>
+                  {item.images?.[0] && (
+                    <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0, borderRadius: 2, overflow: "hidden" }}>
+                      <Image src={item.images[0]} alt={item.name} fill sizes="52px" style={{ objectFit: "cover" }} />
+                    </div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span>{item.name}</span>
+                    <div style={{ marginTop: 6 }}>
+                      {item.isDigital || item.isService ? (
+                        <button className="cart-item-remove" onClick={() => removeItem(item.id)}>Remove</button>
+                      ) : (
+                        <div className="cart-item-qty">
+                          <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
+                          <span>{item.qty}</span>
+                          <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span style={{ flexShrink: 0 }}>${(item.price * item.qty).toFixed(2)}</span>
+                </div>
+              ))}
+              <div className="checkout-summary-row checkout-summary-subtotal">
+                <span>Subtotal</span>
+                <span>${total.toFixed(2)}</span>
+              </div>
+              {selectedRate && (
+                <div className="checkout-summary-row">
+                  <span style={{ color: "var(--gray-mid)" }}>{selectedRate.service}</span>
+                  <span style={{ color: "var(--gray-mid)" }}>
+                    {parseFloat(selectedRate.amount) === 0 ? "Free" : `$${parseFloat(selectedRate.amount).toFixed(2)}`}
+                  </span>
+                </div>
+              )}
+              {orderTotal !== null && (
+                <div className="checkout-summary-row checkout-summary-total">
+                  <span>Total</span>
+                  <span>${orderTotal.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+
             {hasPhysical ? (
               <>
-                <h2 className="checkout-section-title">Shipping</h2>
-                <div className="studio-form" style={{ marginTop: 0 }}>
+                <h2 className="checkout-section-title" style={{ marginTop: 40 }}>Shipping</h2>
 
-                  <div className="studio-form-row">
-                    <label htmlFor="co-country">Country</label>
-                    <select
-                      id="co-country"
-                      value={address.country}
-                      onChange={(e) => setAddress((prev) => ({ ...prev, country: e.target.value }))}
-                    >
-                      {COUNTRIES.map((c) => (
-                        <option key={c.code} value={c.code}>{c.name}</option>
-                      ))}
-                    </select>
+                {addressFormOpen && (
+                  <div className="studio-form" style={{ marginTop: 0 }}>
+
+                    <div className="studio-form-row">
+                      <label htmlFor="co-country">Country</label>
+                      <select
+                        id="co-country"
+                        value={address.country}
+                        onChange={(e) => setAddress((prev) => ({ ...prev, country: e.target.value }))}
+                      >
+                        {COUNTRIES.map((c) => (
+                          <option key={c.code} value={c.code}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="studio-form-row">
+                      <label htmlFor="co-zip">Postal code</label>
+                      <input
+                        id="co-zip"
+                        type="text"
+                        value={address.zip}
+                        onChange={(e) => setAddress((prev) => ({ ...prev, zip: e.target.value }))}
+                        placeholder="e.g. 94710"
+                        maxLength={10}
+                        autoComplete="postal-code"
+                      />
+                    </div>
+
                   </div>
-
-                  <div className="studio-form-row">
-                    <label htmlFor="co-zip">Postal code</label>
-                    <input
-                      id="co-zip"
-                      type="text"
-                      value={address.zip}
-                      onChange={(e) => setAddress((prev) => ({ ...prev, zip: e.target.value }))}
-                      placeholder="e.g. 94710"
-                      maxLength={10}
-                      autoComplete="postal-code"
-                    />
-                  </div>
-
-                </div>
+                )}
 
                 {fetchingRates && (
                   <p style={{ fontSize: 13, color: "var(--gray-mid)", marginTop: 16 }}>Fetching rates…</p>
@@ -452,66 +538,29 @@ export default function CheckoutPage() {
                     ) : null}
                   </div>
                 )}
+
+                {/* The flat rate covers most domestic orders, so the address form
+                    stays folded away until someone actually needs it. */}
+                {!addressFormOpen && (
+                  <button
+                    type="button"
+                    className="checkout-address-toggle"
+                    onClick={() => setAddressRequested(true)}
+                  >
+                    Shipping outside the US, or want it faster?
+                  </button>
+                )}
               </>
             ) : (
               <>
-                <h2 className="checkout-section-title">Digital delivery</h2>
+                <h2 className="checkout-section-title" style={{ marginTop: 40 }}>Digital delivery</h2>
                 <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
                   Your download link will be delivered to the email address you provide at payment.
                 </p>
               </>
             )}
 
-            {/* Order summary */}
-            {/* Stripe renders its own authoritative total on the right. This one
-                is the editable cart, so name it that way rather than competing. */}
-            <div className="checkout-summary" style={{ marginTop: 40 }}>
-              <h2 className="checkout-section-title">Your cart</h2>
-              {items.map((item) => (
-                <div key={item.id} className="checkout-summary-row" style={{ alignItems: "flex-start", gap: 12 }}>
-                  {item.images?.[0] && (
-                    <div style={{ position: "relative", width: 52, height: 52, flexShrink: 0, borderRadius: 2, overflow: "hidden" }}>
-                      <Image src={item.images[0]} alt={item.name} fill sizes="52px" style={{ objectFit: "cover" }} />
-                    </div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <span>{item.name}</span>
-                    <div style={{ marginTop: 6 }}>
-                      {item.isDigital || item.isService ? (
-                        <button className="cart-item-remove" onClick={() => removeItem(item.id)}>Remove</button>
-                      ) : (
-                        <div className="cart-item-qty">
-                          <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
-                          <span>{item.qty}</span>
-                          <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <span style={{ flexShrink: 0 }}>${(item.price * item.qty).toFixed(2)}</span>
-                </div>
-              ))}
-              <div className="checkout-summary-row checkout-summary-subtotal">
-                <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
-              {selectedRate && (
-                <div className="checkout-summary-row">
-                  <span style={{ color: "var(--gray-mid)" }}>{selectedRate.service}</span>
-                  <span style={{ color: "var(--gray-mid)" }}>
-                    {parseFloat(selectedRate.amount) === 0 ? "Free" : `$${parseFloat(selectedRate.amount).toFixed(2)}`}
-                  </span>
-                </div>
-              )}
-              {orderTotal !== null && (
-                <div className="checkout-summary-row checkout-summary-total">
-                  <span>Total</span>
-                  <span>${orderTotal.toFixed(2)}</span>
-                </div>
-              )}
-            </div>
-
-            <p style={{ marginTop: 16, fontSize: 12, color: "var(--gray-mid)" }}>
+            <p style={{ marginTop: 24, fontSize: 12, color: "var(--gray-mid)" }}>
               <a href="/shipping-returns" style={{ color: "inherit", textDecoration: "underline" }}>Shipping &amp; returns</a>
             </p>
           </div>

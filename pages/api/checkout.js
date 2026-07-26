@@ -2,7 +2,9 @@ import Stripe from "stripe";
 import {
   getRates,
   validateCart,
+  mediaMailAllowed,
   FREE_RATE,
+  MEDIA_MAIL_RATE,
   FREE_SHIPPING_CODE,
   FREE_SHIPPING_MINIMUM,
 } from "../../lib/shippingRates";
@@ -118,6 +120,18 @@ async function resolveShippingRate({ country, zip, lines, subtotal, selectedToke
       return { error: `${FREE_SHIPPING_CODE} applies to orders of $${FREE_SHIPPING_MINIMUM} or more.` };
     }
     return FREE_RATE;
+  }
+
+  // Media Mail is a flat nationwide rate, so it needs no carrier lookup and no
+  // postal code — which is the whole reason checkout can offer it before asking
+  // for an address. Eligibility is re-derived here from the validated lines;
+  // the browser's claim to be eligible is not evidence of anything.
+  if (selectedToken === MEDIA_MAIL_RATE.token) {
+    if (country !== "US") return { error: "Media Mail is for US orders only." };
+    if (!mediaMailAllowed(lines)) {
+      return { error: "Media Mail doesn't cover everything in your cart." };
+    }
+    return MEDIA_MAIL_RATE;
   }
 
   let rates;
