@@ -82,9 +82,9 @@ export default async function handler(req, res) {
     return res.status(401).end();
   }
 
-  let active;
+  let active, windowSkips;
   try {
-    active = await getActiveShipments();
+    ({ shipments: active, skipped: windowSkips } = await getActiveShipments());
   } catch (err) {
     console.error("Could not load active shipments:", err.message);
     return res.status(500).json({ error: "Failed to load shipments" });
@@ -95,6 +95,10 @@ export default async function handler(req, res) {
     delivered: 0,
     errors: 0,
     trackingUnavailable: 0,
+    // Not polled, so not billed: too soon to have arrived, or old enough that
+    // the parcel is lost rather than in transit.
+    skippedTooNew: windowSkips.tooNew,
+    skippedTooOld: windowSkips.tooOld,
   };
   const unavailableReasons = new Set();
 
