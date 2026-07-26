@@ -61,6 +61,14 @@ export default function Shop() {
       </Head>
 
       <div className="container">
+        {/* The page had no heading at all: a first-time visitor met thirteen
+            covers and no idea whose they were until below the last one. */}
+        <header className="home-intro">
+          <h1 className="home-headline">Creative work is no picnic.</h1>
+          {/* Name isn't linked — "Eli" is already in the nav. */}
+          <p className="home-subhead">Books and ephemera from Eli Altman</p>
+        </header>
+
         <div className="shop-grid">
           {inPrintProducts.map((product, i) => (
             <Link key={product.id} href={`/shop/${product.slug}`} className="product-card">
