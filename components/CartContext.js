@@ -7,15 +7,28 @@ export function CartProvider({ children }) {
   const [hydrated, setHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  // The cart can't be read during render: the server has no localStorage, so a
+  // first client render holding items wouldn't match the HTML it's hydrating.
+  // It's restored on mount instead, and `hydrated` gates the save below.
   useEffect(() => {
-    const saved = localStorage.getItem("npp-cart");
-    if (saved) setItems(JSON.parse(saved));
+    try {
+      const saved = JSON.parse(localStorage.getItem("npp-cart"));
+      if (Array.isArray(saved) && saved.length) setItems(saved);
+    } catch {
+      // A cart we can't parse is a cart we don't have.
+    }
     setHydrated(true);
   }, []);
 
+  // Without the gate this fires once on mount with the empty initial state and
+  // writes [] over the saved cart before the effect above has restored it. In
+  // production the next render puts it back within a frame; in development
+  // StrictMode re-runs the restore, which then reads back the [] it just wrote
+  // and the cart is gone for real.
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem("npp-cart", JSON.stringify(items));
-  }, [items]);
+  }, [items, hydrated]);
 
   function addItem(product) {
     if (typeof window.fbq === "function") {

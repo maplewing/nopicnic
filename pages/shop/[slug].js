@@ -39,6 +39,22 @@ export default function ProductPage({ product, productReviews, otherProducts, su
   const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
   const [showReviews, setShowReviews] = useState(false);
+  const trackRef = useRef(null);
+
+  // Thumbnails and dots drive the same track the finger does, so there is only
+  // ever one source of truth for which image is showing.
+  function goToImage(i) {
+    const track = trackRef.current;
+    if (track) track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
+    setActiveImg(i);
+  }
+
+  function handleTrackScroll(e) {
+    const el = e.currentTarget;
+    if (!el.clientWidth) return;
+    const i = Math.round(el.scrollLeft / el.clientWidth);
+    if (i !== activeImg) setActiveImg(i);
+  }
 
   const [added, setAdded] = useState(false);
 
@@ -205,42 +221,55 @@ export default function ProductPage({ product, productReviews, otherProducts, su
       <div className="container">
         <div className="product-page">
           <div className="product-images">
-            <div className="product-image-main">
-              {product.images?.[activeImg] && (
-                <Image
-                  src={product.images[activeImg]}
-                  alt={product.name}
-                  {...(imageSize(product.images[activeImg]) || { width: 1200, height: 900 })}
-                  sizes={MAIN_IMAGE_SIZES}
-                  style={{ width: "100%", height: "auto" }}
-                  priority
-                />
-              )}
+            {/* One scroll-snap track at every width: swipe on a phone, thumbnails
+                on a desktop. The filmstrip used to eat a band of the phone's
+                first screen before the title had been read. */}
+            <div className="product-image-track" ref={trackRef} onScroll={handleTrackScroll}>
+              {product.images?.map((img, i) => (
+                <div className="product-image-slide" key={img}>
+                  {/* No inline sizing here: the slide's aspect-ratio governs, and
+                      an inline height would outrank the stylesheet and undo it. */}
+                  <Image
+                    src={img}
+                    alt={i === 0 ? product.name : ""}
+                    {...(imageSize(img) || { width: 1200, height: 900 })}
+                    sizes={MAIN_IMAGE_SIZES}
+                    priority={i === 0}
+                  />
+                </div>
+              ))}
             </div>
+
             {product.images?.length > 1 && (
-              <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
-                {product.images.map((img, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setActiveImg(i)}
-                    aria-label={`View image ${i + 1} of ${product.images.length}`}
-                    aria-current={i === activeImg}
-                    style={{
-                      position: "relative",
-                      width: 60,
-                      height: 76,
-                      padding: 0,
-                      background: "#f5f5f5",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      border: i === activeImg ? "1px solid #000" : "1px solid transparent",
-                    }}
-                  >
-                    <Image src={img} alt="" fill sizes="60px" style={{ objectFit: "cover" }} />
-                  </button>
-                ))}
-              </div>
+              <>
+                <div className="product-image-dots">
+                  {product.images.map((img, i) => (
+                    <button
+                      key={img}
+                      type="button"
+                      className={`product-image-dot${i === activeImg ? " active" : ""}`}
+                      onClick={() => goToImage(i)}
+                      aria-label={`View image ${i + 1} of ${product.images.length}`}
+                      aria-current={i === activeImg}
+                    />
+                  ))}
+                </div>
+
+                <div className="product-thumbs">
+                  {product.images.map((img, i) => (
+                    <button
+                      key={img}
+                      type="button"
+                      className={`product-thumb${i === activeImg ? " active" : ""}`}
+                      onClick={() => goToImage(i)}
+                      aria-label={`View image ${i + 1} of ${product.images.length}`}
+                      aria-current={i === activeImg}
+                    >
+                      <Image src={img} alt="" fill sizes="60px" style={{ objectFit: "cover" }} />
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </div>
 

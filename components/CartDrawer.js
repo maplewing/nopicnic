@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "./CartContext";
 import { FREE_SHIPPING_MINIMUM_USD } from "../data/products";
@@ -34,7 +35,12 @@ export default function CartDrawer() {
           )}
           {items.map((item) => (
             <div key={item.id} className="cart-item">
-              <div className="cart-item-image">
+              <Link
+                href={`/shop/${item.slug}`}
+                className="cart-item-image"
+                onClick={() => setIsOpen(false)}
+                aria-label={`View ${item.name}`}
+              >
                 {item.images?.[0] && (
                   <Image
                     src={item.images[0]}
@@ -44,17 +50,28 @@ export default function CartDrawer() {
                     style={{ objectFit: "cover" }}
                   />
                 )}
-              </div>
+              </Link>
               <div className="cart-item-details">
-                <p className="cart-item-name">{item.name}</p>
+                <Link
+                  href={`/shop/${item.slug}`}
+                  className="cart-item-name"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.name}
+                </Link>
                 <p className="cart-item-price">${item.price.toFixed(2)}</p>
+                {/* Physical lines get both: stepping down to zero also removes,
+                    but that isn't a thing anyone expects to have to discover. */}
                 {item.isDigital || item.isService ? (
                   <button className="cart-item-remove" onClick={() => removeItem(item.id)}>Remove</button>
                 ) : (
-                  <div className="cart-item-qty">
-                    <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
-                    <span>{item.qty}</span>
-                    <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                  <div className="cart-item-controls">
+                    <div className="cart-item-qty">
+                      <button onClick={() => updateQty(item.id, item.qty - 1)} aria-label={`Decrease quantity of ${item.name}`}>−</button>
+                      <span>{item.qty}</span>
+                      <button onClick={() => updateQty(item.id, item.qty + 1)} aria-label={`Increase quantity of ${item.name}`}>+</button>
+                    </div>
+                    <button className="cart-item-remove" onClick={() => removeItem(item.id)}>Remove</button>
                   </div>
                 )}
               </div>
