@@ -237,6 +237,68 @@ button {
   margin-top: 4px;
 }
 
+/* Out-of-print back catalogue, below the shop grid */
+.archive {
+  margin-top: 72px;
+  padding-top: 40px;
+  border-top: 1px solid var(--gray-border);
+}
+
+.archive-heading {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.archive-intro {
+  font-size: 13px;
+  color: var(--gray-mid);
+  line-height: 1.6;
+  max-width: 46ch;
+}
+
+/* Quieter than the shop grid so it reads as history, not as stock. */
+.archive-grid .product-card-image {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+.archive-grid .product-card:hover .product-card-image {
+  opacity: 0.8;
+}
+
+.archive-grid .product-card-name {
+  color: var(--gray-mid);
+}
+
+/* Out of print, on the product page */
+.out-of-print {
+  border-top: 1px solid var(--gray-border);
+  border-bottom: 1px solid var(--gray-border);
+  padding: 16px 0;
+}
+
+.out-of-print-label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-sans);
+  margin-bottom: 6px;
+}
+
+.out-of-print-note {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--gray-mid);
+}
+
+.out-of-print-note a {
+  color: var(--black);
+  text-decoration: underline;
+}
+
 /* Product page */
 .product-page {
   display: grid;

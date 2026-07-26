@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
-import { products, siteConfig } from "../data/products";
+import { inPrintProducts, outOfPrintProducts, siteConfig } from "../data/products";
 
 // The grid is the heaviest thing on the site; these are the only widths a card
 // image is ever rendered at.
@@ -62,7 +62,7 @@ export default function Shop() {
 
       <div className="container">
         <div className="shop-grid">
-          {products.map((product, i) => (
+          {inPrintProducts.map((product, i) => (
             <Link key={product.id} href={`/shop/${product.slug}`} className="product-card">
               <div className="product-card-image">
                 {product.images?.[0] && (
@@ -83,6 +83,36 @@ export default function Shop() {
             </Link>
           ))}
         </div>
+
+        {/* Back catalogue, not stock. No prices: a price on something you can't
+            buy reads as an oversight rather than as history. */}
+        {outOfPrintProducts.length > 0 && (
+          <section className="archive">
+            <h2 className="archive-heading">Out of print</h2>
+            <p className="archive-intro">
+              Earlier editions and odds and ends. We can&rsquo;t sell these any more,
+              but we&rsquo;re glad they exist.
+            </p>
+            <div className="shop-grid archive-grid">
+              {outOfPrintProducts.map((product) => (
+                <Link key={product.id} href={`/shop/${product.slug}`} className="product-card">
+                  <div className="product-card-image">
+                    {product.images?.[0] && (
+                      <Image
+                        src={product.images[0]}
+                        alt={product.name}
+                        fill
+                        sizes={CARD_SIZES}
+                        style={{ objectFit: "cover" }}
+                      />
+                    )}
+                  </div>
+                  <p className="product-card-name">{product.name}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       <div className="homepage-description container">

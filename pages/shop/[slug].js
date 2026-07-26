@@ -28,10 +28,13 @@ export async function getStaticProps({ params }) {
   const reviewKey = product.reviewsFor || product.name;
   const productReviews = reviews.filter((r) => r.product === reviewKey);
   const otherProducts = relatedProducts(product);
-  return { props: { product, productReviews, otherProducts } };
+  const successor = product.supersededBy
+    ? products.find((p) => p.slug === product.supersededBy) ?? null
+    : null;
+  return { props: { product, productReviews, otherProducts, successor } };
 }
 
-export default function ProductPage({ product, productReviews, otherProducts }) {
+export default function ProductPage({ product, productReviews, otherProducts, successor }) {
   const { addItem, setIsOpen } = useCart();
   const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
@@ -123,7 +126,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                 priceCurrency: "USD",
                 availability: product.inStock
                   ? "https://schema.org/InStock"
-                  : "https://schema.org/OutOfStock",
+                  : product.outOfPrint
+                    ? "https://schema.org/Discontinued"
+                    : "https://schema.org/OutOfStock",
                 url: `${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`,
                 seller: { "@type": "Organization", name: "No Picnic Press" },
                 hasMerchantReturnPolicy: {
@@ -244,8 +249,9 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             {product.subtitle && (
               <p style={{ fontSize: 16, color: "#333", marginBottom: 16, lineHeight: 1.4 }}>{product.subtitle}</p>
             )}
-            <p className="product-price">${product.price.toFixed(2)}</p>
-            {!product.isDigital && !product.isService && (
+            {/* A price on something we can't sell is just a tease. */}
+            {!product.outOfPrint && <p className="product-price">${product.price.toFixed(2)}</p>}
+            {!product.isDigital && !product.isService && !product.outOfPrint && (
               <p style={{ fontSize: 13, marginTop: -8, marginBottom: 16, color: product.price >= FREE_SHIPPING_MINIMUM_USD ? "rgb(26, 110, 60)" : "#888" }}>
                 {product.price >= FREE_SHIPPING_MINIMUM_USD
                   ? "Free U.S. shipping"
@@ -271,6 +277,22 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                     {added ? "Added!" : "Add to cart"}
                   </button>
                 </>
+              ) : product.outOfPrint ? (
+                // A disabled button is a dead end. Say why, and point at whatever
+                // replaced it — this is the page people land on from old links.
+                <div className="out-of-print">
+                  <p className="out-of-print-label">Out of print</p>
+                  {successor ? (
+                    <p className="out-of-print-note">
+                      The current edition is{" "}
+                      <Link href={`/shop/${successor.slug}`}>{successor.name}</Link>.
+                    </p>
+                  ) : (
+                    <p className="out-of-print-note">
+                      We can&rsquo;t sell this any more, but it&rsquo;s here for the record.
+                    </p>
+                  )}
+                </div>
               ) : (
                 <button className="btn-primary" disabled>Sold out</button>
               )}

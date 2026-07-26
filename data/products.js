@@ -295,7 +295,7 @@ export const FREE_SHIPPING_MINIMUM_USD = 50;
 // productWeightOz: product weight only, no packaging.
 // Packaging is added once per order in the checkout weight calculation.
 // Omit (or set 0) for digital/service-only items.
-export const products = [
+const productDefinitions = [
   {
     id: "dont-call-it-that",
     name: "Don't Call It That",
@@ -627,6 +627,7 @@ export const products = [
     category: "Books",
     alsoIn: ["Naming"],
     inStock: false,
+    outOfPrint: true,
     productWeightOz: 6,
     images: ["/images/dcit-taxonomy-poster.webp"],
     description: "A poster illustrating the taxonomy of name species from Don't Call It That.",
@@ -641,6 +642,8 @@ export const products = [
     slug: "run-studio-run-1st-edition",
     category: "Books",
     inStock: false,
+    outOfPrint: true,
+    supersededBy: "run-studio-run",
     productWeightOz: 15.7,
     images: ["/images/rsr-1st-edition.jpg"],
     description: "The first edition of Run Studio Run.",
@@ -656,6 +659,8 @@ export const products = [
     category: "Books",
     alsoIn: ["Naming"],
     inStock: false,
+    outOfPrint: true,
+    supersededBy: "dont-call-it-that",
     productWeightOz: 13,
     images: ["/images/dcit-2nd-edition.jpg"],
     description: "The second edition of Don't Call It That.",
@@ -670,12 +675,55 @@ export const products = [
     slug: "run-studio-run-art-prints",
     category: "Books",
     inStock: false,
+    outOfPrint: true,
     productWeightOz: 5,
     images: ["/images/rsr-art-prints.jpg"],
     description: "Art prints from Run Studio Run.",
     details: [],
   },
 ];
+
+// Merchandising order for the shop grid, kept separate from the definitions
+// above so adding a product doesn't mean deciding where it goes mid-file.
+//
+// The logic, front to back: flagship first, then the naming line grouped so the
+// bundle sits immediately after the two things it bundles — the "why not both"
+// position, and the only place it reads as a saving rather than a fourth option.
+// Then the other titles, then the collectible. Digital editions come after the
+// physical ones they duplicate rather than undercutting them from above, the
+// service sits at the end of what's buyable because $1,495 next to $25 distorts
+// everything near it, and out-of-print work trails the lot.
+const CATALOG_ORDER = [
+  "dont-call-it-that",
+  "go-name-yourself",
+  "name-right-now-bundle",
+  "run-studio-run",
+  "assorted-characters",
+  "dont-call-it-that-1st-edition",
+  "dont-call-it-that-digital",
+  "run-studio-run-digital",
+  "extra-strength",
+  // Out of print — kept visible as back catalogue, never as stock.
+  "dont-call-it-that-2nd-edition",
+  "run-studio-run-1st-edition",
+  "dcit-taxonomy-poster",
+  "run-studio-run-art-prints",
+];
+
+// Anything missing from CATALOG_ORDER sorts to the end rather than the front,
+// so a new product is invisible-ish rather than accidentally the hero.
+const orderOf = (p) => {
+  const i = CATALOG_ORDER.indexOf(p.id);
+  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+};
+
+export const products = [...productDefinitions].sort((a, b) => orderOf(a) - orderOf(b));
+
+// Out of print is not the same as out of stock: these will not come back, so
+// they belong in their own section rather than salted through the grid looking
+// like things you just missed.
+export const inPrintProducts = products.filter((p) => !p.outOfPrint);
+export const outOfPrintProducts = products.filter((p) => p.outOfPrint);
 
 // Ranked recommendations for a product page, replacing what used to be the
 // first three in-stock products — identical on every page, and never the bundle.
