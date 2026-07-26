@@ -87,9 +87,12 @@ nudges, because the crons above already cover that ground.
 The two crons need `CRON_SECRET` set in Vercel. Without it every invocation
 401s and nothing is sent, with no error anywhere obvious.
 
-Arrival email requires the **Tracking API** enabled on the Shippo account.
-Without it every lookup 401s, nothing is ever seen as delivered, and the cron
-reports `trackingUnavailable` in its JSON response.
+Arrival email requires a **payment method on file at Shippo**
+([billing](https://goshippo.com/user/billing/)). Rate lookups are free, but
+tracking is not: without a card every lookup 401s with "Your account needs to
+have a valid payment method on file to use this service", nothing is ever seen
+as delivered, and the cron reports `trackingUnavailable` in its JSON response.
+It's a billing gate, not a setting — there is nothing to switch on.
 
 ## Privacy
 

@@ -4,10 +4,13 @@
 // tracking API. When status === "DELIVERED", sends the arrival email and
 // stamps arrived_at on the PaymentIntent so it is never sent twice.
 //
-// Requires the Tracking API to be enabled on the Shippo account. Without it
-// every lookup 401s, nothing is ever seen as delivered, and no mail goes out —
-// the response reports those failures under `trackingUnavailable` rather than
-// swallowing them.
+// Shippo serves tracking only to accounts with a payment method on file, even
+// though rate lookups are free. Without one every lookup 401s with "Your account
+// needs to have a valid payment method on file to use this service", nothing is
+// ever seen as delivered, and no mail goes out. The response reports those
+// failures under `trackingUnavailable` rather than swallowing them, so this is
+// distinguishable from a genuinely quiet day.
+// Fix at https://goshippo.com/user/billing/
 //
 // Manually trigger (dev/prod):
 //   curl -H "Authorization: Bearer $CRON_SECRET" \
