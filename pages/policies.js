@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 
-const LAST_UPDATED = "July 25, 2026";
+const LAST_UPDATED = "July 26, 2026";
 
 export default function Policies() {
   return (
@@ -61,7 +61,19 @@ export default function Policies() {
         <ul>
           <li><strong>Stripe</strong> — payment processing, and the checkout form itself</li>
           <li><strong>Vercel</strong> — website hosting, plus privacy-friendly traffic analytics</li>
-          <li><strong>Shippo and EasyPost</strong> — shipping rates and labels</li>
+          <li>
+            <strong>Pirateship</strong> — shipping labels. Sees your name and delivery
+            address, because that&rsquo;s what goes on the parcel
+          </li>
+          <li>
+            <strong>Shippo</strong> — shipping rates and delivery tracking. Sees your
+            postal code and country when we price your order, and the tracking number
+            afterwards so we know when it arrives
+          </li>
+          <li>
+            <strong>EasyPost</strong> — international shipping rates. Sees your postal
+            code and country, and nothing else
+          </li>
           <li><strong>Resend</strong> — order confirmation and shipping emails</li>
           <li><strong>Loops</strong> — newsletter and customer email</li>
           <li>
