@@ -1,7 +1,17 @@
 import { getSessionToken } from "../../../lib/adminAuth";
+import { checkRateLimit, clientIp } from "../../../lib/rateLimit";
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
+
+  const allowed = await checkRateLimit({
+    key: `ratelimit:admin-auth:${clientIp(req)}`,
+    limit: 10,
+    windowSeconds: 10 * 60,
+  });
+  if (!allowed) {
+    return res.status(429).json({ error: "Too many attempts. Try again in a few minutes." });
+  }
 
   const { password } = req.body;
   if (!password || password !== process.env.ADMIN_PASSWORD) {
