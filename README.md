@@ -88,11 +88,26 @@ The two crons need `CRON_SECRET` set in Vercel. Without it every invocation
 401s and nothing is sent, with no error anywhere obvious.
 
 Arrival email requires a **payment method on file at Shippo**
-([billing](https://goshippo.com/user/billing/)). Rate lookups are free, but
-tracking is not: without a card every lookup 401s with "Your account needs to
-have a valid payment method on file to use this service", nothing is ever seen
-as delivered, and the cron reports `trackingUnavailable` in its JSON response.
-It's a billing gate, not a setting — there is nothing to switch on.
+([billing](https://goshippo.com/user/billing/)). Without one every tracking
+lookup 401s with "Your account needs to have a valid payment method on file to
+use this service", nothing is ever seen as delivered, and the cron reports
+`trackingUnavailable` in its JSON response. It's a billing gate, not a setting —
+there is nothing to switch on.
+
+### What Shippo actually costs us
+
+We buy labels through Pirateship, so Shippo's per-label pricing doesn't apply.
+Their API pricing lists tracking at 2¢/track and rate generation at
+1¢/rate, but as of July 2026 rate calls had run for months with no payment
+method on file and produced **zero billing history** — so rating is not being
+metered on this account, and the card gate was only ever on tracking. Adding
+the card did not make any prior usage collectible.
+
+Expect roughly **$2–5/month** for tracking: the cron polls each shipped order
+once a day until it reports delivered, then stops. At ~30 shipments/month
+that's 100–250 calls. If rate generation ever does start appearing on an
+invoice, `lib/rateCache.js` is the lever — a longer TTL, or keying by ZIP
+prefix instead of exact ZIP, cuts calls further at some cost in price accuracy.
 
 ## Privacy
 
