@@ -289,6 +289,79 @@ button {
   color: #333;
 }
 
+/* Reads after the buy controls, so it needs its own top gap. */
+.product-description-below-cta {
+  margin-top: 28px;
+}
+
+/* Mobile-only sticky buy bar, shown once the inline controls scroll away. */
+.buy-bar {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .buy-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: var(--white);
+    border-top: 1px solid var(--gray-border);
+    transform: translateY(110%);
+    transition: transform 0.2s ease;
+  }
+
+  .buy-bar.visible {
+    transform: translateY(0);
+  }
+
+  .buy-bar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .buy-bar-name {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .buy-bar-price {
+    font-size: 12px;
+    color: var(--gray-mid);
+  }
+
+  .buy-bar .btn-primary {
+    width: auto;
+    flex: 1;
+    margin-bottom: 0;
+    padding: 14px 20px;
+  }
+
+  /* The gallery and title eat the fold on a phone; buy the space back. */
+  .product-page {
+    padding-top: 20px;
+  }
+
+  /* Reserve the bar's height only on pages that have one, and reserve it
+     constantly so nothing shifts when it slides in over the footer. */
+  body:has(.buy-bar) {
+    padding-bottom: 72px;
+  }
+}
+
+.product-info .btn-secondary {
+  margin-top: 8px;
+}
+
 .product-details {
   font-size: 12px;
   line-height: 1.5;
@@ -792,6 +865,37 @@ button {
   margin-bottom: 16px;
 }
 
+/* Progress toward the free-shipping minimum */
+.cart-shipping-meter {
+  margin-bottom: 16px;
+}
+
+.cart-shipping-note {
+  font-size: 12px;
+  color: var(--gray-mid);
+  margin-bottom: 8px;
+}
+
+.cart-shipping-note.earned {
+  color: #1a6e3c;
+}
+
+.cart-shipping-track {
+  height: 3px;
+  background: var(--gray-border);
+  overflow: hidden;
+}
+
+.cart-shipping-fill {
+  height: 100%;
+  background: var(--black);
+  transition: width 0.25s ease;
+}
+
+.cart-shipping-fill.earned {
+  background: #1a6e3c;
+}
+
 .cart-empty {
   text-align: center;
   color: var(--gray-mid);
@@ -903,43 +1007,10 @@ button {
   text-align: right;
 }
 
-.promo-form {
-  display: flex;
-  gap: 0;
-  margin-top: 16px;
-}
 
-.promo-form input {
-  flex: 1;
-  border: 1px solid var(--gray-border);
-  border-right: none;
-  padding: 9px 12px;
-  font-size: 13px;
-  font-family: var(--font-body, "Courier Prime", Courier, monospace);
-  outline: none;
-}
 
-.promo-form input:focus {
-  border-color: var(--black);
-}
 
-.promo-form button {
-  border: 1px solid var(--gray-border);
-  background: none;
-  padding: 9px 16px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  font-family: var(--font-display, "Helvetica Neue", Helvetica, Arial, sans-serif);
-}
 
-.promo-form button:hover {
-  background: var(--black);
-  color: var(--white);
-  border-color: var(--black);
-}
 
 .promo-success {
   margin-top: 8px;
@@ -947,10 +1018,11 @@ button {
   color: #2a7a2a;
 }
 
-.promo-error {
+
+.shipping-nudge {
   margin-top: 8px;
   font-size: 13px;
-  color: #c00;
+  color: var(--gray-mid);
 }
 
 /* Product page — press / as seen in */

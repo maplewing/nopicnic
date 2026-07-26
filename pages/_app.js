@@ -60,7 +60,7 @@ export default function App({ Component, pageProps }) {
     <CartProvider>
       <div className={`${inter.variable} ${courierPrime.variable}`}>
         <div className="shipping-banner">
-          Free domestic shipping on orders of $50 or more — use code MOREBETTER at checkout
+          Free U.S. shipping on orders of $50 or more
         </div>
         <Nav />
         <CartDrawer />

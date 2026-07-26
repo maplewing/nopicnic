@@ -2,10 +2,16 @@ import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { products, reviews } from "../../data/products";
+import {
+  products,
+  reviews,
+  relatedProducts,
+  MEDIA_MAIL_RATE_USD,
+  FREE_SHIPPING_MINIMUM_USD,
+} from "../../data/products";
 import { imageSize } from "../../lib/imageSize";
 import { useCart } from "../../components/CartContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const MAIN_IMAGE_SIZES = "(max-width: 900px) 100vw, 560px";
 const CARD_SIZES = "(max-width: 600px) 50vw, (max-width: 1000px) 33vw, 260px";
@@ -21,7 +27,7 @@ export async function getStaticProps({ params }) {
   const product = products.find((p) => p.slug === params.slug);
   const reviewKey = product.reviewsFor || product.name;
   const productReviews = reviews.filter((r) => r.product === reviewKey);
-  const otherProducts = products.filter((p) => p.slug !== params.slug && p.inStock).slice(0, 3);
+  const otherProducts = relatedProducts(product);
   return { props: { product, productReviews, otherProducts } };
 }
 
@@ -32,6 +38,22 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
   const [showReviews, setShowReviews] = useState(false);
 
   const [added, setAdded] = useState(false);
+
+  // On a phone the inline buy controls still start near the fold, so a bar takes
+  // over once they scroll away. Desktop never sees it (hidden by media query).
+  const ctaRef = useRef(null);
+  const [ctaOffScreen, setCtaOffScreen] = useState(false);
+
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el || typeof IntersectionObserver !== "function") return;
+    const io = new IntersectionObserver(
+      ([entry]) => setCtaOffScreen(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [product.id]);
 
   useEffect(() => {
     if (typeof window.fbq === "function") {
@@ -128,7 +150,7 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                       },
                       shippingRate: {
                         "@type": "MonetaryAmount",
-                        value: 5.20,
+                        value: MEDIA_MAIL_RATE_USD,
                         currency: "USD",
                       },
                       deliveryTime: {
@@ -224,8 +246,10 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
             )}
             <p className="product-price">${product.price.toFixed(2)}</p>
             {!product.isDigital && !product.isService && (
-              <p style={{ fontSize: 13, marginTop: -8, marginBottom: 16, color: product.price >= 50 ? "rgb(26, 110, 60)" : "#888" }}>
-                {product.price >= 50 ? "Free shipping with code MOREBETTER" : "+ $5.25 shipping · Free over $50 with code MOREBETTER"}
+              <p style={{ fontSize: 13, marginTop: -8, marginBottom: 16, color: product.price >= FREE_SHIPPING_MINIMUM_USD ? "rgb(26, 110, 60)" : "#888" }}>
+                {product.price >= FREE_SHIPPING_MINIMUM_USD
+                  ? "Free U.S. shipping"
+                  : `+ $${MEDIA_MAIL_RATE_USD.toFixed(2)} shipping · Free on U.S. orders of $${FREE_SHIPPING_MINIMUM_USD} or more`}
               </p>
             )}
 
@@ -237,7 +261,25 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
               </button>
             )}
 
-            <p className="product-description">
+            {/* The buy controls sit directly under the rating so they clear the
+                fold; everything descriptive follows them. */}
+            <div ref={ctaRef}>
+              {product.inStock ? (
+                <>
+                  <button className="btn-primary" onClick={handleBuyNow}>Buy now</button>
+                  <button className="btn-secondary" onClick={handleAdd} disabled={added}>
+                    {added ? "Added!" : "Add to cart"}
+                  </button>
+                </>
+              ) : (
+                <button className="btn-primary" disabled>Sold out</button>
+              )}
+            </div>
+            {product.inStock && product.limited && (
+              <p style={{ fontSize: 12, color: "#888", marginTop: 8, letterSpacing: "0.03em", textTransform: "uppercase" }}>Limited stock</p>
+            )}
+
+            <p className="product-description product-description-below-cta">
               {product.descriptionAttribution ? (
                 <>
                   <em>&ldquo;{product.description}&rdquo;</em>
@@ -255,20 +297,6 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
                 <> Learn more at <a href={product.learnMore.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{product.learnMore.text}</a></>
               )}
             </p>
-
-            {product.inStock ? (
-              <>
-                <button className="btn-primary" onClick={handleBuyNow}>Buy now</button>
-                <button className="btn-secondary" onClick={handleAdd} disabled={added} style={{ marginTop: 8, marginBottom: 24 }}>
-                  {added ? "Added!" : "Add to cart"}
-                </button>
-              </>
-            ) : (
-              <button className="btn-primary" disabled>Sold out</button>
-            )}
-            {product.inStock && product.limited && (
-              <p style={{ fontSize: 12, color: "#888", marginTop: 8, letterSpacing: "0.03em", textTransform: "uppercase" }}>Limited stock</p>
-            )}
 
             {product.details?.length > 0 && (
               <div className="product-details">
@@ -495,6 +523,18 @@ export default function ProductPage({ product, productReviews, otherProducts }) 
           </div>
         )}
       </div>
+
+      {product.inStock && (
+        <div className={`buy-bar${ctaOffScreen ? " visible" : ""}`} aria-hidden={!ctaOffScreen}>
+          <div className="buy-bar-info">
+            <span className="buy-bar-name">{product.name}</span>
+            <span className="buy-bar-price">${product.price.toFixed(2)}</span>
+          </div>
+          <button className="btn-primary" onClick={handleAdd} disabled={added} tabIndex={ctaOffScreen ? 0 : -1}>
+            {added ? "Added!" : "Add to cart"}
+          </button>
+        </div>
+      )}
     </>
   );
 }

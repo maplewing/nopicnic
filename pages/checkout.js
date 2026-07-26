@@ -155,35 +155,73 @@ export default function CheckoutPage() {
   const [proceeding, setProceeding] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const [clientSecret, setClientSecret] = useState(null);
-  const [promoCode, setPromoCode] = useState("");
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoError, setPromoError] = useState(null);
   // Set when the server rejects a specific cart line, so we can offer to drop it.
   const [blockedItemId, setBlockedItemId] = useState(null);
+  const [rateTouched, setRateTouched] = useState(false);
+
+  // MOREBETTER is announced on a banner sitewide, so it was never a secret —
+  // only a step between a qualifying order and the rate it had already earned.
+  // Derived rather than stored so changing quantity re-evaluates it immediately;
+  // api/checkout re-checks the same two conditions before honouring the rate.
+  const qualifiesForFreeShipping =
+    address.country === "US" && total >= FREE_SHIPPING_MINIMUM;
+  const amountToFreeShipping = FREE_SHIPPING_MINIMUM - total;
 
   // Track which session key we last successfully created so we don't duplicate
   const activeSessionKeyRef = useRef(null);
 
-  // Auto-fetch rates when zip or country changes
+  // Weight drives the quote, so the cart is as much an input as the address is.
+  const cartKey = items.map((i) => `${i.id}:${i.qty}`).join(",");
+
+  // Lets the async callback below read the live selection without making itself
+  // a dependency (which would refetch rates every time the radio changes).
+  const selectionRef = useRef({ serviceToken: null, touched: false });
+  useEffect(() => {
+    selectionRef.current = {
+      serviceToken: selectedRate?.serviceToken ?? null,
+      touched: rateTouched,
+    };
+  }, [selectedRate, rateTouched]);
+
+  // Which address the rates on screen belong to, so a cart-only change can leave
+  // them up while they refresh instead of blanking the list on every +/-.
+  const quotedAddressRef = useRef(null);
+
+  // Auto-fetch rates when the address or the cart changes
   useEffect(() => {
     if (!hasPhysical) return;
 
     const isUS = address.country === "US";
+    const addressKey = `${address.country}:${address.zip}`;
+    const addressChanged = quotedAddressRef.current !== addressKey;
+
     if (address.zip.length < (isUS ? 5 : 2)) {
+      quotedAddressRef.current = null;
       setRates(null);
       setSelectedRate(null);
       setRateError(null);
+      setFetchingRates(false);
       return;
     }
 
+    // Set before the debounce, not inside it: this also gates session creation,
+    // and a rate we already know is about to change shouldn't buy a Stripe session.
+    setFetchingRates(true);
+
+    // Quantity buttons are easy to click faster than a quote comes back, so a
+    // superseded response must not be allowed to land on top of a fresher one.
+    let cancelled = false;
+
     const timer = setTimeout(async () => {
-      setFetchingRates(true);
       setRateError(null);
-      setRates(null);
-      setSelectedRate(null);
-      setPromoApplied(false);
-      setPromoError(null);
       setBlockedItemId(null);
+      // Rates for a different destination are simply wrong; rates for a slightly
+      // different weight are only stale, and worth keeping visible meanwhile.
+      if (addressChanged) {
+        setRates(null);
+        setSelectedRate(null);
+        setRateTouched(false);
+      }
       try {
         const res = await fetch("/api/shipping-rates", {
           method: "POST",
@@ -194,6 +232,7 @@ export default function CheckoutPage() {
           }),
         });
         const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
         if (!res.ok) {
           // A rejected cart line names itself; anything else is an address problem.
           setRateError(data.error || "Couldn't fetch rates. Please check your address and try again.");
@@ -201,21 +240,52 @@ export default function CheckoutPage() {
         } else if (!data.rates?.length) {
           setRateError("No shipping options available for that address.");
         } else {
+          quotedAddressRef.current = addressKey;
           setRates(data.rates);
-          setSelectedRate(data.rates[0]);
+
+          // Someone who deliberately picked Overnight should still have Overnight
+          // after adding a book — at the new weight's price.
+          const { serviceToken, touched } = selectionRef.current;
+          const kept = touched && !addressChanged
+            ? data.rates.find((r) => r.serviceToken === serviceToken)
+            : null;
+
+          if (kept) {
+            setSelectedRate(kept);
+          } else {
+            setRateTouched(false);
+            setSelectedRate(
+              address.country === "US" && total >= FREE_SHIPPING_MINIMUM
+                ? FREE_RATE
+                : data.rates[0]
+            );
+          }
         }
       } catch {
-        setRateError("Couldn't fetch rates. Please check your address and try again.");
+        if (!cancelled) {
+          setRateError("Couldn't fetch rates. Please check your address and try again.");
+        }
       }
-      setFetchingRates(false);
+      if (!cancelled) setFetchingRates(false);
     }, 600);
 
-    return () => clearTimeout(timer);
-  }, [address.zip, address.country]); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [address.zip, address.country, cartKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Free shipping and the cheapest paid rate are both "what we picked for you",
+  // so keep re-picking as the cart crosses the minimum — but stop the moment the
+  // customer chooses a speed themselves.
+  useEffect(() => {
+    if (rateTouched || !rates) return;
+    setSelectedRate(qualifiesForFreeShipping ? FREE_RATE : rates[0]);
+  }, [qualifiesForFreeShipping, rates, rateTouched]);
 
   // Derive a key that represents the current "ready" checkout state.
   // null = not ready to create a session yet.
-  const canProceed = !hasPhysical || selectedRate !== null;
+  const canProceed = !hasPhysical || (selectedRate !== null && !fetchingRates);
   const sessionKey = canProceed && items.length > 0
     ? JSON.stringify({
         items: items.map((i) => `${i.id}:${i.qty}`),
@@ -248,7 +318,7 @@ export default function CheckoutPage() {
         items: items.map((i) => ({ id: i.id, qty: i.qty, name: i.name })),
         selectedRate,
         address,
-        promoCode: promoApplied ? FREE_SHIPPING_CODE : null,
+        promoCode: selectedRate?.token === FREE_RATE.token ? FREE_SHIPPING_CODE : null,
       }),
     })
       .then((r) => r.json())
@@ -282,27 +352,7 @@ export default function CheckoutPage() {
     return null;
   }
 
-  function handleApplyPromo(e) {
-    e.preventDefault();
-    const code = promoCode.trim().toUpperCase();
-    if (!code) return;
-    // Only the free-shipping code is handled here. Everything else is a Stripe
-    // coupon, and telling people it's invalid is how we lose the sale.
-    if (code !== FREE_SHIPPING_CODE) {
-      setPromoError("That's a discount code — enter it under “Add code” in the payment form.");
-      return;
-    }
-    if (address.country !== "US") { setPromoError("Free shipping is for US orders only."); return; }
-    if (total < FREE_SHIPPING_MINIMUM) {
-      setPromoError(`${FREE_SHIPPING_CODE} applies to orders of $${FREE_SHIPPING_MINIMUM} or more.`);
-      return;
-    }
-    setPromoApplied(true);
-    setPromoError(null);
-    setSelectedRate(FREE_RATE);
-  }
-
-  const displayRates = promoApplied && rates ? [FREE_RATE, ...rates] : rates;
+  const displayRates = qualifiesForFreeShipping && rates ? [FREE_RATE, ...rates] : rates;
 
   const shippingTotal = selectedRate ? parseFloat(selectedRate.amount) : null;
   const orderTotal = shippingTotal !== null ? total + shippingTotal : null;
@@ -371,7 +421,7 @@ export default function CheckoutPage() {
                           name="rate"
                           value={rate.token}
                           checked={selectedRate?.token === rate.token}
-                          onChange={() => setSelectedRate(rate)}
+                          onChange={() => { setSelectedRate(rate); setRateTouched(true); }}
                         />
                         <span className="rate-service">{rate.service}</span>
                         <span className="rate-days">
@@ -384,20 +434,22 @@ export default function CheckoutPage() {
                         </span>
                       </label>
                     ))}
-                    {!promoApplied && (
-                      <form onSubmit={handleApplyPromo} className="promo-form">
-                        <input
-                          type="text"
-                          value={promoCode}
-                          onChange={(e) => { setPromoCode(e.target.value); setPromoError(null); }}
-                          placeholder="Free shipping code"
-                          aria-label="Free shipping code"
-                        />
-                        <button type="submit">Apply</button>
-                      </form>
-                    )}
-                    {promoApplied && <p className="promo-success">{FREE_SHIPPING_CODE} applied — shipping is free.</p>}
-                    {promoError && <p className="promo-error">{promoError}</p>}
+                    {qualifiesForFreeShipping ? (
+                      selectedRate?.token === FREE_RATE.token ? (
+                        <p className="promo-success">
+                          Free shipping applied — your order is over ${FREE_SHIPPING_MINIMUM}.
+                        </p>
+                      ) : (
+                        // They picked a faster service; don't claim we discounted it.
+                        <p className="shipping-nudge">
+                          Your order qualifies for free shipping — select it above to use it.
+                        </p>
+                      )
+                    ) : address.country === "US" ? (
+                      <p className="shipping-nudge">
+                        Add ${amountToFreeShipping.toFixed(2)} to your order for free shipping.
+                      </p>
+                    ) : null}
                   </div>
                 )}
               </>

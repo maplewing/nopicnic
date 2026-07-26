@@ -1,12 +1,18 @@
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { useCart } from "./CartContext";
+import { FREE_SHIPPING_MINIMUM_USD } from "../data/products";
 
 export default function CartDrawer() {
   const { items, removeItem, updateQty, total, isOpen, setIsOpen } = useCart();
   const router = useRouter();
 
   if (!isOpen) return null;
+
+  // Digital-only carts never ship, so the threshold is noise for them.
+  const shipsPhysical = items.some((i) => !i.isDigital && !i.isService);
+  const remaining = FREE_SHIPPING_MINIMUM_USD - total;
+  const progress = Math.min(total / FREE_SHIPPING_MINIMUM_USD, 1);
 
   function handleCheckout() {
     setIsOpen(false);
@@ -58,6 +64,21 @@ export default function CartDrawer() {
 
         {items.length > 0 && (
           <div className="cart-footer">
+            {shipsPhysical && (
+              <div className="cart-shipping-meter">
+                <p className={remaining > 0 ? "cart-shipping-note" : "cart-shipping-note earned"}>
+                  {remaining > 0
+                    ? `Add $${remaining.toFixed(2)} for free U.S. shipping`
+                    : "Free U.S. shipping unlocked"}
+                </p>
+                <div className="cart-shipping-track" aria-hidden>
+                  <div
+                    className={progress >= 1 ? "cart-shipping-fill earned" : "cart-shipping-fill"}
+                    style={{ width: `${progress * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
             <div className="cart-subtotal">
               <span>Subtotal</span>
               <span>${total.toFixed(2)}</span>

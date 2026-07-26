@@ -286,6 +286,12 @@ export const reviews = [
 export const STANDARD_MAILER_OZ = 2.4;  // standard padded mailer
 export const LARGE_MAILER_OZ = 3.8;     // larger mailer for DCIT + GNY together
 
+// Cheapest domestic option, quoted on product pages and in Product schema before
+// we know a destination. Lives here so the storefront copy and the rate table
+// can't drift apart; lib/shippingRates.js builds the actual Media Mail rate from it.
+export const MEDIA_MAIL_RATE_USD = 5.50;
+export const FREE_SHIPPING_MINIMUM_USD = 50;
+
 // productWeightOz: product weight only, no packaging.
 // Packaging is added once per order in the checkout weight calculation.
 // Omit (or set 0) for digital/service-only items.
@@ -465,6 +471,9 @@ export const products = [
     bodyTextLead: "You've probably already tried naming with AI.",
     bodyText: "It gave you options that all sounded like everything else out there — because AI learns from existing names, and the best names don't look like existing names. The problem isn't generating options. It's knowing which ones are good and why. That's a skill, and it's learnable.",
     reviewsFor: "Don't Call It That",
+    // Drives recommendations: this bundle leads "Other flavors" on the pages of
+    // the products it contains.
+    bundleOf: ["dont-call-it-that", "go-name-yourself"],
     pressImage: "/images/dcit-press_transparent.jpg",
     pressImageCaption: "Press coverage for Don't Call It That",
     details: [
@@ -667,3 +676,31 @@ export const products = [
     details: [],
   },
 ];
+
+// Ranked recommendations for a product page, replacing what used to be the
+// first three in-stock products — identical on every page, and never the bundle.
+//
+// Digital editions are excluded on purpose: they undercut the physical copy the
+// visitor is already looking at rather than adding to the order. Services are
+// excluded too, since Extra Strength at $1,495 doesn't read as another flavor of
+// a $25 book. Both are still reachable from the shop grid.
+export function relatedProducts(product, limit = 3) {
+  const shelves = new Set([product.category, ...(product.alsoIn || [])]);
+
+  return products
+    .filter(
+      (p) => p.slug !== product.slug && p.inStock && !p.isDigital && !p.isService
+    )
+    .map((p) => {
+      let score = 0;
+      // A bundle containing this product is the highest-value thing to show.
+      if (p.bundleOf?.includes(product.id)) score += 100;
+      if (shelves.has(p.category)) score += 10;
+      if (p.alsoIn?.some((c) => shelves.has(c))) score += 5;
+      return { p, score };
+    })
+    // Sort is stable, so equal scores keep catalog order.
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((x) => x.p);
+}
