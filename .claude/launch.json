@@ -13,6 +13,40 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "start", "--", "-p", "3002"],
       "port": 3002
+    },
+    {
+      "name": "ahm",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/eli/Documents/ahundredmonkeys",
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3001"
+      ],
+      "port": 3001
+    },
+    {
+      "name": "ahm-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/eli/Documents/ahundredmonkeys",
+        "run",
+        "start",
+        "--",
+        "-p",
+        "3003"
+      ],
+      "port": 3003
+    },
+    {
+      "name": "image-review",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/eli/Documents/ahm-image-review", "run", "start"],
+      "port": 3004
     }
   ]
 }

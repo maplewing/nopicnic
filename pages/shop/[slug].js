@@ -12,6 +12,7 @@ import {
 import { imageSize } from "../../lib/imageSize";
 import { useCart } from "../../components/CartContext";
 import { useState, useEffect, useRef } from "react";
+import { graph, eliAltman, noPicnicPress, ID } from "../../lib/entity";
 
 const MAIN_IMAGE_SIZES = "(max-width: 900px) 100vw, 560px";
 const CARD_SIZES = "(max-width: 600px) 50vw, (max-width: 1000px) 33vw, 260px";
@@ -128,14 +129,13 @@ export default function ProductPage({ product, productReviews, otherProducts, su
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
+            __html: JSON.stringify(graph(eliAltman, noPicnicPress, {
               "@type": "Product",
               name: product.name,
               description: product.description,
               image: product.images?.map((img) => `${process.env.NEXT_PUBLIC_URL}${img}`),
               brand: { "@type": "Brand", name: "No Picnic Press" },
-              author: { "@type": "Person", name: "Eli Altman" },
+              author: { "@id": ID.eli },
               offers: {
                 "@type": "Offer",
                 price: product.price,
@@ -146,7 +146,7 @@ export default function ProductPage({ product, productReviews, otherProducts, su
                     ? "https://schema.org/Discontinued"
                     : "https://schema.org/OutOfStock",
                 url: `${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`,
-                seller: { "@type": "Organization", name: "No Picnic Press" },
+                seller: { "@id": ID.noPicnicPress },
                 hasMerchantReturnPolicy: {
                   "@type": "MerchantReturnPolicy",
                   name: "No Picnic Press Return Policy",
@@ -213,7 +213,7 @@ export default function ProductPage({ product, productReviews, otherProducts, su
                   reviewBody: r.text,
                 })),
               }),
-            }),
+            })),
           }}
         />
       </Head>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
 import { inPrintProducts, outOfPrintProducts, siteConfig } from "../data/products";
+import { graph, website, noPicnicPress, eliAltman } from "../lib/entity";
 
 // The grid is the heaviest thing on the site; these are the only widths a card
 // image is ever rendered at.
@@ -27,35 +28,7 @@ export default function Shop() {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@graph": [
-                {
-                  "@type": "WebSite",
-                  "name": "No Picnic Press",
-                  "url": "https://nopicnicpress.com",
-                  "description": "No Picnic Press is the publishing imprint of naming strategist Eli Altman. Home of Don't Call It That, Run Studio Run, and Go Name Yourself.",
-                },
-                {
-                  "@type": "Organization",
-                  "name": "No Picnic Press",
-                  "url": "https://nopicnicpress.com",
-                  "description": "No Picnic Press is the Berkeley, California-based publishing imprint of Eli Altman. Publisher of books on naming, branding, and running small creative studios.",
-                  "email": "hi@nopicnicpress.com",
-                  "founder": {
-                    "@type": "Person",
-                    "name": "Eli Altman",
-                    "url": "https://nopicnicpress.com/about",
-                  },
-                  "address": {
-                    "@type": "PostalAddress",
-                    "addressLocality": "Berkeley",
-                    "addressRegion": "CA",
-                    "addressCountry": "US",
-                  },
-                },
-              ],
-            }),
+            __html: JSON.stringify(graph(website, noPicnicPress, eliAltman)),
           }}
         />
       </Head>

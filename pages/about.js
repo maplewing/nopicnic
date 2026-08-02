@@ -1,4 +1,12 @@
 import Head from "next/head";
+import {
+  graph,
+  eliAltman,
+  aHundredMonkeys,
+  noPicnicPress,
+  books,
+  commArtsFeature,
+} from "../lib/entity";
 
 export default function About() {
   return (
@@ -9,68 +17,9 @@ export default function About() {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@graph": [
-                {
-                  "@type": "Person",
-                  "@id": "https://nopicnicpress.com/about#eli",
-                  "name": "Eli Altman",
-                  "jobTitle": "Managing Director",
-                  "worksFor": {
-                    "@type": "Organization",
-                    "name": "A Hundred Monkeys",
-                    "url": "https://www.ahundredmonkeys.com",
-                  },
-                  "description": "Eli Altman is a naming strategist and the author of Don't Call It That, Run Studio Run, and Go Name Yourself. He is Managing Director of A Hundred Monkeys, a naming studio based in Berkeley, California. His work on brand and product naming has been covered by the New York Times, Wall Street Journal, Bloomberg Businessweek, The Guardian, NPR, and Harvard Law Review.",
-                  "url": "https://nopicnicpress.com/about",
-                  "image": "https://nopicnicpress.com/images/eli-altman.jpg",
-                  "address": {
-                    "@type": "PostalAddress",
-                    "addressLocality": "Berkeley",
-                    "addressRegion": "CA",
-                    "addressCountry": "US",
-                  },
-                  "knowsAbout": [
-                    "brand naming",
-                    "product naming",
-                    "naming strategy",
-                    "brand strategy",
-                    "trademark",
-                    "creative studio management",
-                    "running a creative business",
-                    "design studio operations",
-                    "creative agency management",
-                    "freelance studio management",
-                  ],
-                  "sameAs": ["https://www.ahundredmonkeys.com"],
-                },
-                {
-                  "@type": "Book",
-                  "name": "Don't Call It That",
-                  "author": { "@id": "https://nopicnicpress.com/about#eli" },
-                  "url": "https://nopicnicpress.com/shop/dont-call-it-that",
-                  "description": "A step-by-step workbook covering the entire process of naming a product or company.",
-                  "publisher": { "@type": "Organization", "name": "No Picnic Press" },
-                  "bookEdition": "Third Edition",
-                },
-                {
-                  "@type": "Book",
-                  "name": "Run Studio Run",
-                  "author": { "@id": "https://nopicnicpress.com/about#eli" },
-                  "url": "https://nopicnicpress.com/shop/run-studio-run",
-                  "description": "A practical guide to managing, operating, and growing a small creative studio as a business. Covers pricing, client management, delegation, studio culture, goal setting, and finding work — written specifically for designers, illustrators, and other creative professionals running their own studios.",
-                  "publisher": { "@type": "Organization", "name": "No Picnic Press" },
-                  "bookEdition": "Second Edition",
-                  "about": [
-                    { "@type": "Thing", "name": "creative studio management" },
-                    { "@type": "Thing", "name": "running a creative business" },
-                    { "@type": "Thing", "name": "design studio operations" },
-                    { "@type": "Thing", "name": "freelance studio management" },
-                  ],
-                },
-              ],
-            }),
+            __html: JSON.stringify(
+              graph(eliAltman, aHundredMonkeys, noPicnicPress, commArtsFeature, books)
+            ),
           }}
         />
       </Head>
@@ -87,7 +36,7 @@ export default function About() {
         <p>
           No Picnic Press is the Berkeley, California-based publishing imprint of Eli Altman.
           Eli is the Managing Director at the naming studio{" "}
-          <a href="https://ahundredmonkeys.com" target="_blank" rel="noopener">A Hundred Monkeys</a>.
+          <a href="https://www.ahundredmonkeys.com" target="_blank" rel="noopener">A Hundred Monkeys</a>.
           He took his first professional naming project at 16 years old and joined A Hundred Monkeys
           full time in 2009. Under his tenure he consistently grew the business while running
           projects for a diverse group of clients including Coca-Cola, Nike, Lego, Samsung, Miro,
@@ -111,7 +60,7 @@ export default function About() {
         <ul style={{ fontSize: 13, fontFamily: "var(--font-body)" }}>
           <li>
             <a href="https://underconsideration.com/firstround/2022-san-francisco/" target="_blank" rel="noopener">First Round Conference</a>
-            {" "}— San Francisco
+            {" "}— San Francisco, 2022
           </li>
           <li>
             <a href="https://conference.creativeworks.co/" target="_blank" rel="noopener">Creative Works Conference</a>
@@ -127,7 +76,7 @@ export default function About() {
           </li>
           <li>
             <a href="https://www.underconsideration.com/brandnewconference/video/downloads/eli-altman/" target="_blank" rel="noopener">Brand New Conference</a>
-            {" "}— Chicago
+            {" "}— Chicago, 2014
           </li>
           <li>
             <a href="http://nearlyimpossible.org/conference/sf/" target="_blank" rel="noopener">Nearly Impossible Conference</a>
@@ -137,6 +86,10 @@ export default function About() {
 
         <h2>Press</h2>
         <ul style={{ fontSize: 13, fontFamily: "var(--font-body)" }}>
+          <li>
+            <a href="https://www.commarts.com/columns/a-rose-is-a-rose-is-a-rose" target="_blank" rel="noopener">Communication Arts</a>
+            {" "}— "A Rose Is a Rose Is a Rose"
+          </li>
           <li>
             <a href="https://monocle.com/shop/product/1969445/" target="_blank" rel="noopener">Monocle</a>
             {" "}— The Entrepreneurs, Issue 4
