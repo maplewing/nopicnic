@@ -3,6 +3,7 @@ import Head from "next/head";
 import Image from "next/image";
 import { inPrintProducts, outOfPrintProducts, siteConfig } from "../data/products";
 import { graph, website, noPicnicPress, eliAltman } from "../lib/entity";
+import { serializeJsonLd } from "../lib/jsonLd";
 
 // The grid is the heaviest thing on the site; these are the only widths a card
 // image is ever rendered at.
@@ -28,7 +29,7 @@ export default function Shop() {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(graph(website, noPicnicPress, eliAltman)),
+            __html: serializeJsonLd(graph(website, noPicnicPress, eliAltman)),
           }}
         />
       </Head>

@@ -7,6 +7,7 @@ import {
   books,
   commArtsFeature,
 } from "../lib/entity";
+import { serializeJsonLd } from "../lib/jsonLd";
 
 export default function About() {
   return (
@@ -17,7 +18,7 @@ export default function About() {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(
+            __html: serializeJsonLd(
               graph(eliAltman, aHundredMonkeys, noPicnicPress, commArtsFeature, books)
             ),
           }}

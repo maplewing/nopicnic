@@ -13,6 +13,7 @@ import { imageSize } from "../../lib/imageSize";
 import { useCart } from "../../components/CartContext";
 import { useState, useEffect, useRef } from "react";
 import { graph, eliAltman, noPicnicPress, ID } from "../../lib/entity";
+import { serializeJsonLd } from "../../lib/jsonLd";
 
 const MAIN_IMAGE_SIZES = "(max-width: 900px) 100vw, 560px";
 const CARD_SIZES = "(max-width: 600px) 50vw, (max-width: 1000px) 33vw, 260px";
@@ -129,7 +130,7 @@ export default function ProductPage({ product, productReviews, otherProducts, su
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(graph(eliAltman, noPicnicPress, {
+            __html: serializeJsonLd(graph(eliAltman, noPicnicPress, {
               "@type": "Product",
               name: product.name,
               description: product.description,
