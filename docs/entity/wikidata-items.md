@@ -1,120 +1,155 @@
-# Wikidata items — submission payload
+# Wikidata items
 
-Two items to create: **Eli Altman** (person) and **A Hundred Monkeys** (organization).
-They reference each other, so create A Hundred Monkeys first and paste its Q-number
-into the person item.
+Five items exist. This records what they are, how they link together, and the
+reasoning behind the choices — so the next person to touch them (probably you, in a
+year) doesn't have to re-derive it.
+
+| Item | Q-number |
+|---|---|
+| A Hundred Monkeys | `Q140820950` |
+| Danny Altman | `Q140820955` |
+| Eli Altman | `Q140821007` |
+| Don't Call It That | `Q140821009` |
+| Run Studio Run | `Q140821065` |
+
+Editing account: `User:AbstractArtifact`, with the connection disclosed on its user
+page. Keep that disclosure there. Undisclosed self-editing is what turns a routine
+item into a deletion discussion, and the account name doesn't identify Eli on its own.
 
 ## Why Wikidata rather than Wikipedia
 
-Wikidata's inclusion policy (WD:N) is a genuinely different and lower bar than
-Wikipedia's WP:NCORP. An item is permitted if it describes *a clearly identifiable
-entity that can be described using serious, publicly available references* — it does
-not require the multiple independent in-depth sources that NCORP demands. Published
-books with ISBNs plus the 2015 Communication Arts feature clear that bar for both
-items comfortably.
+Wikidata's inclusion policy (WD:N) is a genuinely lower bar than Wikipedia's
+WP:NCORP. An item is permitted if it describes a clearly identifiable entity that
+can be described using serious, publicly available references — it does not require
+the multiple independent in-depth sources NCORP demands. Two books with ISBNs plus
+the 2015 Communication Arts feature clear that comfortably.
 
-Wikidata also feeds knowledge panels and is ingested directly by language models,
-so it does most of the AIO work a Wikipedia page would have done.
+WD:N also admits items that fill a *structural need*: things required to make
+statements on other items work. That is why Danny Altman has an item. He is not
+independently famous, and doesn't need to be.
 
-## Before you submit
+Wikidata feeds knowledge panels and is ingested directly by language models, so it
+does most of the work a Wikipedia page would have done — see
+`ahm-wikipedia-notability` in the assistant's memory for why that page is not
+currently winnable.
 
-Wikidata is far more tolerant of self-description than Wikipedia, but it is not
-exempt. Disclose the connection on your user page — one line is enough ("I am Eli
-Altman and I have created/edited items relating to myself and A Hundred Monkeys").
-Undisclosed self-editing is what turns a routine item into a deletion discussion.
+## The thing that shapes the whole process
 
-Cite a source for every statement you can. Unsourced items about living people are
-the ones that get challenged.
+Wikidata properties have datatypes, and many of the useful ones are
+`wikibase-item` — they accept **only a link to an existing item**, never typed text.
+`founder` and `notable work` are both like this.
 
----
+So you cannot create A Hundred Monkeys and type "Danny Altman" into `founder`. The
+field will refuse it. The order has to be:
 
-## Item 1 — A Hundred Monkeys
+1. Create every item as a bare shell — label, description, `instance of` only.
+2. Go back and add the statements that point them at each other.
 
-| Field | Value |
+Circular references are normal here and resolve themselves once the shells exist.
+
+## Statements
+
+**A Hundred Monkeys — Q140820950** · `instance of` business (Q4830453)
+
+| Property | Value |
 |---|---|
-| Label (en) | A Hundred Monkeys |
-| Description (en) | American naming and branding studio |
-| Also known as | A Hundred Monkeys Inc. |
+| industry (P452) | marketing (Q39809) |
+| inception (P571) | 1990 |
+| founder (P112) | Q140820955 |
+| headquarters location (P159) | Berkeley (Q484678) |
+| country (P17) | United States of America (Q30) |
+| official website (P856) | `https://www.ahundredmonkeys.com/` |
+| chief executive officer (P169) | Q140821007 |
 
-**Statements**
-
-| Property | Value | Reference |
-|---|---|---|
-| instance of (P31) | business (Q4830453) | — |
-| industry (P452) | marketing (Q39809) | — |
-| inception (P571) | 1990 | Communication Arts, 2015 |
-| founded by (P112) | Danny Altman *(string until an item exists)* | Communication Arts, 2015 |
-| headquarters location (P159) | Berkeley (Q484678) — city only, no street line | official website |
-| country (P17) | United States of America (Q30) | — |
-| official website (P856) | https://www.ahundredmonkeys.com/ | — |
-| chief executive officer (P169) | Eli Altman (link once created) | official website |
-| described by source (P1343) | *see reference below* | — |
-
-**Reference to attach to inception, founded by, and headquarters:**
-
-- Title: A Rose Is a Rose Is a Rose
-- Author: Sara Breselor
-- Published in: Communication Arts
-- Publication date: 4 February 2015
-- URL: https://www.commarts.com/columns/a-rose-is-a-rose-is-a-rose
-
-> Note: **inception is 1990, not 1995.** Bloomberg's company profile carries 1995 and
-> several aggregators have copied it. Stating 1990 here with the Communication Arts
-> reference attached is the highest-leverage correction in this whole document —
+> **inception is 1990, not 1995.** Bloomberg's company profile carries 1995 and other
+> aggregators have copied it. Stating 1990 here, with the Communication Arts
+> reference attached, is the single highest-leverage edit in this document —
 > Wikidata is what most downstream consumers reconcile against.
 
----
+**Eli Altman — Q140821007** · `instance of` human (Q5)
 
-## Item 2 — Eli Altman
+| Property | Value |
+|---|---|
+| occupation (P106) | writer (Q36180) |
+| occupation (P106) | businessperson (Q43845) |
+| occupation (P106) | publisher (Q2516866) |
+| employer (P108) | Q140820950 |
+| position held (P39) | managing director (Q19940089) + qualifier start time (P580) 2022 |
+| notable work (P800) | Q140821009 |
+| notable work (P800) | Q140821065 |
+| residence (P551) | Berkeley (Q484678) |
+| official website (P856) | `https://nopicnicpress.com/about` |
+
+Optionally a second `position held`: creative director (Q667982), start time 2012,
+end time (P582) 2022.
+
+There is **no Wikidata item for "namer" or "naming consultant"**, so that term can
+only live in the description, not in `occupation`. The description reads
+`American namer, author, and publisher`.
+
+**Danny Altman — Q140820955** · `instance of` human (Q5)
+
+| Property | Value |
+|---|---|
+| occupation (P106) | businessperson (Q43845) |
+| employer (P108) | Q140820950 |
+
+Alias `Daniel Altman` is his legal name and is kept deliberately, despite colliding
+with **Q5216400 — Daniel Altman, "Economist and writer"**, a different person. The
+descriptions are distinct enough to tell them apart. If anyone ever proposes merging
+the two items, that collision is the reason, and the answer is no.
+
+**The books** — Q140821009 and Q140821065 · `instance of` book (Q571)
+
+| Property | Don't Call It That | Run Studio Run |
+|---|---|---|
+| author (P50) | Q140821007 | Q140821007 |
+| ISBN-13 (P212) | `9781734248302` | `9780989832038` |
+| publication date (P577) | 2014 | 2018 |
+
+Run Studio Run sits on publisher prefix `0-9898320` while the other titles are on
+`1-7342483` — different blocks entirely, which is why its ISBN could not have been
+inferred from the neighbouring numbers.
+
+## References
+
+An unsourced item is a deletion nomination waiting to happen, and references are
+what satisfy WD:N. Living-person items are held to this most strictly.
+
+Communication Arts has its own item — **Q5154089, "American trade journal"** — so it
+can be cited properly rather than as a bare link. Attach this to `inception`,
+`founder`, and `headquarters location` on A Hundred Monkeys:
 
 | Field | Value |
 |---|---|
-| Label (en) | Eli Altman |
-| Description (en) | American naming strategist and author |
+| stated in (P248) | Q5154089 |
+| reference URL (P854) | `https://www.commarts.com/columns/a-rose-is-a-rose-is-a-rose` |
+| title (P1476) | A Rose Is a Rose Is a Rose |
+| publication date (P577) | 4 February 2015 |
 
-**Statements**
+`title` is a *monolingualtext* field and will ask for a language alongside the text.
 
-| Property | Value | Reference |
-|---|---|---|
-| instance of (P31) | human (Q5) | — |
-| occupation (P106) | writer (Q36180) | book ISBNs |
-| occupation (P106) | businessperson (Q43845) | official website |
-| employer (P108) | A Hundred Monkeys (Q-number from item 1) | official website |
-| position held (P39) | *managing director* — qualify with start time (P580) 2022 | official website |
-| notable work (P800) | Don't Call It That | ISBN 9781734248302 |
-| notable work (P800) | Run Studio Run | — |
-| official website (P856) | https://nopicnicpress.com/about | — |
-| residence (P551) | Berkeley (Q484678) | official website |
+That piece is the right source to lean on precisely because it is reported
+journalism about the studio — a writer visited and described the place — rather than
+a naming trend piece quoting Eli. Everything else in the press list is the latter,
+which is why none of it rescued the Wikipedia article.
 
-**Deliberately omitted — do not fill these in by guessing:**
+## Deliberately left blank
 
-- **country of citizenship (P27)** — being based in Berkeley is not evidence of
-  citizenship. Leave blank unless you want it stated.
-- **sex or gender (P21)** — Wikidata prompts for it; supply it yourself or leave it.
-- **date of birth (P569)** — only add if you're comfortable with it being public.
-  It is permanent and widely syndicated.
+- **country of citizenship (P27)** — living in Berkeley is not evidence of
+  citizenship, and Wikidata will happily let you assert it unsourced.
+- **date of birth (P569)** — permanent, and mirrored by every downstream scraper.
+- **image (P18)** — requires the photo on Wikimedia Commons under a free licence.
+  Carolyn McDermott holds that copyright, not us.
 
-**After creating the items**, add both URIs to the `sameAs` arrays in
-`lib/entity.js` (there is a comment marking the spot). That closes the loop: our
-site asserts the identity, Wikidata asserts it back, and the two reconcile.
+## Still to do
 
----
-
-## Item 3 — the books (optional, do later)
-
-Separate items for *Don't Call It That* (ISBN 9781734248302) and *Go Name Yourself*
-(ISBN 9781734248319) are straightforward — `instance of: book (Q571)`,
-`author: <Eli's Q-number>`, `ISBN-13 (P212)`. Worth doing once the two items above
-are stable, because `notable work` resolving to a real item is stronger than a
-bare string.
-
-ISBNs for all three titles:
-
-| Title | ISBN-13 |
-|---|---|
-| Don't Call It That (3rd ed.) | 9781734248302 |
-| Go Name Yourself | 9781734248319 |
-| Run Studio Run (2nd ed.) | 9780989832038 |
-
-Run Studio Run is on a different publisher prefix from the other two, so it is not
-part of that block — worth knowing if you ever register further titles.
+- **Add the Wikidata URIs to `sameAs`** in `lib/entity.js` here and
+  `src/lib/entity.ts` in the AHM repo. Both files have a comment marking the spot.
+  This is the step that closes the loop: our sites assert the identity, Wikidata
+  asserts it back, and the two reconcile into one entity rather than a guess.
+- **Consider an item for No Picnic Press**, typed `instance of` imprint (Q2608849).
+  It would let both books carry `publisher (P123)` and give structural backing to
+  the "publisher" in Eli's description. Not urgent.
+- **Go Name Yourself** (ISBN `9781734248319`) has no item. It is a card deck rather
+  than a book, so `instance of` would need thought — not simply Q571.
