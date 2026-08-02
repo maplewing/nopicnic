@@ -88,10 +88,6 @@ export default function About() {
         <h2>Press</h2>
         <ul style={{ fontSize: 13, fontFamily: "var(--font-body)" }}>
           <li>
-            <a href="https://www.commarts.com/columns/a-rose-is-a-rose-is-a-rose" target="_blank" rel="noopener">Communication Arts</a>
-            {" "}— "A Rose Is a Rose Is a Rose"
-          </li>
-          <li>
             <a href="https://monocle.com/shop/product/1969445/" target="_blank" rel="noopener">Monocle</a>
             {" "}— The Entrepreneurs, Issue 4
           </li>
@@ -130,6 +126,10 @@ export default function About() {
           <li>
             <a href="https://harvardlawreview.org/2018/02/are-we-running-out-of-trademarks/" target="_blank" rel="noopener">Harvard Law Review</a>
             {" "}— "Are we running out of trademarks?" Vol. 131, Issue 4
+          </li>
+          <li>
+            <a href="https://www.commarts.com/columns/a-rose-is-a-rose-is-a-rose" target="_blank" rel="noopener">Communication Arts</a>
+            {" "}— "A Rose Is a Rose Is a Rose"
           </li>
         </ul>
 
