@@ -55,17 +55,32 @@ Circular references are normal here and resolve themselves once the shells exist
 | Property | Value |
 |---|---|
 | industry (P452) | marketing (Q39809) |
-| inception (P571) | 1990 |
+| inception (P571) | 1990 — see the note below before changing this |
 | founder (P112) | Q140820955 |
 | headquarters location (P159) | Berkeley (Q484678) |
 | country (P17) | United States of America (Q30) |
 | official website (P856) | `https://www.ahundredmonkeys.com/` |
 | chief executive officer (P169) | Q140821007 |
 
-> **inception is 1990, not 1995.** Bloomberg's company profile carries 1995 and other
-> aggregators have copied it. Stating 1990 here, with the Communication Arts
-> reference attached, is the single highest-leverage edit in this document —
-> Wikidata is what most downstream consumers reconcile against.
+> **On the founding date, which is subtler than it first looks.** Danny Altman began
+> the naming practice in Mill Valley in 1990, trading as **Whatchamacallit**, and
+> incorporated it as A Hundred Monkeys in **1995**. The studio moved to Berkeley in
+> **2013**.
+>
+> So registry-derived sources carrying 1995 — Bloomberg among them — are **not
+> wrong**. They measure incorporation, a different event. We date the studio from
+> the practice, which is a normal and legitimate choice for a continuously operating
+> business, and `inception` is 1990 on that basis.
+>
+> What this means in practice: don't "correct" 1995 wherever you find it, and don't
+> expect the disagreement to go away. The right move is to make our own claim
+> legible — 1990 as inception, the 1995 incorporation stated in prose — so anyone
+> meeting both dates can see how they fit rather than having to pick a liar.
+>
+> The 2010 NorthBay biz feature muddies it further by saying Danny started A Hundred
+> Monkeys in 1992, apparently pinning the transition to Bob Manley's death. That one
+> is simply wrong; it is worth knowing about so it isn't mistaken for a third
+> credible version.
 
 **Eli Altman — Q140821007** · `instance of` human (Q5)
 
@@ -166,6 +181,24 @@ That piece is the right source to lean on precisely because it is reported
 journalism about the studio — a writer visited and described the place — rather than
 a naming trend piece quoting Eli. Everything else in the press list is the latter,
 which is why none of it rescued the Wikipedia article.
+
+## A second source worth knowing about
+
+**"Monkey Business"** — Bill Meagher, *NorthBay biz*, February 2010. The original URL
+(`northbaybiz.com/General_Articles/General_Articles/Monkey_Business.php`) is dead;
+eleven Internet Archive snapshots survive from 2011 to 2016.
+
+It is the second piece of genuinely independent reporting about the studio: Meagher
+visited, described the converted auto-repair garage and the "Room for Confusion"
+conference room himself, and reported business facts nobody fed him in a quote —
+billings around $1 million, naming fees up to $65,000, roughly 140 competing firms.
+Quotes season the piece rather than carry it.
+
+That matters because it is the second source of the kind WP:NCORP demands, and its
+absence is why the Wikipedia article was undeleteable before. It is cited from the
+A Hundred Monkeys site's structured data, and is deliberately **not** in the No Picnic
+Press list — regional business press reads as thin next to the NYT and WSJ entries
+there, and that list is doing a different job.
 
 ## Deliberately left blank
 
