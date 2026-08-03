@@ -72,6 +72,7 @@ export default async function handler(req, res) {
     quantity: l.qty,
     weight: parseFloat(((l.product.productWeightOz || 14) * l.qty).toFixed(2)),
     value: parseFloat((l.product.price * l.qty).toFixed(2)),
+    currency: "USD",
     origin_country: "US",
     hs_tariff_number: "490110",  // Printed books
   }));
@@ -111,7 +112,7 @@ export default async function handler(req, res) {
     console.error("EasyPost shipment error:", text);
     let detail = text;
     try { detail = JSON.parse(text)?.error?.message || text; } catch {}
-    return res.status(502).json({ error: `EasyPost: ${detail}` });
+    return res.status(502).json({ error: `EasyPost (create shipment): ${detail}` });
   }
 
   const shipment = await epShipRes.json();
@@ -138,7 +139,7 @@ export default async function handler(req, res) {
     console.error("EasyPost buy error:", text);
     let detail = text;
     try { detail = JSON.parse(text)?.error?.message || text; } catch {}
-    return res.status(502).json({ error: `EasyPost: ${detail}` });
+    return res.status(502).json({ error: `EasyPost (buy label): ${detail}` });
   }
 
   const bought = await epBuyRes.json();
