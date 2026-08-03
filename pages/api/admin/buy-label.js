@@ -66,7 +66,17 @@ export default async function handler(req, res) {
 
   const auth = Buffer.from(`${process.env.EASYPOST_API_KEY}:`).toString("base64");
 
-  // Create EasyPost shipment with full recipient address
+  // Build customs items from physical line items
+  const customsItems = lines.map((l) => ({
+    description: l.product.name,
+    quantity: l.qty,
+    weight: parseFloat(((l.product.productWeightOz || 14) * l.qty).toFixed(2)),
+    value: parseFloat((l.product.price * l.qty).toFixed(2)),
+    origin_country: "US",
+    hs_tariff_number: "490199",  // Printed books
+  }));
+
+  // Create EasyPost shipment with full recipient address and customs
   const epShipRes = await fetch("https://api.easypost.com/v2/shipments", {
     method: "POST",
     headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
@@ -83,6 +93,15 @@ export default async function handler(req, res) {
           country: address.country,
         },
         parcel: { length: 12, width: 9, height: 2, weight: weightOz },
+        customs_info: {
+          eel_pfc: "NOEEI 30.37(a)",
+          customs_certify: true,
+          customs_signer: "Eli Altman",
+          contents_type: "merchandise",
+          restriction_type: "none",
+          non_delivery_option: "return",
+          customs_items: customsItems,
+        },
       },
     }),
   });
