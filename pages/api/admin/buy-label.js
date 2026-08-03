@@ -94,6 +94,9 @@ export default async function handler(req, res) {
           country: address.country,
         },
         parcel: { length: 12, width: 9, height: 2, weight: weightOz },
+        options: {
+          invoice_date: new Date().toISOString().slice(0, 10).replace(/-/g, ""),
+        },
         customs_info: {
           eel_pfc: "NOEEI 30.37(a)",
           customs_certify: true,
