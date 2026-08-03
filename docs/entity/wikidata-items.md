@@ -1,14 +1,15 @@
 # Wikidata items
 
-Five items exist. This records what they are, how they link together, and the
-reasoning behind the choices — so the next person to touch them (probably you, in a
-year) doesn't have to re-derive it.
+Six items exist and are wired to both sites. This records what they are, how they
+link together, and the reasoning behind the choices — so the next person to touch
+them (probably you, in a year) doesn't have to re-derive it.
 
 | Item | Q-number |
 |---|---|
 | A Hundred Monkeys | `Q140820950` |
 | Danny Altman | `Q140820955` |
 | Eli Altman | `Q140821007` |
+| No Picnic Press | `Q140821287` |
 | Don't Call It That | `Q140821009` |
 | Run Studio Run | `Q140821065` |
 
@@ -74,6 +75,7 @@ Circular references are normal here and resolve themselves once the shells exist
 | occupation (P106) | businessperson (Q43845) |
 | occupation (P106) | publisher (Q2516866) |
 | employer (P108) | Q140820950 |
+| employer (P108) | Q140821287 |
 | position held (P39) | managing director (Q19940089) + qualifier start time (P580) 2022 |
 | notable work (P800) | Q140821009 |
 | notable work (P800) | Q140821065 |
@@ -91,19 +93,38 @@ only live in the description, not in `occupation`. The description reads
 
 | Property | Value |
 |---|---|
+| occupation (P106) | writer (Q36180) |
 | occupation (P106) | businessperson (Q43845) |
 | employer (P108) | Q140820950 |
+
+Both occupations are deliberate: he writes as well as runs the business, so the two
+sit alongside each other rather than one replacing the other.
 
 Alias `Daniel Altman` is his legal name and is kept deliberately, despite colliding
 with **Q5216400 — Daniel Altman, "Economist and writer"**, a different person. The
 descriptions are distinct enough to tell them apart. If anyone ever proposes merging
 the two items, that collision is the reason, and the answer is no.
 
+**No Picnic Press — Q140821287** · `instance of` imprint (Q2608849)
+
+| Property | Value |
+|---|---|
+| founder (P112) | Q140821007 |
+| country (P17) | United States of America (Q30) |
+| headquarters location (P159) | Berkeley (Q484678) |
+| official website (P856) | `https://nopicnicpress.com` |
+
+`inception (P571)` is absent because the founding year isn't recorded anywhere we
+have. Don't Call It That's first edition came out in 2014 under ExtraCurricular
+Press, so the imprint post-dates that — but "post-dates" is not a year, and a guess
+here would be indistinguishable from a fact to everything downstream.
+
 **The books** — Q140821009 and Q140821065 · `instance of` book (Q571)
 
 | Property | Don't Call It That | Run Studio Run |
 |---|---|---|
 | author (P50) | Q140821007 | Q140821007 |
+| publisher (P123) | Q140821287 | Q140821287 |
 | ISBN-13 (P212) | `9781734248302` | `9780989832038` |
 | publication date (P577) | 2014 | 2018 |
 
@@ -117,8 +138,8 @@ An unsourced item is a deletion nomination waiting to happen, and references are
 what satisfy WD:N. Living-person items are held to this most strictly.
 
 Communication Arts has its own item — **Q5154089, "American trade journal"** — so it
-can be cited properly rather than as a bare link. Attach this to `inception`,
-`founder`, and `headquarters location` on A Hundred Monkeys:
+is cited properly rather than as a bare link. This reference is attached to
+`inception` on A Hundred Monkeys:
 
 | Field | Value |
 |---|---|
@@ -128,6 +149,18 @@ can be cited properly rather than as a bare link. Attach this to `inception`,
 | publication date (P577) | 4 February 2015 |
 
 `title` is a *monolingualtext* field and will ask for a language alongside the text.
+
+Only `inception` carries it, and that is a deliberate stopping point rather than an
+unfinished job. 1990 is the one contested fact — the aggregators carry 1995 — so it
+is the claim that needs defending. Nobody disputes where the studio is or who
+founded it. Sourcing those too would be tidiness, and the reference editor is close
+to unusable: the input for the reference value renders one character wide in Safari,
+Firefox and Chrome alike, which makes each additional citation a fight for no gain.
+
+All four fields must go inside a **single** reference block. Two blocks each holding
+one field reads as two independent sources supporting the claim, which is false —
+there is one article. Use the `+ add` link *within* an existing block, not a second
+`+ add reference`.
 
 That piece is the right source to lean on precisely because it is reported
 journalism about the studio — a writer visited and described the place — rather than
@@ -142,14 +175,20 @@ which is why none of it rescued the Wikipedia article.
 - **image (P18)** — requires the photo on Wikimedia Commons under a free licence.
   Carolyn McDermott holds that copyright, not us.
 
-## Still to do
+## The loop, closed
 
-- **Add the Wikidata URIs to `sameAs`** in `lib/entity.js` here and
-  `src/lib/entity.ts` in the AHM repo. Both files have a comment marking the spot.
-  This is the step that closes the loop: our sites assert the identity, Wikidata
-  asserts it back, and the two reconcile into one entity rather than a guess.
-- **Consider an item for No Picnic Press**, typed `instance of` imprint (Q2608849).
-  It would let both books carry `publisher (P123)` and give structural backing to
-  the "publisher" in Eli's description. Not urgent.
+Every item's URI is in the `sameAs` array of the matching node in `lib/entity.js`
+here and `src/lib/entity.ts` in the AHM repo. Our sites assert the identity,
+Wikidata asserts it back, and the two reconcile into one entity rather than a guess.
+Wikidata is listed first in each array on purpose — it is the identifier the others
+get reconciled against.
+
+If an item's Q-number ever changes (a merge, most likely), both repos have to change
+with it or the assertion becomes a lie pointing at a redirect.
+
+## Left undone, on purpose
+
 - **Go Name Yourself** (ISBN `9781734248319`) has no item. It is a card deck rather
-  than a book, so `instance of` would need thought — not simply Q571.
+  than a book, so `instance of` needs thought — not simply Q571.
+- **No Picnic Press `inception`** — see above; the year isn't known.
+- **References beyond `inception`** — see above; deliberate.
