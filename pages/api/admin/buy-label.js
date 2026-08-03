@@ -109,7 +109,9 @@ export default async function handler(req, res) {
   if (!epShipRes.ok) {
     const text = await epShipRes.text();
     console.error("EasyPost shipment error:", text);
-    return res.status(502).json({ error: "EasyPost error creating shipment" });
+    let detail = text;
+    try { detail = JSON.parse(text)?.error?.message || text; } catch {}
+    return res.status(502).json({ error: `EasyPost: ${detail}` });
   }
 
   const shipment = await epShipRes.json();
@@ -134,7 +136,9 @@ export default async function handler(req, res) {
   if (!epBuyRes.ok) {
     const text = await epBuyRes.text();
     console.error("EasyPost buy error:", text);
-    return res.status(502).json({ error: "EasyPost error purchasing label" });
+    let detail = text;
+    try { detail = JSON.parse(text)?.error?.message || text; } catch {}
+    return res.status(502).json({ error: `EasyPost: ${detail}` });
   }
 
   const bought = await epBuyRes.json();
