@@ -73,7 +73,7 @@ export default async function handler(req, res) {
     weight: parseFloat(((l.product.productWeightOz || 14) * l.qty).toFixed(2)),
     value: parseFloat((l.product.price * l.qty).toFixed(2)),
     origin_country: "US",
-    hs_tariff_number: "490199",  // Printed books
+    hs_tariff_number: "490110",  // Printed books
   }));
 
   // Create EasyPost shipment with full recipient address and customs
