@@ -136,10 +136,15 @@ export default async function handler(req, res) {
 
   if (!epBuyRes.ok) {
     const text = await epBuyRes.text();
-    console.error("EasyPost buy error:", text);
+    console.error("EasyPost buy error (full):", text);
     let detail = text;
-    try { detail = JSON.parse(text)?.error?.message || text; } catch {}
-    return res.status(502).json({ error: `EasyPost (buy label): ${detail}` });
+    try {
+      const parsed = JSON.parse(text);
+      // Log structured errors array if present
+      if (parsed?.error?.errors) console.error("EasyPost errors:", JSON.stringify(parsed.error.errors));
+      detail = parsed?.error?.message || text;
+    } catch {}
+    return res.status(502).json({ error: `EasyPost (buy label): ${detail}`, detail: text });
   }
 
   const bought = await epBuyRes.json();
