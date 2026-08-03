@@ -335,6 +335,7 @@ function OrdersTable({ orders, shipments = [] }) {
   const [shipTrack, setShipTrack] = useState({});   // { [sessionId]: trackingNumber string }
   const [shipSending, setShipSending] = useState(new Set());
   const [shipDone, setShipDone] = useState(new Set());
+  const [labelBuying, setLabelBuying] = useState(new Set());
   const [copiedAddressId, setCopiedAddressId] = useState(null);
   const [search, setSearch] = useState("");
   const [donePage, setDonePage] = useState(0);
@@ -392,6 +393,32 @@ function OrdersTable({ orders, shipments = [] }) {
       }
     } finally {
       setShipSending((s) => { const n = new Set(s); n.delete(sessionId); return n; });
+    }
+  }
+
+  async function handleBuyLabel(sessionId) {
+    setLabelBuying((s) => new Set([...s, sessionId]));
+    try {
+      const res = await fetch("/api/admin/buy-label", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stripeSessionId: sessionId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert("Label purchase failed: " + (data.error || "unknown error"));
+        return;
+      }
+      // Auto-fill the tracking number
+      if (data.trackingNumber) {
+        setShipTrack((t) => ({ ...t, [sessionId]: data.trackingNumber }));
+      }
+      // Open label PDF in new tab
+      if (data.labelUrl) {
+        window.open(data.labelUrl, "_blank");
+      }
+    } finally {
+      setLabelBuying((s) => { const n = new Set(s); n.delete(sessionId); return n; });
     }
   }
 
@@ -679,6 +706,15 @@ function OrdersTable({ orders, shipments = [] }) {
                                 </div>
                               ) : (
                                 <div>
+                                  {order.shipping.address?.country && order.shipping.address.country !== "US" && (
+                                    <button
+                                      onClick={() => handleBuyLabel(sid)}
+                                      disabled={labelBuying.has(sid) || isSending}
+                                      style={{ ...s.filterBtn, marginBottom: 8, opacity: (labelBuying.has(sid) || isSending) ? 0.5 : 1, background: "#1a6e3c", color: "#fff", borderColor: "#1a6e3c" }}
+                                    >
+                                      {labelBuying.has(sid) ? "Buying…" : "Buy EasyPost label →"}
+                                    </button>
+                                  )}
                                   <input
                                     value={tracking}
                                     onChange={(e) => setShipTrack((t) => ({ ...t, [sid]: e.target.value }))}
