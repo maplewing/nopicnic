@@ -450,6 +450,7 @@ const productDefinitions = [
     category: "Naming",
     inStock: true,
     productWeightOz: 15.7,
+    hsTariffNumber: "4911",
     images: ["/images/gny-cover.jpg", "/images/gny-2.webp", "/images/gny-3.webp", "/images/gny-4.webp", "/images/gny-5.webp", "/images/gny-6.webp", "/images/gny-7.webp", "/images/gny-8.webp", "/images/gny-9.webp", "/images/gny-10.webp"],
     hideReviews: true,
     description: `Instead of staring at a blank page waiting for brilliance, each card gives you a thought exercise.`,

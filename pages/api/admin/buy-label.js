@@ -61,7 +61,7 @@ export default async function handler(req, res) {
     value_amount: parseFloat((l.product.price * l.qty).toFixed(2)).toString(),
     value_currency: "USD",
     origin_country: "US",
-    tariff_number: "490110",
+    tariff_number: l.product.hsTariffNumber || "490110",
   }));
 
   const shippoRes = await fetch("https://api.goshippo.com/shipments/", {
