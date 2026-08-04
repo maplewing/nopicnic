@@ -14,19 +14,11 @@ const ORIGIN = {
   country: "US",
 };
 
-// Maps Stripe display_name → carrier service token
+// Maps Stripe display_name → Shippo servicelevel token
 const SERVICE_TOKEN = {
-  // UPS (via EasyPost)
-  "UPS Worldwide Economy":            "UPSWorldwideEconomyDDU",
-  "UPS Worldwide Expedited":          "Expedited",
-  "UPS Worldwide Saver":              "UPSSaver",
-  "UPS Worldwide Express":            "Express",
-  "UPS Worldwide Express Plus":       "ExpressPlus",
-  "UPS Standard":                     "UPSStandard",
-  // USPS (via Shippo)
-  "USPS First Class International":          "usps_first_class_package_international_service",
-  "USPS Priority Mail International":        "usps_priority_mail_international",
-  "USPS Priority Mail Express International":"usps_priority_mail_express_international",
+  "USPS First Class International":           "usps_first_class_package_international_service",
+  "USPS Priority Mail International":         "usps_priority_mail_international",
+  "USPS Priority Mail Express International": "usps_priority_mail_express_international",
 };
 
 export default async function handler(req, res) {
@@ -58,16 +50,7 @@ export default async function handler(req, res) {
     ? session.shipping_cost.shipping_rate.display_name
     : null;
   const targetService = displayName ? SERVICE_TOKEN[displayName] : null;
-  const isUSPS = displayName?.startsWith("USPS");
 
-  return isUSPS
-    ? buyShippoLabel({ res, address, recipientName, weightOz, lines, displayName, targetService })
-    : buyEasyPostLabel({ res, address, recipientName, weightOz, lines, displayName, targetService });
-}
-
-// ── USPS via Shippo ──
-
-async function buyShippoLabel({ res, address, recipientName, weightOz, lines, displayName, targetService }) {
   const customsItems = lines.map((l) => ({
     description: l.product.name,
     quantity: l.qty,
@@ -170,102 +153,6 @@ async function buyShippoLabel({ res, address, recipientName, weightOz, lines, di
     carrier: "USPS",
     service: displayName || rate.servicelevel?.name,
     rate: rate.amount,
-    currency: (rate.currency || "USD").toUpperCase(),
-  });
-}
-
-// ── UPS via EasyPost ──
-
-async function buyEasyPostLabel({ res, address, recipientName, weightOz, lines, displayName, targetService }) {
-  const auth = Buffer.from(`${process.env.EASYPOST_API_KEY}:`).toString("base64");
-
-  const customsItems = lines.map((l) => ({
-    description: l.product.name,
-    quantity: l.qty,
-    weight: parseFloat(((l.product.productWeightOz || 14) * l.qty).toFixed(2)),
-    value: parseFloat((l.product.price * l.qty).toFixed(2)),
-    currency: "USD",
-    origin_country: "US",
-    hs_tariff_number: "490110",
-  }));
-
-  const epShipRes = await fetch("https://api.easypost.com/v2/shipments", {
-    method: "POST",
-    headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      shipment: {
-        from_address: ORIGIN,
-        to_address: {
-          name: recipientName,
-          street1: address.line1,
-          ...(address.line2 ? { street2: address.line2 } : {}),
-          city: address.city,
-          ...(address.state ? { state: address.state } : {}),
-          ...(address.postal_code ? { zip: address.postal_code } : {}),
-          country: address.country,
-        },
-        parcel: { length: 12, width: 9, height: 2, weight: weightOz },
-        options: {
-          invoice_date: new Date().toISOString().slice(0, 10).replace(/-/g, ""),
-        },
-        customs_info: {
-          eel_pfc: "NOEEI 30.37(a)",
-          customs_certify: true,
-          customs_signer: "Eli Altman",
-          contents_type: "merchandise",
-          restriction_type: "none",
-          non_delivery_option: "return",
-          customs_items: customsItems,
-        },
-      },
-    }),
-  });
-
-  if (!epShipRes.ok) {
-    const text = await epShipRes.text();
-    console.error("EasyPost shipment error:", text);
-    let detail = text;
-    try { detail = JSON.parse(text)?.error?.message || text; } catch {}
-    return res.status(502).json({ error: `EasyPost (create shipment): ${detail}` });
-  }
-
-  const shipment = await epShipRes.json();
-  const allRates = (shipment.rates || [])
-    .filter((r) => (r.carrier === "UPS" || r.carrier === "UPSDAP") && r.rate)
-    .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
-
-  if (allRates.length === 0) {
-    return res.status(502).json({ error: "No UPS rates available for this shipment" });
-  }
-
-  const rate = (targetService && allRates.find((r) => r.service === targetService)) || allRates[0];
-
-  const epBuyRes = await fetch(`https://api.easypost.com/v2/shipments/${shipment.id}/buy`, {
-    method: "POST",
-    headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ rate: { id: rate.id } }),
-  });
-
-  if (!epBuyRes.ok) {
-    const text = await epBuyRes.text();
-    console.error("EasyPost buy error:", text);
-    let detail = text;
-    try {
-      const parsed = JSON.parse(text);
-      if (parsed?.error?.errors) console.error("EasyPost errors:", JSON.stringify(parsed.error.errors));
-      detail = parsed?.error?.message || text;
-    } catch {}
-    return res.status(502).json({ error: `EasyPost (buy label): ${detail}`, detail: text });
-  }
-
-  const bought = await epBuyRes.json();
-
-  return res.status(200).json({
-    labelUrl: bought.postage_label?.label_url,
-    trackingNumber: bought.tracking_code,
-    carrier: "UPS",
-    service: displayName || rate.service,
-    rate: rate.rate,
     currency: (rate.currency || "USD").toUpperCase(),
   });
 }
