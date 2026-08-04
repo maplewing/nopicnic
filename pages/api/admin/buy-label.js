@@ -69,14 +69,7 @@ export default async function handler(req, res) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      address_from: {
-        name: ORIGIN.name,
-        street1: ORIGIN.street1,
-        city: ORIGIN.city,
-        state: ORIGIN.state,
-        zip: ORIGIN.zip,
-        country: ORIGIN.country,
-      },
+      address_from: ORIGIN,
       address_to: {
         name: recipientName,
         street1: address.line1,
