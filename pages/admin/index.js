@@ -417,6 +417,11 @@ function OrdersTable({ orders, shipments = [] }) {
       if (data.labelUrl) {
         window.open(data.labelUrl, "_blank");
       }
+      // Show cost summary
+      const cost = data.rate ? `$${parseFloat(data.rate).toFixed(2)} ${data.currency || "USD"}` : null;
+      const svc = [data.carrier, data.service].filter(Boolean).join(" — ");
+      alert(`Label purchased${svc ? ": " + svc : ""}${cost ? " · " + cost : ""}`);
+
     } finally {
       setLabelBuying((s) => { const n = new Set(s); n.delete(sessionId); return n; });
     }
