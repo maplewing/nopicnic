@@ -93,6 +93,7 @@ export default async function handler(req, res) {
         certify: true,
         certify_signer: "Eli Altman",
         incoterm: "DDU",
+        eel_pfc: "NOEEI 30.37(a)",
         items: customsItems,
       },
       async: false,
