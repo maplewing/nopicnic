@@ -14,7 +14,7 @@ const ORIGIN = {
   country: "US",
 };
 
-// Maps Stripe display_name → Shippo servicelevel token
+// Maps Stripe display_name → Shippo servicelevel token (USPS only; UPS matched by name).
 const SERVICE_TOKEN = {
   "USPS First Class International":           "usps_first_class_package_international_service",
   "USPS Priority Mail International":         "usps_priority_mail_international",
@@ -114,14 +114,18 @@ export default async function handler(req, res) {
 
   const shipment = await shippoRes.json();
   const allRates = (shipment.rates || [])
-    .filter((r) => r.provider === "USPS" && r.amount)
+    .filter((r) => (r.provider === "USPS" || r.provider === "UPS") && r.amount)
     .sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount));
 
   if (allRates.length === 0) {
-    return res.status(502).json({ error: "No USPS rates available for this shipment" });
+    return res.status(502).json({ error: "No rates available for this shipment" });
   }
 
-  const rate = (targetService && allRates.find((r) => r.servicelevel?.token === targetService)) || allRates[0];
+  // Match by token first (USPS), then by display name (UPS), then cheapest.
+  const rate =
+    (targetService && allRates.find((r) => r.servicelevel?.token === targetService)) ||
+    (displayName && allRates.find((r) => r.servicelevel?.name === displayName)) ||
+    allRates[0];
 
   const txRes = await fetch("https://api.goshippo.com/transactions/", {
     method: "POST",
@@ -150,7 +154,7 @@ export default async function handler(req, res) {
   return res.status(200).json({
     labelUrl: tx.label_url,
     trackingNumber: tx.tracking_number,
-    carrier: "USPS",
+    carrier: rate.provider || "USPS",
     service: displayName || rate.servicelevel?.name,
     rate: rate.amount,
     currency: (rate.currency || "USD").toUpperCase(),
