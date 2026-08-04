@@ -12,6 +12,7 @@ const ORIGIN = {
   state: "CA",
   zip: process.env.NPP_ORIGIN_ZIP || "94710",
   country: "US",
+  email: "hi@nopicnicpress.com",
 };
 
 // Maps Stripe display_name → Shippo servicelevel token (USPS only; UPS matched by name).
