@@ -712,7 +712,7 @@ function OrdersTable({ orders, shipments = [] }) {
                                       disabled={labelBuying.has(sid) || isSending}
                                       style={{ ...s.filterBtn, marginBottom: 8, opacity: (labelBuying.has(sid) || isSending) ? 0.5 : 1, background: "#1a6e3c", color: "#fff", borderColor: "#1a6e3c" }}
                                     >
-                                      {labelBuying.has(sid) ? "Buying…" : "Buy EasyPost label →"}
+                                      {labelBuying.has(sid) ? "Buying…" : "Buy label →"}
                                     </button>
                                   )}
                                   <input
