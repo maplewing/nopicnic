@@ -93,6 +93,26 @@ Each is independent of the company, published by an outlet with editorial oversi
 and *about A Hundred Monkeys* rather than about naming-in-general. That last property
 is the one WP:ORGIND turns on and the one every source at the 2017 AfD lacked.
 
+**A fourth source, useful but easy to misuse.** "Monkey see, monkey sue?", Dinesh
+Ramde, *Associated Press*, 26 September 2009 — the trademark suit against 100
+Monkeys Inc. of Wauwatosa, Wisconsin. It is independent in a way none of the 2017
+sources were: nobody was interviewed, AP reported a court filing.
+
+Two things about it, and the first is a trap worth naming:
+
+- **It ran in around 200 papers, and that makes it one source, not two hundred.**
+  WP:NCORP is explicit that the same article republished is a single source. Writing
+  "covered in 200 newspapers" in an AfC note invites a correction, and a reviewer who
+  has caught you inflating once will read the three features more sceptically. The
+  cost of that is much higher than anything the claim would have bought.
+- **It is thin and it is one event.** A wire brief about a filing is not in-depth
+  coverage of an organisation, and notability does not follow from a single
+  newsworthy incident.
+
+Use it in the body, as the citation for the trademark dispute — a real piece of
+company history no other source provides — and list it fourth in the source table,
+plainly separated from the three features.
+
 **Supporting only, do not lead with it:** the New York Times Magazine piece
 ("HOW TO; Invent a Brand Name", Josh Rottenberg, 8 April 2001) is a how-to article
 that uses the studio as its worked example. It was rejected at the 2017 AfD and that
@@ -106,6 +126,19 @@ need not be available online or free — but **cite the magazine, not the reprin
 do not present a self-hosted copy as an independent host. If you want it airtight,
 find a library holding via WorldCat and cite that. Same for NorthBay biz, where the
 original URL is dead and the Archive has eleven snapshots.
+
+### One conflict to write around
+
+The sources disagree about when the company began, and a drafter working from memory
+will walk into it. AP says the name had been used "since 1994". The 2010 NorthBay
+piece says Danny started A Hundred Monkeys in 1992. Our own account — the practice
+from 1990 trading as Whatchamacallit, incorporated as A Hundred Monkeys in 1995 — is
+correct and is what the entity layer publishes, but **no cited source states it**.
+
+Wikipedia articles assert what their sources support, not what the subject knows. So
+do not write "founded in 1990" and cite one of these; either attribute the claim to
+the source making it, or write around the date. Getting challenged on the first
+sentence is a bad way to start a review.
 
 ## Step 3 — Write from the sources, not from what you know
 
