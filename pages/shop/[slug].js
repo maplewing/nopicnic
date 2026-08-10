@@ -192,6 +192,13 @@ export default function ProductPage({ product, productReviews, otherProducts, su
                       },
                     },
               },
+              ...(!product.isDigital && !product.isService && product.productWeightOz > 0 && {
+                weight: {
+                  "@type": "QuantitativeValue",
+                  value: product.productWeightOz,
+                  unitCode: "ONZ",
+                },
+              }),
               ...(product.schemaTopics?.length > 0 && {
                 about: product.schemaTopics.map((t) => ({ "@type": "Thing", name: t })),
               }),
