@@ -1,5 +1,10 @@
 // GET /api/drip/arrival
 // Vercel Cron — runs daily at 2pm UTC (see vercel.json)
+//
+// Also fires the unshipped-order digest to hi@nopicnicpress.com on its way in
+// (lib/unshippedDigest.js) — Hobby allows two cron jobs and this site has two,
+// so the alert shares this one rather than needing a third.
+//
 // For each shipped order that hasn't been marked arrived, polls Shippo's
 // tracking API. When status === "DELIVERED", sends the arrival email and
 // stamps arrived_at on the PaymentIntent so it is never sent twice.
@@ -20,6 +25,7 @@ import Stripe from "stripe";
 import { Resend } from "resend";
 import { getActiveShipments, markArrived } from "../../../lib/shipments";
 import { shipmentArrivalEmail } from "../../../lib/dripEmails";
+import { sendUnshippedDigest } from "../../../lib/unshippedDigest";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -82,15 +88,28 @@ export default async function handler(req, res) {
     return res.status(401).end();
   }
 
+  // The unshipped digest rides along here because Vercel's Hobby plan allows two
+  // cron jobs and vercel.json already spends both. It runs first, and in its own
+  // try, so that nothing below can take it down with it — an alert about orders
+  // nobody is watching is worth the least when it is the thing that broke.
+  let unshippedDigest;
+  try {
+    unshippedDigest = await sendUnshippedDigest();
+  } catch (err) {
+    console.error("Unshipped digest failed:", err.message);
+    unshippedDigest = { error: err.message };
+  }
+
   let active, windowSkips;
   try {
     ({ shipments: active, skipped: windowSkips } = await getActiveShipments());
   } catch (err) {
     console.error("Could not load active shipments:", err.message);
-    return res.status(500).json({ error: "Failed to load shipments" });
+    return res.status(500).json({ error: "Failed to load shipments", unshippedDigest });
   }
 
   const results = {
+    unshippedDigest,
     checked: active.length,
     delivered: 0,
     errors: 0,

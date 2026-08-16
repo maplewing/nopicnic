@@ -7,10 +7,6 @@
     {
       "path": "/api/drip/review-request",
       "schedule": "0 10 * * *"
-    },
-    {
-      "path": "/api/drip/unshipped",
-      "schedule": "0 16 * * *"
     }
   ]
 }
