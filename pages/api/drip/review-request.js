@@ -1,10 +1,24 @@
 // GET /api/drip/review-request
 // Vercel Cron Job — runs daily at 10:00 UTC (see vercel.json).
-// Finds Stripe sessions completed 9–11 days ago and sends a review
-// request email to customers who haven't received one yet.
+// Asks for a review ten days after the order actually reached the customer.
+//
+// "Reached the customer" is not the same as "was paid for", and the difference
+// is what this used to get wrong: it selected on session age alone, so an order
+// still sitting unshipped got a mail saying it landed on the doorstep ten days
+// ago. Now each order gets a delivery date it has to actually earn —
+//
+//   physical  arrived_at if the arrival cron confirmed it, otherwise the ship
+//             date plus typical transit. No ship date at all means no email,
+//             ever, until it ships — the order is not late for a review, it is
+//             late for a label, which api/drip/unshipped is what handles.
+//   digital   the moment of purchase; download links go out with the receipt.
+//   service   the same, and the copy says "wrapped up" rather than "arrived".
+//
+// The dates live in lib/reviewTiming.js, which is pure and can be run against
+// real orders without sending anything — see scripts/review-due.mjs.
 //
 // Sent-tracking: a Redis set (lib/reviewSent.js), written per send, so the same
-// order can't be emailed twice across the three daily runs its window spans.
+// order can't be emailed twice across the days its window spans.
 //
 // To run manually (dev or prod):
 //   curl -H "Authorization: Bearer $CRON_SECRET" \
@@ -17,12 +31,13 @@
 //   RESEND_API_KEY       — existing
 //   UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN — existing
 
-import Stripe from "stripe";
 import { Resend } from "resend";
 import { reviewRequestEmail } from "../../../lib/dripEmails";
 import { hasReviewBeenSent, markReviewSent } from "../../../lib/reviewSent";
+import { listCompletedSessions } from "../../../lib/shipments";
+import { orderKind } from "../../../lib/orderKind.js";
+import { reviewStatus } from "../../../lib/reviewTiming.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
@@ -34,18 +49,11 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  // Sessions completed 9–11 days ago (window prevents missing the exact day)
-  const now = Math.floor(Date.now() / 1000);
-  const DAY = 86400;
-  const rangeStart = now - 11 * DAY;
-  const rangeEnd = now - 9 * DAY;
-
   let sessions;
   try {
-    sessions = await stripe.checkout.sessions.list({
-      created: { gte: rangeStart, lte: rangeEnd },
-      expand: ["data.line_items"],
-      limit: 100,
+    sessions = await listCompletedSessions({
+      withinDays: 60,
+      expand: ["data.line_items", "data.payment_intent.latest_charge"],
     });
   } catch (err) {
     console.error("Stripe sessions.list error:", err.message);
@@ -53,17 +61,37 @@ export default async function handler(req, res) {
   }
 
   const newlySent = [];
-  let skipped = 0;
+  let alreadySent = 0;
+  let notYetDelivered = 0;
+  let outsideWindow = 0;
   let errors = 0;
 
-  for (const session of sessions.data) {
-    if (session.status !== "complete") continue;
+  const now = Date.now();
+
+  for (const session of sessions) {
+    if (session.payment_status !== "paid") continue;
+
+    const intent = typeof session.payment_intent === "object" ? session.payment_intent : null;
+    // Nobody wants to be asked how they liked the thing they sent back.
+    if (intent?.latest_charge?.amount_refunded > 0) continue;
 
     const toEmail = session.customer_details?.email;
     if (!toEmail) continue;
 
+    const kind = orderKind(session);
+    const { status } = reviewStatus(session, kind, now);
+
+    if (status === "not-delivered") {
+      notYetDelivered++;
+      continue;
+    }
+    if (status !== "due") {
+      outsideWindow++;
+      continue;
+    }
+
     if (await hasReviewBeenSent(session.id)) {
-      skipped++;
+      alreadySent++;
       continue;
     }
 
@@ -74,7 +102,7 @@ export default async function handler(req, res) {
       from: "No Picnic Press <orders@nopicnicpress.com>",
       to: toEmail,
       subject: "So, what do you think?",
-      html: reviewRequestEmail(firstName, items, toEmail),
+      html: reviewRequestEmail(firstName, items, toEmail, kind),
     });
 
     if (error) {
@@ -95,9 +123,13 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).json({
-    checked: sessions.data.length,
+    checked: sessions.length,
     sent: newlySent.length,
-    skipped,
+    // Split out rather than lumped into one `skipped`: "waiting on a label" is
+    // an operational problem, the other two are the job working normally.
+    notYetDelivered,
+    outsideWindow,
+    alreadySent,
     errors,
   });
 }

@@ -77,7 +77,14 @@ export default async function handler(req, res) {
     },
     {
       subject: "[PREVIEW] So, what do you think?",
-      html: reviewRequestEmail(MOCK.firstName, MOCK.items, to),
+      html: reviewRequestEmail(MOCK.firstName, MOCK.items, to, "physical"),
+    },
+    {
+      // Same email, digital order. Worth previewing separately: the opening
+      // line is the only thing that changes, and it's the line that reads as
+      // nonsense if the wrong one goes out.
+      subject: "[PREVIEW] So, what do you think? (digital order)",
+      html: reviewRequestEmail(MOCK.firstName, [{ name: "Run Studio Run (ePub)" }], to, "digital"),
     },
   ];
 

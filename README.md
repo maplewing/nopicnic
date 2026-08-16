@@ -75,8 +75,22 @@ receives after ordering is sent by this app through Resend:
 | Order confirmation + download links | `api/webhook` | Stripe `checkout.session.completed` |
 | Shipping confirmation | `api/admin/shipments` | You add tracking in the admin |
 | Arrival + promo code | `api/drip/arrival` (cron) | Shippo reports the parcel delivered |
-| Review request | `api/drip/review-request` (cron) | 9–11 days after purchase |
+| Review request | `api/drip/review-request` (cron) | 10 days after the order reached the customer |
 | Announcement | `api/drip/announce` | Manually, to newsletter subscribers only |
+| Unshipped digest (to you, not the customer) | `api/drip/unshipped` (cron) | Daily, while any physical order is 3+ days old with no label |
+
+The review request waits on delivery, not on the sale. A physical order needs a
+ship date before it qualifies at all — it counts ten days from the arrival the
+Shippo cron confirmed, or from the ship date plus typical transit if tracking
+never reported. Digital orders and studio sessions count from purchase, and get
+copy that doesn't claim anything landed on a doorstep. An order that sat
+unshipped used to get the ten-day mail on schedule anyway, asking how the
+customer liked a book that never left the building.
+
+`api/drip/unshipped` is the other half of that: it mails
+`hi@nopicnicpress.com` a digest of anything paid, physical, and still without a
+label after three days, and keeps mailing it daily until the order ships or is
+refunded. Nothing late means no email at all.
 
 **Loops holds the newsletter list and nothing else.** Buying something records
 the customer in Loops as `subscribed: false`; only the footer signup form sets
@@ -84,8 +98,13 @@ it true. `api/webhook` deliberately does not send a `purchase` event — if you
 add one and wire a Loop to it, customers get two review asks and two discount
 nudges, because the crons above already cover that ground.
 
-The two crons need `CRON_SECRET` set in Vercel. Without it every invocation
+All three crons need `CRON_SECRET` set in Vercel. Without it every invocation
 401s and nothing is sent, with no error anywhere obvious.
+
+Three cron jobs also needs a **Vercel Pro** project — Hobby allows two, and a
+third makes the deployment fail rather than silently skipping it. On Hobby,
+drop the `api/drip/unshipped` entry from `vercel.json` and call the same handler
+at the end of `api/drip/arrival` instead.
 
 Arrival email requires a **payment method on file at Shippo**
 ([billing](https://goshippo.com/user/billing/)). Without one every tracking
