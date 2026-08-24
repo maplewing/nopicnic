@@ -1543,15 +1543,20 @@ export default function AdminDashboard() {
   const [manualOrders, setManualOrders] = useState([]);
   const [shipments, setShipments] = useState([]);
 
-  const fetchAll = useCallback(async () => {
+  // Stats, orders, and analytics are served from a few-minute server-side cache,
+  // because each one costs a full walk of the Stripe history or a month of blob
+  // reads and none of them move minute to minute. `fresh` is what the Refresh
+  // button sends to skip it; a shipment recorded from this page clears it anyway.
+  const fetchAll = useCallback(async ({ fresh = false } = {}) => {
     setLoading(true);
     setError(null);
     try {
       const NO_CACHE = { cache: "no-store" };
+      const bust = fresh ? "refresh=1" : "";
       const [statsRes, ordersRes, analyticsRes, inventoryRes, manualRes, stockRes, shipmentsRes] = await Promise.all([
-        fetch("/api/admin/stats", NO_CACHE),
-        fetch("/api/admin/orders?days=365", NO_CACHE),
-        fetch("/api/admin/analytics?days=30", NO_CACHE),
+        fetch(`/api/admin/stats${bust ? `?${bust}` : ""}`, NO_CACHE),
+        fetch(`/api/admin/orders?days=365${bust ? `&${bust}` : ""}`, NO_CACHE),
+        fetch(`/api/admin/analytics?days=30${bust ? `&${bust}` : ""}`, NO_CACHE),
         fetch("/api/admin/inventory", NO_CACHE),
         fetch("/api/admin/manual-orders", NO_CACHE),
         fetch("/api/admin/stock", NO_CACHE),
@@ -1657,7 +1662,7 @@ export default function AdminDashboard() {
               </button>
             ))}
             <button
-              onClick={fetchAll}
+              onClick={() => fetchAll({ fresh: true })}
               disabled={loading}
               style={{ ...s.tabBtn, marginLeft: "auto", opacity: loading ? 0.4 : 1 }}
             >

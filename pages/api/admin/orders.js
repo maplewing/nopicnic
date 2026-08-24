@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { checkAdminAuth } from "../../../lib/adminAuth";
 import { getOrderNumbers } from "../../../lib/orderNumbers";
+import { serveCached } from "../../../lib/adminCache";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -9,6 +10,15 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).end();
 
   const days = parseInt(req.query.days || "90");
+
+  return serveCached(req, res, {
+    name: "orders",
+    params: { days },
+    build: () => buildOrders(days),
+  });
+}
+
+async function buildOrders(days) {
   const since = Math.floor(Date.now() / 1000) - days * 86400;
 
   // Fetch completed checkout sessions
@@ -70,6 +80,5 @@ export default async function handler(req, res) {
   // Sort newest first
   orders.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  res.setHeader("Cache-Control", "no-store");
-  return res.status(200).json({ orders });
+  return { orders };
 }

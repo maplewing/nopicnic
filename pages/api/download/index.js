@@ -10,6 +10,8 @@
 //
 // Also requires BLOB_READ_WRITE_TOKEN (auto-added by Vercel when store was created).
 
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 import { verifyDownloadToken } from "../../../lib/downloadToken";
 
 // Maps product slug + format → env var name holding the blob URL.
@@ -56,7 +58,7 @@ export default async function handler(req, res) {
       : {};
 
     const upstream = await fetch(fileUrl, fetchOptions);
-    if (!upstream.ok) {
+    if (!upstream.ok || !upstream.body) {
       console.error("Blob fetch failed:", upstream.status, fileUrl);
       return res.status(500).send("Could not generate download link. Please contact hi@nopicnicpress.com.");
     }
@@ -67,10 +69,17 @@ export default async function handler(req, res) {
     const length = upstream.headers.get("content-length");
     if (length) res.setHeader("Content-Length", length);
 
-    const buffer = await upstream.arrayBuffer();
-    return res.send(Buffer.from(buffer));
+    // Piped rather than buffered: arrayBuffer() held the whole book — 3MB for the
+    // EPUB — in function memory and then copied it again into a Buffer, which is
+    // real CPU on every download for bytes we only pass through.
+    await pipeline(Readable.fromWeb(upstream.body), res);
+    return;
   } catch (err) {
     console.error("Download error:", err);
+    // Once the stream has started the status line is already on the wire, so
+    // there's nothing left to say — just close it and let the client see a
+    // truncated file rather than crashing on a second set of headers.
+    if (res.headersSent) return res.end();
     return res.status(500).send("Could not generate download link. Please contact hi@nopicnicpress.com.");
   }
 }

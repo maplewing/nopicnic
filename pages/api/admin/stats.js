@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { checkAdminAuth } from "../../../lib/adminAuth";
+import { serveCached } from "../../../lib/adminCache";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -25,6 +26,10 @@ export default async function handler(req, res) {
   if (!checkAdminAuth(req)) return res.status(401).json({ error: "Unauthorized" });
   if (req.method !== "GET") return res.status(405).end();
 
+  return serveCached(req, res, { name: "stats", build: () => buildStats() });
+}
+
+async function buildStats() {
   const now = Math.floor(Date.now() / 1000);
   const since60 = now - 60 * 86400;
   const statsSince = process.env.STATS_SINCE ? Math.max(since60, parseInt(process.env.STATS_SINCE)) : since60;
@@ -81,7 +86,7 @@ export default async function handler(req, res) {
 
   const totalTax = completed.reduce((acc, s) => acc + (s.total_details?.amount_tax || 0) / 100, 0);
 
-  return res.status(200).json({
+  return {
     daily,
     totals: { revenue: totalRevenue, orders: totalOrders, avgOrderValue, tax: totalTax },
     periods: {
@@ -92,5 +97,5 @@ export default async function handler(req, res) {
       lastWeek:  { revenue: sum(lastWeekC),  orders: lastWeekC.length },
       lastMonth: { revenue: sum(lastMonthC), orders: lastMonthC.length, avgOrderValue: prevAvg },
     },
-  });
+  };
 }
