@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { checkAdminAuth } from "../../../lib/adminAuth";
 import { getOrderNumbers } from "../../../lib/orderNumbers";
 import { serveCached } from "../../../lib/adminCache";
+import { isFullyRefunded, refundedAmount } from "../../../lib/refunds";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -44,7 +45,7 @@ async function buildOrders(days) {
   const { mapping } = await getOrderNumbers();
 
   const orders = sessions
-    .filter((s) => s.payment_status === "paid" && !(s.payment_intent?.latest_charge?.amount_refunded > 0))
+    .filter((s) => s.payment_status === "paid" && !isFullyRefunded(s))
     .map((session) => ({
       orderNumber: mapping[session.id] ?? null,
       stripeSessionId: session.id,
@@ -69,6 +70,7 @@ async function buildOrders(days) {
       tax: (session.total_details?.amount_tax || 0) / 100,
       shippingCost: (session.shipping_cost?.amount_total || 0) / 100,
       total: (session.amount_total || 0) / 100,
+      refunded: refundedAmount(session),
       tracking: session.payment_intent?.metadata?.shipped_at ? {
         shippedAt: session.payment_intent.metadata.shipped_at,
         trackingNumber: session.payment_intent.metadata.tracking_number || null,

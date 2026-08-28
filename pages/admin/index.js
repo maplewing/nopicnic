@@ -584,7 +584,14 @@ function OrdersTable({ orders, shipments = [] }) {
                   <td style={s.tdNum}>{fmt(order.subtotal)}</td>
                   <td style={s.tdNum}>{order.tax > 0 ? fmt(order.tax) : "—"}</td>
                   <td style={s.tdNum}>{order.shippingCost > 0 ? fmt(order.shippingCost) : "—"}</td>
-                  <td style={{ ...s.tdNum, fontWeight: 600 }}>{fmt(order.total)}</td>
+                  <td style={{ ...s.tdNum, fontWeight: 600 }}>
+                    {fmt(order.total)}
+                    {order.refunded > 0 && (
+                      <div style={{ fontSize: 11, fontWeight: 400, color: "#b3261e" }}>
+                        −{fmt(order.refunded)} refunded
+                      </div>
+                    )}
+                  </td>
                 </tr>
                 {expanded === order.stripeSessionId && (
                   <tr key={order.stripeSessionId + "-detail"}>
@@ -788,7 +795,14 @@ function OrdersTable({ orders, shipments = [] }) {
                   <td style={s.tdNum}>{fmt(order.subtotal)}</td>
                   <td style={s.tdNum}>{order.tax > 0 ? fmt(order.tax) : "—"}</td>
                   <td style={s.tdNum}>{order.shippingCost > 0 ? fmt(order.shippingCost) : "—"}</td>
-                  <td style={{ ...s.tdNum, fontWeight: 600 }}>{fmt(order.total)}</td>
+                  <td style={{ ...s.tdNum, fontWeight: 600 }}>
+                    {fmt(order.total)}
+                    {order.refunded > 0 && (
+                      <div style={{ fontSize: 11, fontWeight: 400, color: "#b3261e" }}>
+                        −{fmt(order.refunded)} refunded
+                      </div>
+                    )}
+                  </td>
                 </tr>
                 {expanded === order.stripeSessionId && (
                   <tr key={order.stripeSessionId + "-detail"}>

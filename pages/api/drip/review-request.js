@@ -37,6 +37,7 @@ import { hasReviewBeenSent, markReviewSent } from "../../../lib/reviewSent";
 import { listCompletedSessions } from "../../../lib/shipments";
 import { orderKind } from "../../../lib/orderKind.js";
 import { reviewStatus } from "../../../lib/reviewTiming.js";
+import { isFullyRefunded } from "../../../lib/refunds";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -71,9 +72,9 @@ export default async function handler(req, res) {
   for (const session of sessions) {
     if (session.payment_status !== "paid") continue;
 
-    const intent = typeof session.payment_intent === "object" ? session.payment_intent : null;
-    // Nobody wants to be asked how they liked the thing they sent back.
-    if (intent?.latest_charge?.amount_refunded > 0) continue;
+    // Nobody wants to be asked how they liked the thing they sent back. A
+    // partial refund is not that — the order arrived, it just cost less.
+    if (isFullyRefunded(session)) continue;
 
     const toEmail = session.customer_details?.email;
     if (!toEmail) continue;

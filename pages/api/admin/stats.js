@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { checkAdminAuth } from "../../../lib/adminAuth";
 import { serveCached } from "../../../lib/adminCache";
+import { isFullyRefunded, refundedAmount } from "../../../lib/refunds";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -40,10 +41,15 @@ async function buildStats() {
     expand: ["data.payment_intent.latest_charge"],
   });
 
-  const nonRefunded = allSessions.filter((s) => !(s.payment_intent?.latest_charge?.amount_refunded > 0));
+  // A cancelled order leaves entirely; a partially refunded one stays and is
+  // counted net of what went back, below.
+  const nonRefunded = allSessions.filter((s) => !isFullyRefunded(s));
   const completed = nonRefunded.filter(
     (s) => s.status === "complete" && s.payment_status === "paid"
   );
+
+  // What the order was actually worth: a partial refund is money that came back.
+  const net = (s) => (s.amount_total || 0) / 100 - refundedAmount(s);
 
   // Build daily revenue map (last 30 days only for chart)
   const since30 = now - 30 * 86400;
@@ -56,7 +62,7 @@ async function buildStats() {
   for (const s of completed) {
     const key = new Date(s.created * 1000).toISOString().slice(0, 10);
     if (dailyMap[key]) {
-      dailyMap[key].revenue += (s.amount_total || 0) / 100;
+      dailyMap[key].revenue += net(s);
       dailyMap[key].orders += 1;
     }
   }
@@ -64,7 +70,7 @@ async function buildStats() {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([date, v]) => ({ date, ...v }));
 
-  const sum = (arr) => arr.reduce((acc, s) => acc + (s.amount_total || 0) / 100, 0);
+  const sum = (arr) => arr.reduce((acc, s) => acc + net(s), 0);
 
   // Current periods
   const todayC      = completed.filter((s) => s.created >= now - 86400);
