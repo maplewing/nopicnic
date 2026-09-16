@@ -476,6 +476,14 @@ function OrdersTable({ orders, shipments = [] }) {
     return !shipDone.has(o.stripeSessionId) && !rec;
   });
   const doneOrders = filtered.filter((o) => !pendingOrders.includes(o));
+  // Counted across every order, not the period filter — the CSV isn't filtered
+  // by date either, so an order from last month still goes out.
+  const domesticPending = orders.filter((o) =>
+    o.shipping?.address?.country === "US" &&
+    !o.tracking &&
+    !shipments.find((s) => s.sessionId === o.stripeSessionId) &&
+    !shipDone.has(o.stripeSessionId)
+  ).length;
   const totalDonePages = Math.ceil(doneOrders.length / PAGE_SIZE);
   const paginatedDone = doneOrders.slice(donePage * PAGE_SIZE, (donePage + 1) * PAGE_SIZE);
 
@@ -516,6 +524,15 @@ function OrdersTable({ orders, shipments = [] }) {
             {label}
           </button>
         ))}
+        {domesticPending > 0 && (
+          <a
+            href="/api/admin/pirateship-csv"
+            title="Every unshipped US order, for Pirate Ship's spreadsheet import"
+            style={{ ...s.filterBtn, textDecoration: "none" }}
+          >
+            Pirate Ship CSV ({domesticPending}) ↓
+          </a>
+        )}
         <input
           type="search"
           placeholder="Search name, email, address, order #…"
@@ -1546,7 +1563,7 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("orders");
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState(null);
   const [analytics, setAnalytics] = useState(null);
