@@ -446,6 +446,10 @@ const productDefinitions = [
     subtitle: "The deck of cards for name generation",
     price: 40,
     stripePriceId: "price_1TxTSCEiVbcGdXdNp580SLUk",
+    // The $36 price GNY sold at until July 2026. Nothing charges it any more, but
+    // sessions from before the switch still carry it, and lib/profitShare.js has
+    // to recognise them as GNY when it totals a quarter that spans the change.
+    formerStripePriceIds: ["price_1TgAGNEiVbcGdXdNmvVYzwtb"],
     slug: "go-name-yourself",
     category: "Naming",
     inStock: true,

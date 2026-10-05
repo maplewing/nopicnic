@@ -1559,6 +1559,306 @@ function ManualOrdersSection({ orders, onChange, inventory }) {
   );
 }
 
+// ─── Profit Share ─────────────────────────────────────────────────────────────
+
+// The storefront opened in June 2026; nothing before Q2 is in Stripe.
+const FIRST_QUARTER = { year: 2026, q: 2 };
+
+function quarterList() {
+  const now = new Date();
+  const last = { year: now.getFullYear(), q: Math.floor(now.getMonth() / 3) + 1 };
+  const list = [];
+  for (let { year, q } = FIRST_QUARTER; year < last.year || (year === last.year && q <= last.q); ) {
+    list.push(`${year}-Q${q}`);
+    if (q === 4) { year += 1; q = 1; } else q += 1;
+  }
+  return list.reverse();
+}
+
+function quarterLabel(id) {
+  const [year, q] = id.split("-");
+  return `${q} ${year}`;
+}
+
+function csvCell(value) {
+  const str = String(value ?? "");
+  return /[",\n\r]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+}
+
+function downloadProfitShareCsv(data) {
+  const lineById = Object.fromEntries(data.lines.map((l) => [l.id, l]));
+  const header = ["Quarter", "Payee", "Line", "Units", "Proceeds", "Print cost", "Stripe fees", "Base", "Share", "Amount"];
+  const rows = [];
+  for (const payee of data.payees) {
+    for (const r of payee.rows) {
+      const l = lineById[r.id];
+      rows.push([quarterLabel(data.quarter), payee.name, l.label, l.units, l.proceeds.toFixed(2), l.cost.toFixed(2), l.fees.toFixed(2), l.base.toFixed(2), `${payee.share * 100}%`, r.amount.toFixed(2)]);
+    }
+    rows.push([quarterLabel(data.quarter), payee.name, "Total", "", "", "", "", "", "", payee.total.toFixed(2)]);
+  }
+  const csv = [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `profit-share-${data.quarter}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function ProfitShareTab() {
+  const quarters = quarterList();
+  // Default to the last finished quarter — that's the one being paid out.
+  const [quarter, setQuarter] = useState(quarters[1] || quarters[0]);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [draft, setDraft] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/profit-share?quarter=${quarter}`, { cache: "no-store" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to load");
+      setData(json);
+      if (!json.config) setDraft({ unitCosts: {}, payees: [] });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [quarter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function saveConfig() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/profit-share", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Save failed");
+      setDraft(null);
+      await load();
+    } catch (err) {
+      alert("Error: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inp = {
+    border: "1px solid #ddd", padding: "6px 8px", fontSize: 13,
+    fontFamily: MONO, outline: "none", background: "#fff", color: "#111",
+  };
+  const note = { fontSize: 12, color: "#888", lineHeight: 1.5, marginTop: 8 };
+  const totalRow = { ...s.tr, fontWeight: 600, background: "#fafafa" };
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 24, alignItems: "center", flexWrap: "wrap" }}>
+        {quarters.map((q) => (
+          <button key={q} onClick={() => setQuarter(q)} style={{ ...s.filterBtn, ...(quarter === q ? s.filterBtnActive : {}) }}>
+            {quarterLabel(q)}
+          </button>
+        ))}
+        {data && data.quarter === quarter && data.payees.length > 0 && (
+          <button onClick={() => downloadProfitShareCsv(data)} style={{ ...s.filterBtn, marginLeft: "auto" }}>
+            Download CSV
+          </button>
+        )}
+      </div>
+
+      {loading && <div style={{ textAlign: "center", padding: "60px 0", color: "#999", fontSize: 13 }}>Loading…</div>}
+      {error && <div style={{ background: "#fff0f0", border: "1px solid #f5c0c0", padding: 16, fontSize: 13, color: "#c00" }}>Error: {error}</div>}
+
+      {!loading && data && (
+        <>
+          {quarter === quarters[0] && (
+            <p style={{ ...note, marginTop: 0, marginBottom: 24 }}>This quarter isn't over — these figures are to date.</p>
+          )}
+
+          {/* Payouts */}
+          {data.payees.map((payee) => (
+            <div key={payee.name} style={s.section}>
+              <h2 style={s.sectionHeading}>{payee.name} — {payee.share * 100}%</h2>
+              <table style={{ ...s.table, tableLayout: "auto" }}>
+                <thead>
+                  <tr>
+                    <th style={s.th}>Line</th>
+                    <th style={{ ...s.th, textAlign: "right" }}>Base</th>
+                    <th style={{ ...s.th, textAlign: "right" }}>Payout</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payee.rows.map((r) => (
+                    <tr key={r.id} style={s.tr}>
+                      <td style={s.td}>{r.label}</td>
+                      <td style={s.tdNum}>{fmt(r.base)}</td>
+                      <td style={s.tdNum}>{fmt(r.amount)}</td>
+                    </tr>
+                  ))}
+                  <tr style={totalRow}>
+                    <td style={s.td}>Total</td>
+                    <td style={s.tdNum} />
+                    <td style={s.tdNum}>{fmt(payee.total)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ))}
+
+          {/* How each line was counted */}
+          <div style={s.section}>
+            <h2 style={s.sectionHeading}>How it was counted</h2>
+            <table style={{ ...s.table, tableLayout: "auto" }}>
+              <thead>
+                <tr>
+                  <th style={s.th}>Line</th>
+                  <th style={{ ...s.th, textAlign: "right" }}>Units</th>
+                  <th style={{ ...s.th, textAlign: "right" }}>Proceeds</th>
+                  <th style={{ ...s.th, textAlign: "right" }}>Print cost</th>
+                  <th style={{ ...s.th, textAlign: "right" }}>Stripe fees</th>
+                  <th style={{ ...s.th, textAlign: "right" }}>Base</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.lines.map((l) => (
+                  <tr key={l.id} style={s.tr}>
+                    <td style={s.td}>{l.label}</td>
+                    <td style={s.tdNum}>{l.units}</td>
+                    <td style={s.tdNum}>{fmt(l.proceeds)}</td>
+                    <td style={s.tdNum}>{l.printCost ? `${l.units} × ${fmt(l.unitCost)} = ${fmt(l.cost)}` : "—"}</td>
+                    <td style={s.tdNum}>{fmt(l.fees)}</td>
+                    <td style={s.tdNum}>{fmt(l.base)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p style={note}>
+              Proceeds are what buyers paid for the item after discounts, without tax or shipping, less any partial
+              refund. Stripe's fee on each order is shared across its items by amount. Wholesale is from manual orders at the invoiced price, with no fee. A bundle's discount against the two list
+              prices is split evenly between DCIT and GNY. {data.notes.stripeOrders} site order{data.notes.stripeOrders === 1 ? "" : "s"} and{" "}
+              {data.notes.manualOrders} manual order{data.notes.manualOrders === 1 ? "" : "s"} this quarter
+              {data.notes.cancelledOrders > 0 && `; ${data.notes.cancelledOrders} refunded in full and left out`}
+              {data.notes.partialRefunds > 0 && `; ${data.notes.partialRefunds} partly refunded`}.
+              {data.notes.missingFees > 0 && ` Stripe returned no fee for ${data.notes.missingFees} order${data.notes.missingFees === 1 ? "" : "s"}, counted as $0.`}
+            </p>
+          </div>
+
+          {/* Not counted */}
+          {data.excluded.length > 0 && (
+            <div style={s.section}>
+              <h2 style={s.sectionHeading}>Not counted</h2>
+              <table style={{ ...s.table, tableLayout: "auto" }}>
+                <thead>
+                  <tr>
+                    <th style={s.th}>Item</th>
+                    <th style={s.th}>Why</th>
+                    <th style={{ ...s.th, textAlign: "right" }}>Units</th>
+                    <th style={{ ...s.th, textAlign: "right" }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.excluded.map((x) => (
+                    <tr key={`${x.name}|${x.reason}`} style={s.tr}>
+                      <td style={s.td}>{x.name}</td>
+                      <td style={{ ...s.td, color: x.reason === "not recognised" ? "#c00" : "#888" }}>{x.reason}</td>
+                      <td style={s.tdNum}>{x.units}</td>
+                      <td style={s.tdNum}>{fmt(x.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Settings */}
+          <div style={s.section}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <h2 style={s.sectionHeading}>Shares and print costs</h2>
+              {!draft && (
+                <button onClick={() => setDraft(JSON.parse(JSON.stringify(data.config)))} style={s.filterBtn}>Edit</button>
+              )}
+            </div>
+            {!data.config && <p style={{ ...note, marginTop: 0 }}>Nothing set up yet — add who is paid and the print costs below.</p>}
+            {!draft && data.config && (
+              <p style={{ ...note, marginTop: 0 }}>
+                {data.config.payees.map((p) => `${p.name} ${p.share * 100}%`).join(" · ")}
+                {" — print costs: "}
+                {data.printCostDefs.map((c) => `${c.label} ${fmt(data.config.unitCosts?.[c.id])}`).join(" · ")}
+              </p>
+            )}
+            {draft && (
+              <div style={{ background: "#fff", border: "1px solid #e0e0e0", padding: 20 }}>
+                <div style={{ ...s.expandLabel, marginBottom: 10 }}>Print cost per copy</div>
+                <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 24 }}>
+                  {data.printCostDefs.map((l) => (
+                    <label key={l.id} style={{ fontSize: 13 }}>
+                      {l.label}{" "}
+                      <input
+                        type="number" min="0" step="0.01" style={{ ...inp, width: 90 }}
+                        value={draft.unitCosts[l.id] ?? ""}
+                        onChange={(e) => setDraft((d) => ({ ...d, unitCosts: { ...d.unitCosts, [l.id]: e.target.value === "" ? undefined : +e.target.value } }))}
+                      />
+                    </label>
+                  ))}
+                </div>
+
+                <div style={{ ...s.expandLabel, marginBottom: 10 }}>Payees</div>
+                {draft.payees.map((p, i) => {
+                  const setPayee = (fields) => setDraft((d) => ({ ...d, payees: d.payees.map((x, j) => (j === i ? { ...x, ...fields } : x)) }));
+                  return (
+                    <div key={i} style={{ borderTop: "1px solid #f0f0f0", padding: "12px 0", display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+                      <input style={{ ...inp, width: 180 }} value={p.name} placeholder="Name" onChange={(e) => setPayee({ name: e.target.value })} />
+                      <label style={{ fontSize: 13 }}>
+                        <input
+                          type="number" min="0" max="100" step="0.5" style={{ ...inp, width: 70 }}
+                          value={Math.round(p.share * 1000) / 10}
+                          onChange={(e) => setPayee({ share: +e.target.value / 100 })}
+                        />{" "}%
+                      </label>
+                      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 12 }}>
+                        {data.lineDefs.map((l) => (
+                          <label key={l.id} style={{ whiteSpace: "nowrap" }}>
+                            <input
+                              type="checkbox" checked={p.lines.includes(l.id)}
+                              onChange={(e) => setPayee({ lines: e.target.checked ? [...p.lines, l.id] : p.lines.filter((x) => x !== l.id) })}
+                            />{" "}{l.label}
+                          </label>
+                        ))}
+                      </div>
+                      <button onClick={() => setDraft((d) => ({ ...d, payees: d.payees.filter((_, j) => j !== i) }))} style={{ ...s.filterBtn, color: "#c00", borderColor: "#f5c0c0" }}>
+                        Remove
+                      </button>
+                    </div>
+                  );
+                })}
+                <button onClick={() => setDraft((d) => ({ ...d, payees: [...d.payees, { name: "", share: 0.25, lines: [] }] }))} style={{ ...s.filterBtn, marginTop: 8 }}>
+                  + Add payee
+                </button>
+
+                <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+                  <button onClick={saveConfig} disabled={saving} style={{ ...s.filterBtn, ...s.filterBtnActive, opacity: saving ? 0.5 : 1 }}>
+                    {saving ? "Saving…" : "Save"}
+                  </button>
+                  {data.config && <button onClick={() => setDraft(null)} style={s.filterBtn}>Cancel</button>}
+                </div>
+                <p style={note}>Saved privately, not in the site's code. Changes apply to every quarter, past ones included.</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
@@ -1683,7 +1983,7 @@ export default function AdminDashboard() {
         <div style={s.body}>
           {/* Tab nav */}
           <nav style={s.tabNav}>
-            {[["overview", "Overview"], ["orders", "Orders"], ["inventory", "Inventory"]].map(([id, label]) => (
+            {[["overview", "Overview"], ["orders", "Orders"], ["inventory", "Inventory"], ["profit-share", "Profit share"]].map(([id, label]) => (
               <button
                 key={id}
                 onClick={() => setTab(id)}
@@ -1701,7 +2001,7 @@ export default function AdminDashboard() {
             </button>
           </nav>
 
-          {loading && (
+          {loading && tab !== "profit-share" && (
             <div style={{ textAlign: "center", padding: "80px 0", color: "#999", fontSize: 13 }}>
               Loading…
             </div>
@@ -1828,6 +2128,12 @@ export default function AdminDashboard() {
               <ManualOrdersSection orders={manualOrders} onChange={setManualOrders} inventory={inventory} />
             </>
           )}
+
+          {/* ── PROFIT SHARE TAB ─────────────────────────────────────────── */}
+          {/* Loads its own data when opened rather than with the rest of the
+              dashboard: it walks a full quarter of Stripe, and is needed four
+              times a year. */}
+          {tab === "profit-share" && <ProfitShareTab />}
 
           {/* ── INVENTORY TAB ────────────────────────────────────────────── */}
           {!loading && inventory && tab === "inventory" && (
