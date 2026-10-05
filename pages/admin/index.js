@@ -1742,7 +1742,7 @@ function ProfitShareTab() {
             </table>
             <p style={note}>
               Proceeds are what buyers paid for the item after discounts, without tax or shipping, less any partial
-              refund. Stripe's fee on each order is shared across its items by amount. Wholesale is from manual orders at the invoiced price, with no fee. A bundle's discount against the two list
+              refund. Stripe's fee on each order is shared across its items by amount. Wholesale is from manual orders, with no fee: at the invoiced price, except GNY at the standard $24 (40% off). A bundle on a manual order counts as wholesale; the bundle lines are site orders only. A bundle's discount against the two list
               prices is split evenly between DCIT and GNY. {data.notes.stripeOrders} site order{data.notes.stripeOrders === 1 ? "" : "s"} and{" "}
               {data.notes.manualOrders} manual order{data.notes.manualOrders === 1 ? "" : "s"} this quarter
               {data.notes.cancelledOrders > 0 && `; ${data.notes.cancelledOrders} refunded in full and left out`}
