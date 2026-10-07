@@ -12,7 +12,7 @@ import {
 import { imageSize } from "../../lib/imageSize";
 import { useCart } from "../../components/CartContext";
 import { useState, useEffect, useRef } from "react";
-import { graph, eliAltman, noPicnicPress, ID } from "../../lib/entity";
+import { graph, eliAltman, noPicnicPress, ID, SITE_URL } from "../../lib/entity";
 import { serializeJsonLd } from "../../lib/jsonLd";
 
 const MAIN_IMAGE_SIZES = "(max-width: 900px) 100vw, 560px";
@@ -110,22 +110,22 @@ export default function ProductPage({ product, productReviews, otherProducts, su
   return (
     <>
       <Head>
-        <link rel="canonical" href={`${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`} />
+        <link rel="canonical" href={`${SITE_URL}/shop/${product.slug}`} />
         <title>{`${product.name} — No Picnic Press`}</title>
         <meta name="description" content={product.description} />
         <meta property="og:title" content={`${product.name} — No Picnic Press`} />
         <meta property="og:description" content={product.description} />
         <meta property="og:type" content="product" />
-        <meta property="og:url" content={`${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`} />
+        <meta property="og:url" content={`${SITE_URL}/shop/${product.slug}`} />
         {product.images?.[0] && (
-          <meta property="og:image" content={`${process.env.NEXT_PUBLIC_URL}${product.images[0]}`} />
+          <meta property="og:image" content={`${SITE_URL}${product.images[0]}`} />
         )}
         <meta property="og:site_name" content="No Picnic Press" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${product.name} — No Picnic Press`} />
         <meta name="twitter:description" content={product.description} />
         {product.images?.[0] && (
-          <meta name="twitter:image" content={`${process.env.NEXT_PUBLIC_URL}${product.images[0]}`} />
+          <meta name="twitter:image" content={`${SITE_URL}${product.images[0]}`} />
         )}
         <script
           type="application/ld+json"
@@ -134,7 +134,7 @@ export default function ProductPage({ product, productReviews, otherProducts, su
               "@type": "Product",
               name: product.name,
               description: product.description,
-              image: product.images?.map((img) => `${process.env.NEXT_PUBLIC_URL}${img}`),
+              image: product.images?.map((img) => `${SITE_URL}${img}`),
               brand: { "@type": "Brand", name: "No Picnic Press" },
               author: { "@id": ID.eli },
               offers: {
@@ -146,7 +146,7 @@ export default function ProductPage({ product, productReviews, otherProducts, su
                   : product.outOfPrint
                     ? "https://schema.org/Discontinued"
                     : "https://schema.org/OutOfStock",
-                url: `${process.env.NEXT_PUBLIC_URL}/shop/${product.slug}`,
+                url: `${SITE_URL}/shop/${product.slug}`,
                 seller: { "@id": ID.noPicnicPress },
                 hasMerchantReturnPolicy: {
                   "@type": "MerchantReturnPolicy",

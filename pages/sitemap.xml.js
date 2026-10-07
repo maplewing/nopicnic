@@ -1,6 +1,5 @@
 import { products } from "../data/products";
-
-const SITE_URL = process.env.NEXT_PUBLIC_URL || "https://nopicnicpress.com";
+import { SITE_URL } from "../lib/entity";
 
 // No lastmod: every page would carry the deploy date whether or not it changed,
 // and Google ignores lastmod it can't trust.
