@@ -336,11 +336,44 @@ function OrdersTable({ orders, shipments = [] }) {
   const [shipSending, setShipSending] = useState(new Set());
   const [shipDone, setShipDone] = useState(new Set());
   const [labelBuying, setLabelBuying] = useState(new Set());
+  const [labelTx, setLabelTx] = useState({});       // { [sessionId]: shippo transaction id }
   const [copiedAddressId, setCopiedAddressId] = useState(null);
   const [search, setSearch] = useState("");
   const [donePage, setDonePage] = useState(0);
 
   const PAGE_SIZE = 25;
+
+  // A bought label, reachable again. The URL is fetched fresh on click, so this
+  // only needs the transaction id — from the order's metadata, or from state if
+  // the label was bought a moment ago on this page.
+  function LabelLink({ order }) {
+    const txId = labelTx[order.stripeSessionId] || order.label?.txId || null;
+    if (!txId) return null;
+    const detail = [order.label?.carrier, order.label?.service].filter(Boolean).join(" — ");
+    return (
+      <div style={{ marginBottom: 8 }}>
+        <a
+          href={`/api/admin/label/${txId}`}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            display: "inline-block",
+            fontSize: 11,
+            color: "#1a6e3c",
+            border: "1px solid #b7d8c4",
+            padding: "2px 10px",
+            textDecoration: "none",
+            letterSpacing: "0.03em",
+          }}
+        >
+          Label PDF ↗
+        </a>
+        {detail && (
+          <div style={{ fontSize: 11, color: "#888", marginTop: 3 }}>{detail}</div>
+        )}
+      </div>
+    );
+  }
 
   useEffect(() => { setDonePage(0); }, [filter, search, sort.col, sort.dir]);
 
@@ -408,6 +441,11 @@ function OrdersTable({ orders, shipments = [] }) {
       if (!res.ok) {
         alert("Label purchase failed: " + (data.error || "unknown error"));
         return;
+      }
+      // Shows the label link straight away, without waiting for a refresh to
+      // bring the order back with its metadata.
+      if (data.transactionId) {
+        setLabelTx((t) => ({ ...t, [sessionId]: data.transactionId }));
       }
       // Auto-fill the tracking number
       if (data.trackingNumber) {
@@ -695,6 +733,7 @@ function OrdersTable({ orders, shipments = [] }) {
                           return (
                             <div>
                               <div style={s.expandLabel}>Shipment</div>
+                              <LabelLink order={order} />
                               {isShipped ? (
                                 <div style={{ fontSize: 12, lineHeight: 1.6 }}>
                                   <span style={{ color: "#1a6e3c", fontWeight: 600 }}>Ship email sent ✓</span>
@@ -735,7 +774,7 @@ function OrdersTable({ orders, shipments = [] }) {
                                 </div>
                               ) : (
                                 <div>
-                                  {order.shipping.address?.country && order.shipping.address.country !== "US" && (
+                                  {order.shipping.address?.country && order.shipping.address.country !== "US" && !labelTx[sid] && !order.label?.txId && (
                                     <button
                                       onClick={() => handleBuyLabel(sid)}
                                       disabled={labelBuying.has(sid) || isSending}
@@ -906,6 +945,7 @@ function OrdersTable({ orders, shipments = [] }) {
                           return (
                             <div>
                               <div style={s.expandLabel}>Shipment</div>
+                              <LabelLink order={order} />
                               {isShipped ? (
                                 <div style={{ fontSize: 12, lineHeight: 1.6 }}>
                                   <span style={{ color: "#1a6e3c", fontWeight: 600 }}>Ship email sent ✓</span>

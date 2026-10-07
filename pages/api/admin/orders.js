@@ -71,6 +71,13 @@ async function buildOrders(days) {
       shippingCost: (session.shipping_cost?.amount_total || 0) / 100,
       total: (session.amount_total || 0) / 100,
       refunded: refundedAmount(session),
+      label: session.payment_intent?.metadata?.label_tx ? {
+        txId: session.payment_intent.metadata.label_tx,
+        trackingNumber: session.payment_intent.metadata.label_tracking || null,
+        carrier: session.payment_intent.metadata.label_carrier || null,
+        service: session.payment_intent.metadata.label_service || null,
+        boughtAt: session.payment_intent.metadata.label_bought_at || null,
+      } : null,
       tracking: session.payment_intent?.metadata?.shipped_at ? {
         shippedAt: session.payment_intent.metadata.shipped_at,
         trackingNumber: session.payment_intent.metadata.tracking_number || null,

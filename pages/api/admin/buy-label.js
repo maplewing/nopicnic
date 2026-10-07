@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { checkAdminAuth } from "../../../lib/adminAuth";
+import { invalidateAdminCache } from "../../../lib/adminCache";
 import { products } from "../../../data/products";
 import { getTotalWeightOz } from "../../../lib/shippingRates";
 
@@ -147,8 +148,45 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: `Shippo label failed: ${msgs || tx.status}` });
   }
 
+  // The label URL exists only in this response, and the popup that opens it is
+  // the kind of thing a browser blocks — so remember where the label came from.
+  // Not the URL itself: it is a signed link well over Stripe's 500-character
+  // metadata limit, and it expires. The transaction ID is 32 characters and
+  // /api/admin/label/[tx] trades it for a fresh URL whenever the label is
+  // needed again.
+  //
+  // Deliberately not shipped_at. A bought label is not a shipped order — that
+  // stamp belongs to "Send ship email", and writing it here would drop the
+  // order out of the unshipped digest before the parcel had moved.
+  //
+  // The label is already bought and paid for by this point, so a failure here
+  // must not read as a failed purchase: it is logged, and the response still
+  // carries everything the admin needs.
+  try {
+    const paymentIntentId = typeof session.payment_intent === "object"
+      ? session.payment_intent?.id
+      : session.payment_intent;
+    if (paymentIntentId) {
+      await stripe.paymentIntents.update(paymentIntentId, {
+        metadata: {
+          label_tx: tx.object_id || "",
+          label_tracking: tx.tracking_number || "",
+          label_carrier: rate.provider || "",
+          label_service: displayName || rate.servicelevel?.name || "",
+          label_bought_at: new Date().toISOString(),
+        },
+      });
+      // /api/admin/orders is cached, so without this the label link would not
+      // appear until the entry expired.
+      await invalidateAdminCache();
+    }
+  } catch (err) {
+    console.error("Label bought but metadata write failed:", err.message, tx.object_id);
+  }
+
   return res.status(200).json({
     labelUrl: tx.label_url,
+    transactionId: tx.object_id,
     trackingNumber: tx.tracking_number,
     carrier: rate.provider || "USPS",
     service: displayName || rate.servicelevel?.name,
