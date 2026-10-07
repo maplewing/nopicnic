@@ -170,9 +170,12 @@ export default function ProductPage({ product, productReviews, otherProducts, su
                         "@type": "DefinedRegion",
                         addressCountry: "US",
                       },
+                      // The Merchant Center policy is $5.50 under the free-shipping
+                      // minimum and free at or above it; a product priced over the
+                      // minimum is free as a one-item order, so say so here too.
                       shippingRate: {
                         "@type": "MonetaryAmount",
-                        value: MEDIA_MAIL_RATE_USD,
+                        value: product.price >= FREE_SHIPPING_MINIMUM_USD ? 0 : MEDIA_MAIL_RATE_USD,
                         currency: "USD",
                       },
                       deliveryTime: {
@@ -192,13 +195,6 @@ export default function ProductPage({ product, productReviews, otherProducts, su
                       },
                     },
               },
-              ...(!product.isDigital && !product.isService && product.productWeightOz > 0 && {
-                weight: {
-                  "@type": "QuantitativeValue",
-                  value: product.productWeightOz,
-                  unitCode: "ONZ",
-                },
-              }),
               ...(product.schemaTopics?.length > 0 && {
                 about: product.schemaTopics.map((t) => ({ "@type": "Thing", name: t })),
               }),
