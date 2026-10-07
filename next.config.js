@@ -12,6 +12,20 @@ const nextConfig = {
   },
   async redirects() {
     return [
+      // The Vercel hostname serves the same deployment as the real domain, and
+      // Google had indexed it (labelled "Vercel") because the canonical pointed
+      // there. Send it to the real site so the two stop competing. Only the exact
+      // production hostname: preview deployments live on other *.vercel.app names.
+      //
+      // /api is left alone on purpose. Stripe doesn't follow redirects, so a
+      // webhook endpoint or cron still addressed to this hostname must keep
+      // answering rather than 308-ing into a failed delivery.
+      {
+        source: "/:path((?!api(?:/|$)).*)",
+        has: [{ type: "host", value: "nopicnic.vercel.app" }],
+        destination: "https://nopicnicpress.com/:path",
+        permanent: true,
+      },
       // Both policies live on one page. Ad platforms and payment processors ask
       // for a URL that is specifically a privacy policy, so keep these pointing in.
       { source: "/privacy", destination: "/policies#privacy", permanent: true },
