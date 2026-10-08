@@ -12,7 +12,7 @@ import {
 import { imageSize } from "../../lib/imageSize";
 import { useCart } from "../../components/CartContext";
 import { useState, useEffect, useRef } from "react";
-import { graph, eliAltman, noPicnicPress, ID, SITE_URL } from "../../lib/entity";
+import { graph, eliAltman, noPicnicPress, ID, SITE_URL, books } from "../../lib/entity";
 import { serializeJsonLd } from "../../lib/jsonLd";
 
 const MAIN_IMAGE_SIZES = "(max-width: 900px) 100vw, 560px";
@@ -33,10 +33,15 @@ export async function getStaticProps({ params }) {
   const successor = product.supersededBy
     ? products.find((p) => p.slug === product.supersededBy) ?? null
     : null;
-  return { props: { product, productReviews, otherProducts, successor } };
+  // The ISBN lives in lib/entity.js beside the Book node it belongs to; reading it
+  // from there means it is typed once. Matching on the page's own URL is what keeps
+  // it off the digital editions, the 1st edition and the bundle, which are
+  // different products with different (or no) identifiers.
+  const isbn = books.find((b) => b.url === `${SITE_URL}/shop/${product.slug}`)?.isbn ?? null;
+  return { props: { product, productReviews, otherProducts, successor, isbn } };
 }
 
-export default function ProductPage({ product, productReviews, otherProducts, successor }) {
+export default function ProductPage({ product, productReviews, otherProducts, successor, isbn }) {
   const { addItem, setIsOpen } = useCart();
   const router = useRouter();
   const [activeImg, setActiveImg] = useState(0);
@@ -137,6 +142,9 @@ export default function ProductPage({ product, productReviews, otherProducts, su
               image: product.images?.map((img) => `${SITE_URL}${img}`),
               brand: { "@type": "Brand", name: "No Picnic Press" },
               author: { "@id": ID.eli },
+              // An ISBN-13 is a GTIN-13, and Google asks for every applicable
+              // global identifier on a merchant listing.
+              ...(isbn && { gtin13: isbn }),
               offers: {
                 "@type": "Offer",
                 price: product.price,
